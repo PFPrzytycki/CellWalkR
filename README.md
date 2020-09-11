@@ -14,4 +14,4 @@ $ R
 ## Usage
 
 For a guide to using CellWalkR, see the provided
-[vignette](vignettes/CellWalkR.html).
+[vignette](examples/CellWalkR_Vignette.md).
