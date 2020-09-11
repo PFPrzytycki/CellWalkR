@@ -1,0 +1,194 @@
+#' Cluster labels
+#'
+#' \code{clusterLabels()} Computes hierarchical clustering of labels
+#'
+#' @param cellWalk a cellWalk object
+#' @param cellTypes character, vector of labels to use, all labels used by default
+#' @param distMethod character, method used to compute distance
+#' @param plot boolean, plot output matrix
+#' @return cellWalk object with label clustering stored in "cluster"
+#' @export
+clusterLabels = function(cellWalk, cellTypes, distMethod="euclidean", plot=FALSE){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  numLabels = dim(cellWalk[["normMat"]])[2]
+  typeTypeInf = cellWalk[["infMat"]][1:numLabels,1:numLabels]
+  colnames(typeTypeInf) = colnames(cellWalk[["normMat"]])
+  rownames(typeTypeInf) = colnames(cellWalk[["normMat"]])
+
+  if(missing(cellTypes)){
+    cellTypes = colnames(cellWalk[["normMat"]])
+  }
+  keepLabels = which( colnames(cellWalk[["normMat"]]) %in% cellTypes)
+  if(length(keepLabels)<2){
+    stop("Fewer than two labels match cell types")
+  }
+  typeTypeInf = typeTypeInf[keepLabels,keepLabels]
+
+  typeTypeClust = hclust(dist(typeTypeInf, method = distMethod))
+
+  if(plot){
+    print(plot(typeTypeClust))
+  }
+
+  cellWalk[["cluster"]] = typeTypeClust
+  cellWalk
+}
+
+
+#' Find uncertain labels
+#'
+#' \code{findUncertainLabels()} generates an l-by-l matrix for how often each label is
+#' confused for each other label at a given threshold, optinally normalized for total
+#' counts of cells for each label (default FALSE)
+#'
+#' @param cellWalk a cellWalk object
+#' @param threshold numeric, quantile threshold for uncertain label
+#' @param cellTypes character, vector of labels to use, all labels used by default
+#' @param plot boolean, plot output matrix
+#' @param normalize boolean, normalize plot scale
+#' @return cellWalk object with label uncertainty matrix (l-by-l) stored in "uncertaintyMatrix"
+#' @export
+findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, plot=FALSE, normalize=FALSE){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  normMat = cellWalk[["normMat"]]
+
+  if(missing(cellTypes)){
+    cellTypes = colnames(normMat)
+  }
+  keepLabels = which( colnames(normMat) %in% cellTypes)
+  if(length(keepLabels)<2){
+    stop("Fewer than two labels match cell types")
+  }
+  cellTypes = cellTypes[cellTypes %in% colnames(normMat)]
+  normMat = normMat[,match(cellTypes, colnames(normMat))]
+
+  cellLabels = cellWalk[["cellLabels"]]
+  #difference between top two label scores
+  uncertaintyScore = apply(normMat, 1, function(x) sort(x, decreasing = TRUE)[1]-sort(x, decreasing = TRUE)[2])
+  uncertaintyTypes = apply(normMat, 1, function(x) c(cellTypes[order(x, decreasing = TRUE)][1], cellTypes[order(x, decreasing = TRUE)][2]))
+  #all pairs of labels where difference in scores below threshold
+  uncertainPairs = uncertaintyTypes[,uncertaintyScore < quantile(uncertaintyScore, threshold)]
+  uncertainMat = sapply(cellTypes, function(c1) sapply(cellTypes, function(c2) length(which((uncertainPairs[1,]==c1 & uncertainPairs[2,]==c2) | (uncertainPairs[1,]==c2 & uncertainPairs[2,]==c1)))))
+  uncertainMatNorm = sapply(cellTypes, function(c1)
+    sapply(cellTypes, function(c2)
+      length(which((uncertainPairs[1,]==c1 & uncertainPairs[2,]==c2) |
+                     (uncertainPairs[1,]==c2 & uncertainPairs[2,]==c1)))
+      /length(which(cellLabels==c1 | cellLabels==c2))))
+
+  if(plot){
+    if(!requireNamespace("ggplot2", quietly = TRUE)){
+      stop("Must install ggplot2")
+    }
+    if(!requireNamespace("reshape2", quietly = TRUE)){
+      stop("Must install reshape2")
+    }
+    if(normalize){
+      uncertainMatMelt = reshape2::melt(uncertainMatNorm)
+    }
+    else{
+      uncertainMatMelt = reshape2::melt(uncertainMat)
+    }
+    uncertainMatMelt$Var1 = factor(uncertainMatMelt$Var1, levels = cellTypes)
+    uncertainMatMelt$Var2 = factor(uncertainMatMelt$Var2, levels = cellTypes)
+    print(ggplot2::ggplot(uncertainMatMelt, ggplot2::aes(Var1, Var2)) +
+      ggplot2::geom_tile(ggplot2::aes(fill = value), colour = "black") +
+      ggplot2::scale_fill_gradient(low = "white",high = "steelblue") +
+      ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust=0),
+                     axis.title.x = ggplot2::element_blank(),
+                     axis.text.y = ggplot2::element_text(angle = 45),
+                     axis.title.y = ggplot2::element_blank()) +
+      ggplot2::scale_x_discrete(position = "top"))
+  }
+
+  cellWalk[["uncertaintyMatrix"]] = uncertainMat
+  cellWalk
+
+}
+
+#' Label bulk data
+#'
+#' \code{labelBulk()} Determines labels for bulk data by mapping them via
+#' the calculated information matrix
+#'
+#' @param cellWalk a cellWalk object
+#' @param bulkPeaks GRanges of peaks in bulk data
+#' @param ATACMat cell-by-peak matrix
+#' @param peaks GRanges of peaks in ATACMat
+#' @param cellTypes character, vector of labels to use, all labels used by default
+#' @param parallel execute in parallel
+#' @param numCores number of cores to use for parallel execution
+#' @return labels for each region in bulk data
+#' @export
+labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FALSE, numCores=1){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  infMat = cellWalk[["infMat"]]
+  normMat = cellWalk[["normMat"]]
+
+  if(missing(cellTypes)){
+    cellTypes = colnames(normMat)
+  }
+  keepLabels = which( colnames(normMat) %in% cellTypes)
+  if(length(keepLabels)<2){
+    stop("Fewer than two labels match cell types")
+  }
+  cellTypes = cellTypes[cellTypes %in% colnames(normMat)]
+
+  if(length(which(!colnames(normMat) %in% cellTypes))>0){
+    infMat = infMat[-which(!colnames(normMat) %in% cellTypes),
+                  -which(!colnames(normMat) %in% cellTypes)]
+  }
+
+  peakOverlaps = findOverlaps(peaks, bulkPeaks)
+
+  if(parallel){
+    if(!requireNamespace("parallel", quietly = TRUE)){
+      stop("Must install parallel")
+    }
+    if(numCores >= parallel::detectCores()) {
+      numCores = parallel::detectCores() - 1
+      warning("numCores greater than avaialble cores, using available cores")
+    }
+    infCellOnType = parallel::mcmapply(function(e) {
+      whichPeaks = peakOverlaps@from[peakOverlaps@to==e]
+      if(length(whichPeaks)==0){
+        rep(0, length(cellTypes))
+      } else{
+        testCells = ATACMat[,whichPeaks]
+        if(length(whichPeaks)==1){
+          whichCells = which(testCells>0)
+        } else{
+          whichCells = which(Matrix::rowSums(testCells)>0)
+        }
+        Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+      }
+    }, e=1:length(bulkPeaks), mc.cores = numCores)
+  }
+  else{
+    infCellOnType = sapply(1:length(bulkPeaks), function(e) {
+      whichPeaks = peakOverlaps@from[peakOverlaps@to==e]
+      if(length(whichPeaks)==0){
+        rep(0, length(cellTypes))
+      } else{
+        testCells = ATACMat[,whichPeaks]
+        if(length(whichPeaks)==1){
+          whichCells = which(testCells>0)
+        } else{
+          whichCells = which(Matrix::rowSums(testCells)>0)
+        }
+        Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+      }
+    })
+  }
+
+  mappedLabel = apply(infCellOnType, 2, function(x) cellTypes[order(x, decreasing = TRUE)[1]])
+  mappedScore = apply(infCellOnType, 2, function(x) sort(x, decreasing = TRUE)[1])
+
+  mappedLabel
+
+}

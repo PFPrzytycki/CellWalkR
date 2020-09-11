@@ -1,0 +1,257 @@
+---
+title: "CellWalkR"
+author: "Pawel F. Przytycki"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CellWalkR}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+## Getting Started
+
+CellWalkR is an R package implementing the CellWalker method for combining 
+scATAC-seq data with labels and other epigenetic data. This vignette shows
+an example of running CellWalkR on a small set of scATAC-seq data to generate
+a cellWalk object which can then be used to assign labels to cells as well as 
+cell-type specific labels to bulk data.
+
+```{r setup, message=FALSE, warning=FALSE}
+library(CellWalkR)
+```
+
+```{r setseed, echo=FALSE}
+set.seed(1)
+```
+
+First, load scATAC-seq data in the form of a cell-by-peak matrix and load the
+corresponding peaks into a GRanges object. 
+If working with a SnapATAC object, a cell-by-peak matrix should be stored 
+in @pmat.
+
+```{r loadATACMat}
+ATACMat = Matrix::readMM("../Data/SamplePeakMat.mtx")
+peaks = as(data.table::fread("../Data/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
+```
+
+Next, we compute cell-to-cell similarity in order to build edges in the
+cell-to-cell portion of the graph. 
+If working with a SnapATAC object, Jaccard similarity is stored in @jmat.
+
+```{r cellEdges}
+cellEdges = computeCellSim(ATACMat, method="Jaccard")
+```
+
+cellEdges is a cell-by-cell matrix of cell-to-cell similarity. Any matrix of 
+cell similarity can be used.
+
+```{r print_cellEdges}
+head(cellEdges, n=c(5,5))
+```
+
+In order to generate label-to-cell edges, we need to define which genomic 
+regions correspond to which genes. These could be promoters, gene bodies, or
+any other definition. In this example we will use full gene bodies. 
+
+```{r getRegions, message=FALSE}
+regions = getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
+```
+
+regions is a GRanges object with a gene_id field. This gene_id field needs to
+match the genes (or other identifiers) in the labeling data.
+
+```{r print_getRegions}
+head(regions)
+```
+
+Now we can load our first set of labeling data. If no labeling data is 
+available, can run findMarkers() on a set of scRNA-seq data. 
+
+```{r labelGenes}
+labelGenes = data.table::fread("../Data/SampleMarkers1.txt")
+```
+
+The labeling data should consist of at least two columns, gene names (or other
+identifiers that match regions) and 
+associated labels, with an optional third column for log-fold change in 
+expression of that gene for that label.
+
+```{r print_labelGenes}
+head(labelGenes)
+```
+
+We then need to map between this data and the peaks in the scATAC-seq data.
+
+```{r mapPeaksToGenes}
+ATACGenePeak = mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
+```
+
+With this mapping we can compute label-to-cell edges, a matrix where the number
+of rows is the number of labels and the number of columns is the number of 
+cells.
+
+```{r computeLabelEdges}
+labelEdges = computeLabelEdges(labelGenes, ATACMat, ATACGenePeak)
+head(labelEdges)
+```
+
+## Tuning Label Edges
+
+Although we now have cell-to-cell edges and label-to-cell edges, we don't know 
+how to correctly weight the two relative to each other. The tuneEdgeWeights
+method will run CellWalker across a range of possible parameters and compute
+cell homogeneity for each.
+We make a list of labelEdges because there can be many of them, and sample down
+to 1000 cells for faster computation.
+
+```{r tuneEdgeWeights}
+labelEdgesList = list(labelEdges)
+edgeWeights = tuneEdgeWeights(cellEdges, 
+                              labelEdgesList, 
+                              labelEdgeOpts=10^seq(1,7,1), 
+                              sampleDepth=1000)
+```
+
+We can see which parameter had the highest cell homogeneity:
+
+```{r print-tuneEdgeWeights}
+head(edgeWeights[order(edgeWeights$cellHomogeneity, decreasing = TRUE),])
+```
+
+And can generate a cellWalk object with this parameter. This object stores
+the final influence matrix and can be used for downstream analysis.
+
+```{r walkCells-Edges}
+cellWalk = walkCells(cellEdges, 
+                     labelEdgesList, 
+                     labelEdgeWeights = 1e+07)
+```
+
+## Adding Filters
+
+We may have some bulk epigenetic data that can help filter down which peaks are
+relevant to our analysis. We can tune weights on each filter to determine
+how signficant it is to our data. For our example we have H3K4me3 data which
+indicates active promoters. Thus we apply this filter permissively (setting 
+filterOut=FALSE) and at the whole gene level (filterGene=TRUE) rather than just 
+to overlaping peaks. 
+
+```{r tuneFilterWeights}
+filter = data.table::fread("../Data/SampleFilter.bed")
+filter = GRanges(filter$V1, IRanges(filter$V2, filter$V3))
+filters = list(filter)
+labelGenesList = list(labelGenes)
+filterWeights = tuneFilterWeights(cellEdges, 
+                                  labelGenesList, 
+                                  labelEdgesList, 
+                                  labelEdgeWeights = 1e+07,
+                                  ATACMat,
+                                  ATACGenePeak,
+                                  filters = filters,
+                                  filterOut = c(FALSE),
+                                  filterGene = c(TRUE),
+                                  regions=regions, 
+                                  sampleDepth=1000)
+filterWeights
+```
+
+We see that adding this filter improves performance. We can make a new cellWalk 
+object using this filter:
+
+```{r walkCells-Filters}
+labelEdges = computeLabelEdges(labelGenes, 
+                               ATACMat, 
+                               ATACGenePeak,
+                               filters = filters, 
+                               filterWeights = c(1),
+                               filterOut = c(FALSE),
+                               filterGene = c(TRUE),
+                               regions = regions)
+labelEdgesList = list(labelEdges)
+cellWalk = walkCells(cellEdges, 
+                     labelEdgesList, 
+                     labelEdgeWeights = 1e+07)
+```
+
+## Downstream Analysis
+
+Once we have created a cellWalk object, we can use it for downstream analysis.
+Most directly, we can look at what labels are the most strongly linked to 
+each cell. This is based on the amount of label-to-cell influence in the
+cell walk. Cell labeling can be used for numerous further downstream analyses 
+such as cell-type specific peak calling.
+
+```{r downstream-cellLabels}
+head(cellWalk$cellLabels)
+```
+
+We can dig further into cell labeling by examining how often labels are confused
+for each other.
+
+```{r downstream-uncertainty}
+cellWalk = findUncertainLabels(cellWalk, plot=TRUE)
+```
+
+We can also directly examine label similarity by considering label-to-label 
+influence.
+
+```{r downstream-labelLabels}
+cellWalk = clusterLabels(cellWalk, plot=TRUE)
+```
+
+A very powerful use for the cell walk is mapping data to labels via 
+cell-to-label influence. For example, we can map enhancers to cell types.
+
+```{r downstream-mapLabels}
+sampleEnhancers = data.table::fread("../Data/sampleEnhancers.bed")
+sampleEnhancers = GRanges(sampleEnhancers$V1, IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
+mappedLabel = labelBulk(cellWalk, 
+                        sampleEnhancers[1:10], 
+                        ATACMat, 
+                        peaks)
+mappedLabel
+```
+
+## Adding a Second Set of Labels
+
+CellWalkR can be run on an arbitrary number of sets of labels and filters, each
+with it's own weight. Filters can selectively be applied to some sets of labels
+and not others. Here for example, we will add a second set of labels to which
+the above filter does not apply.
+
+```{r moreLabels-data}
+labelGenesB = data.table::fread("../Data/SampleMarkers2.txt")
+ATACGenePeakB = mapPeaksToGenes(labelGenesB, ATACMat, peaks, regions)
+labelEdgesB = computeLabelEdges(labelGenesB, ATACMat, ATACGenePeakB)
+```
+
+Now simply tune edge weights as before with a list of all label edges.
+
+```{r moreLabels}
+labelEdgesListB = list(labelEdges, labelEdgesB)
+edgeWeightsB = tuneEdgeWeights(cellEdges, 
+                               labelEdgesListB, 
+                               labelEdgeOpts = 10^seq(1,7,1),
+                               sampleDepth = 1000)
+head(edgeWeightsB[order(edgeWeightsB$cellHomogeneity, decreasing = TRUE),])
+```
+
+We can then compute a new cell walk using the list of edges and a vector of 
+optimal weights.
+
+```{r moreLabels-walk}
+cellWalkB = walkCells(cellEdges, 
+                      labelEdgesListB, 
+                      labelEdgeWeights = c(1e+05, 1e+06))
+```
+
+
+
