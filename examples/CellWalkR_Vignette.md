@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2020-09-10
+2020-09-11
 
 ## Getting Started
 
@@ -19,10 +19,13 @@ library(CellWalkR)
 First, load scATAC-seq data in the form of a cell-by-peak matrix and
 load the corresponding peaks into a GRanges object. If working with a
 SnapATAC object, a cell-by-peak matrix should be stored in @pmat.
+**Please note:** all data needed to recreate this vignette locally is
+already loaded so read commands can be skipped. They are included as an
+example for how new data could be loaded.
 
 ``` r
-ATACMat = Matrix::readMM("../Data/SamplePeakMat.mtx")
-peaks = as(data.table::fread("../Data/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
+ATACMat = Matrix::readMM("extdata/SamplePeakMat.mtx")
+peaks = as(data.table::fread("extdata/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
 ```
 
 Next, we compute cell-to-cell similarity in order to build edges in the
@@ -78,7 +81,7 @@ Now we can load our first set of labeling data. If no labeling data is
 available, can run findMarkers() on a set of scRNA-seq data.
 
 ``` r
-labelGenes = data.table::fread("../Data/SampleMarkers1.txt")
+labelGenes = data.table::fread("extdata/SampleMarkers1.txt")
 ```
 
 The labeling data should consist of at least two columns, gene names (or
@@ -88,13 +91,13 @@ that label.
 
 ``` r
 head(labelGenes)
-#>    entrez  cluster   avg_diff
-#> 1:  10299 RG-early -1.2297890
-#> 2:   6167 RG-early  0.2546596
-#> 3:  11168 RG-early  0.2570446
-#> 4:   8760 RG-early -0.2578798
-#> 5:   8503 RG-early  0.2613031
-#> 6:  10208 RG-early  0.2618003
+#>   entrez  cluster   avg_diff
+#> 1  10299 RG-early -1.2297890
+#> 2   6167 RG-early  0.2546596
+#> 3  11168 RG-early  0.2570446
+#> 4   8760 RG-early -0.2578798
+#> 5   8503 RG-early  0.2613031
+#> 6  10208 RG-early  0.2618003
 ```
 
 We then need to map between this data and the peaks in the scATAC-seq
@@ -170,8 +173,11 @@ permissively (setting filterOut=FALSE) and at the whole gene level
 (filterGene=TRUE) rather than just to overlaping peaks.
 
 ``` r
-filter = data.table::fread("../Data/SampleFilter.bed")
+filter = data.table::fread("extdata/SampleFilter.bed")
 filter = GRanges(filter$V1, IRanges(filter$V2, filter$V3))
+```
+
+``` r
 filters = list(filter)
 labelGenesList = list(labelGenes)
 filterWeights = tuneFilterWeights(cellEdges, 
@@ -248,8 +254,11 @@ cell-to-label influence. For example, we can map enhancers to cell
 types.
 
 ``` r
-sampleEnhancers = data.table::fread("../Data/sampleEnhancers.bed")
+sampleEnhancers = data.table::fread("extdata/sampleEnhancers.bed")
 sampleEnhancers = GRanges(sampleEnhancers$V1, IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
+```
+
+``` r
 mappedLabel = labelBulk(cellWalk, 
                         sampleEnhancers[1:10], 
                         ATACMat, 
@@ -267,7 +276,10 @@ to some sets of labels and not others. Here for example, we will add a
 second set of labels to which the above filter does not apply.
 
 ``` r
-labelGenesB = data.table::fread("../Data/SampleMarkers2.txt")
+labelGenesB = data.table::fread("extdata/SampleMarkers2.txt")
+```
+
+``` r
 ATACGenePeakB = mapPeaksToGenes(labelGenesB, ATACMat, peaks, regions)
 labelEdgesB = computeLabelEdges(labelGenesB, ATACMat, ATACGenePeakB)
 ```
@@ -278,16 +290,16 @@ Now simply tune edge weights as before with a list of all label edges.
 labelEdgesListB = list(labelEdges, labelEdgesB)
 edgeWeightsB = tuneEdgeWeights(cellEdges, 
                                labelEdgesListB, 
-                               labelEdgeOpts = 10^seq(1,7,1),
+                               labelEdgeOpts = 10^seq(4,7,1),
                                sampleDepth = 1000)
 head(edgeWeightsB[order(edgeWeightsB$cellHomogeneity, decreasing = TRUE),])
 #>     Var1  Var2 cellHomogeneity
-#> 40 1e+05 1e+06       0.4755922
-#> 46 1e+04 1e+07       0.4554749
-#> 48 1e+06 1e+07       0.4371820
-#> 32 1e+04 1e+05       0.3772749
-#> 33 1e+05 1e+05       0.3625097
-#> 47 1e+05 1e+07       0.3402918
+#> 9  1e+04 1e+06       0.5011993
+#> 13 1e+04 1e+07       0.4894711
+#> 14 1e+05 1e+07       0.4518762
+#> 10 1e+05 1e+06       0.4264239
+#> 15 1e+06 1e+07       0.4203451
+#> 16 1e+07 1e+07       0.3927239
 ```
 
 We can then compute a new cell walk using the list of edges and a vector
@@ -296,5 +308,5 @@ of optimal weights.
 ``` r
 cellWalkB = walkCells(cellEdges, 
                       labelEdgesListB, 
-                      labelEdgeWeights = c(1e+05, 1e+06))
+                      labelEdgeWeights = c(1e+04, 1e+06))
 ```

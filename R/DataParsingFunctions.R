@@ -420,7 +420,8 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
 #' @param sampleDepth integer depth to subsample cells to for faster calculation
 #' @param cellTypes list of names of cell types, if not provided unique cell labels are used
 #' @param parallel boolean, execute in parallel
-#' @param numCores integer number of cores to use for parallel execution
+#' @param numCores integer, number of cores to use for parallel execution
+#' @param trackProgress boolean, print percent run completed
 #' @return data frame of weights with corresponding cell homogeneity
 #' @export
 tuneEdgeWeights = function(

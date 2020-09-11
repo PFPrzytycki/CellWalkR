@@ -1,15 +1,16 @@
 Package: CellWalkR
 Type: Package
 Title: R implementation of CellWalker for analysis of scATAC-seq 
-Version: 0.1.0
-Author: Pawel F. Przytycki
+Version: 0.1.1
+Author: Pawel F. Przytyck
 Maintainer: Pawel F. Przytycki <pawel.przytycki@gladstone.ucsf.edu>
 Description: R implementation of CellWalker for analysis of scATAC-seq 
     Use four spaces when indenting paragraphs within the Description.
-License: MIT
+License: GPL-2 + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends:
+  R (>= 3.5.0),
   GenomicRanges
 Imports:
 	data.table,
@@ -22,6 +23,7 @@ Suggests:
     SnapATAC,
     Seurat (>= 3.0),
     ggplot2,
+    reshape2,
     parallel,
     knitr,
     rmarkdown

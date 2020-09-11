@@ -28,7 +28,9 @@ tuneEdgeWeights(
 
 \item{parallel}{boolean, execute in parallel}
 
-\item{numCores}{integer number of cores to use for parallel execution}
+\item{numCores}{integer, number of cores to use for parallel execution}
+
+\item{trackProgress}{boolean, print percent run completed}
 }
 \value{
 data frame of weights with corresponding cell homogeneity

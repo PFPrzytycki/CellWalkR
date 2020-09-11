@@ -35,18 +35,20 @@ set.seed(1)
 First, load scATAC-seq data in the form of a cell-by-peak matrix and load the
 corresponding peaks into a GRanges object. 
 If working with a SnapATAC object, a cell-by-peak matrix should be stored 
-in @pmat.
+in @pmat. **Please note:** all data needed to recreate this vignette locally
+is already loaded so read commands can be skipped. They are included as an
+example for how new data could be loaded.
 
-```{r loadATACMat}
-ATACMat = Matrix::readMM("../Data/SamplePeakMat.mtx")
-peaks = as(data.table::fread("../Data/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
+```{r loadATACMat, eval=FALSE}
+ATACMat = Matrix::readMM("extdata/SamplePeakMat.mtx")
+peaks = as(data.table::fread("extdata/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
 ```
 
 Next, we compute cell-to-cell similarity in order to build edges in the
 cell-to-cell portion of the graph. 
 If working with a SnapATAC object, Jaccard similarity is stored in @jmat.
 
-```{r cellEdges}
+```{r cellEdges, message=FALSE}
 cellEdges = computeCellSim(ATACMat, method="Jaccard")
 ```
 
@@ -75,8 +77,8 @@ head(regions)
 Now we can load our first set of labeling data. If no labeling data is 
 available, can run findMarkers() on a set of scRNA-seq data. 
 
-```{r labelGenes}
-labelGenes = data.table::fread("../Data/SampleMarkers1.txt")
+```{r labelGenes, eval=FALSE}
+labelGenes = data.table::fread("extdata/SampleMarkers1.txt")
 ```
 
 The labeling data should consist of at least two columns, gene names (or other
@@ -144,9 +146,11 @@ indicates active promoters. Thus we apply this filter permissively (setting
 filterOut=FALSE) and at the whole gene level (filterGene=TRUE) rather than just 
 to overlaping peaks. 
 
-```{r tuneFilterWeights}
-filter = data.table::fread("../Data/SampleFilter.bed")
+```{r loadFilters, eval=FALSE}
+filter = data.table::fread("extdata/SampleFilter.bed")
 filter = GRanges(filter$V1, IRanges(filter$V2, filter$V3))
+```
+```{r tuneFilterWeights}
 filters = list(filter)
 labelGenesList = list(labelGenes)
 filterWeights = tuneFilterWeights(cellEdges, 
@@ -210,9 +214,11 @@ cellWalk = clusterLabels(cellWalk, plot=TRUE)
 A very powerful use for the cell walk is mapping data to labels via 
 cell-to-label influence. For example, we can map enhancers to cell types.
 
-```{r downstream-mapLabels}
-sampleEnhancers = data.table::fread("../Data/sampleEnhancers.bed")
+```{r downstream-loadEnhancers, eval=FALSE}
+sampleEnhancers = data.table::fread("extdata/sampleEnhancers.bed")
 sampleEnhancers = GRanges(sampleEnhancers$V1, IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
+```
+```{r downstream-mapLabels}
 mappedLabel = labelBulk(cellWalk, 
                         sampleEnhancers[1:10], 
                         ATACMat, 
@@ -227,8 +233,10 @@ with it's own weight. Filters can selectively be applied to some sets of labels
 and not others. Here for example, we will add a second set of labels to which
 the above filter does not apply.
 
+```{r moreLabels-loaddata, eval=FALSE}
+labelGenesB = data.table::fread("extdata/SampleMarkers2.txt")
+```
 ```{r moreLabels-data}
-labelGenesB = data.table::fread("../Data/SampleMarkers2.txt")
 ATACGenePeakB = mapPeaksToGenes(labelGenesB, ATACMat, peaks, regions)
 labelEdgesB = computeLabelEdges(labelGenesB, ATACMat, ATACGenePeakB)
 ```
@@ -239,7 +247,7 @@ Now simply tune edge weights as before with a list of all label edges.
 labelEdgesListB = list(labelEdges, labelEdgesB)
 edgeWeightsB = tuneEdgeWeights(cellEdges, 
                                labelEdgesListB, 
-                               labelEdgeOpts = 10^seq(1,7,1),
+                               labelEdgeOpts = 10^seq(4,7,1),
                                sampleDepth = 1000)
 head(edgeWeightsB[order(edgeWeightsB$cellHomogeneity, decreasing = TRUE),])
 ```
@@ -250,7 +258,7 @@ optimal weights.
 ```{r moreLabels-walk}
 cellWalkB = walkCells(cellEdges, 
                       labelEdgesListB, 
-                      labelEdgeWeights = c(1e+05, 1e+06))
+                      labelEdgeWeights = c(1e+04, 1e+06))
 ```
 
 
