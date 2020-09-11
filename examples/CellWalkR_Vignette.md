@@ -230,7 +230,7 @@ confused for each other.
 cellWalk = findUncertainLabels(cellWalk, plot=TRUE)
 ```
 
-![](CallWalkR_Vignette_files/figure-gfm/downstream-uncertainty-1.png)<!-- -->
+![](CellWalkR_Vignette_files/figure-gfm/downstream-uncertainty-1.png)<!-- -->
 
 We can also directly examine label similarity by considering
 label-to-label influence.
@@ -239,7 +239,7 @@ label-to-label influence.
 cellWalk = clusterLabels(cellWalk, plot=TRUE)
 ```
 
-![](CallWalkR_Vignette_files/figure-gfm/downstream-labelLabels-1.png)<!-- -->
+![](CellWalkR_Vignette_files/figure-gfm/downstream-labelLabels-1.png)<!-- -->
 
     #> NULL
 
