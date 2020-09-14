@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2020-09-11
+2020-09-14
 
 ## Getting Started
 
@@ -19,13 +19,12 @@ library(CellWalkR)
 First, load scATAC-seq data in the form of a cell-by-peak matrix and
 load the corresponding peaks into a GRanges object. If working with a
 SnapATAC object, a cell-by-peak matrix should be stored in @pmat.
-**Please note:** all data needed to recreate this vignette locally is
-already loaded so read commands can be skipped. They are included as an
-example for how new data could be loaded.
 
 ``` r
-ATACMat = Matrix::readMM("extdata/SamplePeakMat.mtx")
-peaks = as(data.table::fread("extdata/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
+pathToMat <- system.file("extdata", "SamplePeakMat.mtx", package = "CellWalkR")
+ATACMat <- Matrix::readMM(pathToMat)
+pathToPeaks <- system.file("extdata", "SamplePeaks.txt", package = "CellWalkR")
+peaks <- as(data.table::fread(pathToPeaks, header = FALSE)$V1, "GRanges")
 ```
 
 Next, we compute cell-to-cell similarity in order to build edges in the
@@ -33,7 +32,7 @@ cell-to-cell portion of the graph. If working with a SnapATAC object,
 Jaccard similarity is stored in @jmat.
 
 ``` r
-cellEdges = computeCellSim(ATACMat, method="Jaccard")
+cellEdges <- computeCellSim(ATACMat, method="Jaccard")
 ```
 
 cellEdges is a cell-by-cell matrix of cell-to-cell similarity. Any
@@ -56,7 +55,7 @@ gene bodies, or any other definition. In this example we will use full
 gene bodies.
 
 ``` r
-regions = getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
+regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
 ```
 
 regions is a GRanges object with a gene\_id field. This gene\_id field
@@ -81,7 +80,8 @@ Now we can load our first set of labeling data. If no labeling data is
 available, can run findMarkers() on a set of scRNA-seq data.
 
 ``` r
-labelGenes = data.table::fread("extdata/SampleMarkers1.txt")
+pathToLabels <- system.file("extdata", "SampleMarkers1.txt", package = "CellWalkR")
+labelGenes <- data.table::fread(pathToLabels)
 ```
 
 The labeling data should consist of at least two columns, gene names (or
@@ -104,7 +104,7 @@ We then need to map between this data and the peaks in the scATAC-seq
 data.
 
 ``` r
-ATACGenePeak = mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
+ATACGenePeak <- mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
 ```
 
 With this mapping we can compute label-to-cell edges, a matrix where the
@@ -112,7 +112,7 @@ number of rows is the number of labels and the number of columns is the
 number of cells.
 
 ``` r
-labelEdges = computeLabelEdges(labelGenes, ATACMat, ATACGenePeak)
+labelEdges <- computeLabelEdges(labelGenes, ATACMat, ATACGenePeak)
 head(labelEdges)
 #>      RG-early        oRG         tRG vRG     RG-div1    RG-div2
 #> [1,]        0 0.02591189 0.025962569   0 0.040257391 0.01894717
@@ -133,11 +133,11 @@ labelEdges because there can be many of them, and sample down to 1000
 cells for faster computation.
 
 ``` r
-labelEdgesList = list(labelEdges)
-edgeWeights = tuneEdgeWeights(cellEdges, 
+labelEdgesList <- list(labelEdges)
+edgeWeights <- tuneEdgeWeights(cellEdges, 
                               labelEdgesList, 
-                              labelEdgeOpts=10^seq(1,7,1), 
-                              sampleDepth=1000)
+                              labelEdgeOpts = 10^seq(1,7,1), 
+                              sampleDepth = 1000)
 ```
 
 We can see which parameter had the highest cell homogeneity:
@@ -158,7 +158,7 @@ stores the final influence matrix and can be used for downstream
 analysis.
 
 ``` r
-cellWalk = walkCells(cellEdges, 
+cellWalk <- walkCells(cellEdges, 
                      labelEdgesList, 
                      labelEdgeWeights = 1e+07)
 ```
@@ -173,14 +173,15 @@ permissively (setting filterOut=FALSE) and at the whole gene level
 (filterGene=TRUE) rather than just to overlaping peaks.
 
 ``` r
-filter = data.table::fread("extdata/SampleFilter.bed")
-filter = GRanges(filter$V1, IRanges(filter$V2, filter$V3))
+pathToFilter <- system.file("extdata", "SampleFilter.bed", package = "CellWalkR")
+filter <- data.table::fread(pathToFilter)
+filter <- GRanges(filter$V1, IRanges(filter$V2, filter$V3))
 ```
 
 ``` r
-filters = list(filter)
-labelGenesList = list(labelGenes)
-filterWeights = tuneFilterWeights(cellEdges, 
+filters <- list(filter)
+labelGenesList <- list(labelGenes)
+filterWeights <- tuneFilterWeights(cellEdges, 
                                   labelGenesList, 
                                   labelEdgesList, 
                                   labelEdgeWeights = 1e+07,
@@ -190,7 +191,7 @@ filterWeights = tuneFilterWeights(cellEdges,
                                   filterOut = c(FALSE),
                                   filterGene = c(TRUE),
                                   regions=regions, 
-                                  sampleDepth=1000)
+                                  sampleDepth = 1000)
 filterWeights
 #>   Var1 cellHomogeneity
 #> 1    0      0.06987248
@@ -201,7 +202,7 @@ We see that adding this filter improves performance. We can make a new
 cellWalk object using this filter:
 
 ``` r
-labelEdges = computeLabelEdges(labelGenes, 
+labelEdges <- computeLabelEdges(labelGenes, 
                                ATACMat, 
                                ATACGenePeak,
                                filters = filters, 
@@ -209,8 +210,8 @@ labelEdges = computeLabelEdges(labelGenes,
                                filterOut = c(FALSE),
                                filterGene = c(TRUE),
                                regions = regions)
-labelEdgesList = list(labelEdges)
-cellWalk = walkCells(cellEdges, 
+labelEdgesList <- list(labelEdges)
+cellWalk <- walkCells(cellEdges, 
                      labelEdgesList, 
                      labelEdgeWeights = 1e+07)
 ```
@@ -233,7 +234,7 @@ We can dig further into cell labeling by examining how often labels are
 confused for each other.
 
 ``` r
-cellWalk = findUncertainLabels(cellWalk, plot=TRUE)
+cellWalk <- findUncertainLabels(cellWalk, plot = TRUE)
 ```
 
 ![](CellWalkR_Vignette_files/figure-gfm/downstream-uncertainty-1.png)<!-- -->
@@ -242,7 +243,7 @@ We can also directly examine label similarity by considering
 label-to-label influence.
 
 ``` r
-cellWalk = clusterLabels(cellWalk, plot=TRUE)
+cellWalk <- clusterLabels(cellWalk, plot = TRUE)
 ```
 
 ![](CellWalkR_Vignette_files/figure-gfm/downstream-labelLabels-1.png)<!-- -->
@@ -254,12 +255,14 @@ cell-to-label influence. For example, we can map enhancers to cell
 types.
 
 ``` r
-sampleEnhancers = data.table::fread("extdata/sampleEnhancers.bed")
-sampleEnhancers = GRanges(sampleEnhancers$V1, IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
+pathToEnhancers <- system.file("extdata", "sampleEnhancers.bed", package = "CellWalkR")
+sampleEnhancers <- data.table::fread(pathToEnhancers)
+sampleEnhancers <- GRanges(sampleEnhancers$V1, 
+                           IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
 ```
 
 ``` r
-mappedLabel = labelBulk(cellWalk, 
+mappedLabel <- labelBulk(cellWalk, 
                         sampleEnhancers[1:10], 
                         ATACMat, 
                         peaks)
@@ -276,19 +279,20 @@ to some sets of labels and not others. Here for example, we will add a
 second set of labels to which the above filter does not apply.
 
 ``` r
-labelGenesB = data.table::fread("extdata/SampleMarkers2.txt")
+pathToLabelsB <- system.file("extdata", "SampleMarkers2.txt", package = "CellWalkR")
+labelGenesB <- data.table::fread(pathToLabelsB)
 ```
 
 ``` r
-ATACGenePeakB = mapPeaksToGenes(labelGenesB, ATACMat, peaks, regions)
-labelEdgesB = computeLabelEdges(labelGenesB, ATACMat, ATACGenePeakB)
+ATACGenePeakB <- mapPeaksToGenes(labelGenesB, ATACMat, peaks, regions)
+labelEdgesB <- computeLabelEdges(labelGenesB, ATACMat, ATACGenePeakB)
 ```
 
 Now simply tune edge weights as before with a list of all label edges.
 
 ``` r
-labelEdgesListB = list(labelEdges, labelEdgesB)
-edgeWeightsB = tuneEdgeWeights(cellEdges, 
+labelEdgesListB <- list(labelEdges, labelEdgesB)
+edgeWeightsB <- tuneEdgeWeights(cellEdges, 
                                labelEdgesListB, 
                                labelEdgeOpts = 10^seq(4,7,1),
                                sampleDepth = 1000)
@@ -306,7 +310,7 @@ We can then compute a new cell walk using the list of edges and a vector
 of optimal weights.
 
 ``` r
-cellWalkB = walkCells(cellEdges, 
+cellWalkB <- walkCells(cellEdges, 
                       labelEdgesListB, 
                       labelEdgeWeights = c(1e+04, 1e+06))
 ```
