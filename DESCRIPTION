@@ -28,6 +28,6 @@ Suggests:
     knitr,
     rmarkdown
 Remotes:
-  bioc::3.3/GenomicRanges
+  bioc::release/GenomicRanges
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
