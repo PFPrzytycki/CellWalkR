@@ -33,7 +33,9 @@ set.seed(1)
 ```
 
 First, load scATAC-seq data in the form of a cell-by-peak matrix and load the
-corresponding peaks into a GRanges object. 
+corresponding peaks into a GRanges object. **Please note:** all data needed to
+recreate this vignette locally should already loaded so read commands can be skipped.
+They are included as an example for how new data could be loaded.
 If working with a SnapATAC object, a cell-by-peak matrix should be stored 
 in @pmat.
 
