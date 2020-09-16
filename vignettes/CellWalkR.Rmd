@@ -56,12 +56,13 @@ cellEdges is a cell-by-cell matrix of cell-to-cell similarity. Any matrix of
 cell similarity can be used.
 
 ```{r print_cellEdges}
-head(cellEdges, n=c(5,5))
+cellEdges[1:5,1:5]
 ```
 
 In order to generate label-to-cell edges, we need to define which genomic 
 regions correspond to which genes. These could be promoters, gene bodies, or
-any other definition. In this example we will use full gene bodies. 
+any other definition. In this example we will use full gene bodies. Note 
+that getRegions requires GenomicFeatures and a TxDb object to be installed.
 
 ```{r getRegions, message=FALSE}
 regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
