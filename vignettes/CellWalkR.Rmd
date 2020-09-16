@@ -69,6 +69,8 @@ mapping. However this will require installing packages for genomic annotaions
 (GenomicFeatures and a TxDb object). We'll use the Hg38 in this example.
 
 ```{r installAnnotations, eval=FALSE}
+install.packages("BiocManager")
+BiocManager::install(version = "3.10")
 BiocManager::install("GenomicFeatures")
 BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
 ```
