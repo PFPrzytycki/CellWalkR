@@ -63,8 +63,17 @@ cellEdges[1:5,1:5]
 
 In order to generate label-to-cell edges, we need to define which genomic 
 regions correspond to which genes. These could be promoters, gene bodies, or
-any other definition. In this example we will use full gene bodies. Note 
-that getRegions requires GenomicFeatures and a TxDb object to be installed.
+any other definition. If a specific set of regions associated with genes 
+isn't already known, the getRegions() function can be used to generate a 
+mapping. However this will require installing packages for genomic annotaions 
+(GenomicFeatures and a TxDb object). We'll use the Hg38 in this example.
+
+```{r installAnnotations, eval=FALSE}
+BiocManager::install("GenomicFeatures")
+BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
+```
+
+Now we can generate regions, in this case using full gene bodies. 
 
 ```{r getRegions, message=FALSE}
 regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
@@ -203,8 +212,11 @@ head(cellWalk$cellLabels)
 ```
 
 We can dig further into cell labeling by examining how often labels are confused
-for each other.
-
+for each other. Plotting requires the packages ggplot2 and reshape2. 
+```{r installPlotting, eval=FALSE}
+install.packages("ggplot2")
+install.packages("reshape2")
+```
 ```{r downstream-uncertainty}
 cellWalk <- findUncertainLabels(cellWalk, plot = TRUE)
 ```
