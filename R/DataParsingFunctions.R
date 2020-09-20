@@ -391,8 +391,10 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
 
   l = sum(sapply(labelEdgesList, function(x) dim(x)[2]))
   combinedGraph = combineMultiLabelGraph(labelEdgesList, cellEdges, labelEdgeWeights)
-  selectCells = sample(dim(cellEdges)[1], sampleDepth)+l
-  combinedGraph = combinedGraph[c(1:l,selectCells),c(1:l,selectCells)]
+  if(!sampleDepth == c){
+    selectCells = sample(dim(cellEdges)[1], sampleDepth)+l
+    combinedGraph = combinedGraph[c(1:l,selectCells),c(1:l,selectCells)]
+  }
 
   combinedGraph = combinedGraph[Matrix::colSums(combinedGraph)!=0, Matrix::colSums(combinedGraph)!=0]
   infMat = randomWalk(combinedGraph)
