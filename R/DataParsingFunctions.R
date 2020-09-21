@@ -391,6 +391,12 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
 
   l = sum(sapply(labelEdgesList, function(x) dim(x)[2]))
   combinedGraph = combineMultiLabelGraph(labelEdgesList, cellEdges, labelEdgeWeights)
+
+  if(! is.null(colnames(cellEdges))){
+    colnames(combinedGraph) = c( c(unlist(sapply(labelEdgesList, function(x) colnames(x)))), colnames(cellEdges))
+    rownames(combinedGraph) = c( c(unlist(sapply(labelEdgesList, function(x) colnames(x)))), colnames(cellEdges))
+  }
+
   if(!sampleDepth == c){
     selectCells = sample(dim(cellEdges)[1], sampleDepth)+l
     combinedGraph = combinedGraph[c(1:l,selectCells),c(1:l,selectCells)]
@@ -398,6 +404,12 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
 
   combinedGraph = combinedGraph[Matrix::colSums(combinedGraph)!=0, Matrix::colSums(combinedGraph)!=0]
   infMat = randomWalk(combinedGraph)
+
+  if(! is.null(colnames(cellEdges))){
+    rownames(infMat) = rownames(combinedGraph)
+    colnames(infMat) = colnames(combinedGraph)
+  }
+
   normMat = normalizeInfluence(infMat[-(1:l),(1:l)])
   colnames(normMat) = c(unlist(sapply(labelEdgesList, function(x) colnames(x))))
   if(max(table(colnames(normMat)))>1){
