@@ -170,7 +170,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
     cellTypePeakMap = sapply(labels, function(x) {
       markerGenes = labelGenes[labelGenes[,2]==x,1]
       markerGenes = markerGenes[markerGenes %in% regions$gene_id]
-      markerLocs = regions[match(markerGenes,regions$gene_id)]
+      markerLocs = regions[regions$gene_id %in% markerGenes]
       markerOverlaps = GenomicRanges::findOverlaps(peaks,markerLocs)
       list(peak=markerOverlaps@from,gene=markerGenes[(markerOverlaps@to-1)%%length(markerGenes)+1])
     })
@@ -310,13 +310,13 @@ computeLabelEdges = function(
           stop("Must provide a table with genes of interest in first column and corresponding labels in
                second column and log fold gene expression in the third")
         }
-        geneExp = labelGenes[match(genesInMarkers,labelGenes[,1]),3]
+        geneExp = labelGenes[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1]),3]
       }
       else{
         stop("Not a recognized scaling method")
       }
 
-      geneFilterScale = geneFilter[match(genesInMarkers,labelGenes[,1])]
+      geneFilterScale = geneFilter[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1])]
 
       if(!missing(filters) && sum(!filterGene)>0){
         if(missing(peaks) || !is(peaks,"GRanges")){
@@ -331,14 +331,17 @@ computeLabelEdges = function(
           peakFilterOverlap = countOverlaps(peaks, filterRanges)
           if(filterOut[filterIndex]){
             peaksInMarkers = peaksInMarkers[peakFilterOverlap==0]
+            geneExp = geneExp[peakFilterOverlap==0]
+            geneFilterScale = geneFilterScale[peakFilterOverlap==0]
           }
           else{
             peaksInMarkers = peaksInMarkers[peakFilterOverlap>0]
+            geneExp = geneExp[peakFilterOverlap>0]
+            geneFilterScale = geneFilterScale[peakFilterOverlap>0]
           }
         }
       }
-
-      cellsInLabelMarkers = Matrix::rowSums(ATACMat[,peaksInMarkers]*geneExp*geneFilterScale)/cellPeakCounts
+      cellsInLabelMarkers = Matrix::colSums(Matrix::t(ATACMat[,peaksInMarkers])*geneExp*geneFilterScale)/cellPeakCounts
       cellsInLabelMarkers[cellsInLabelMarkers<0] = 0
       cellsInMarkers = cbind(cellsInMarkers,cellsInLabelMarkers)
     }
