@@ -114,11 +114,11 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
 
 #' Compute Jaccard on sprase matrix
 #'
-#' \code{sparseJaccard()} computes the Jaccard similarity between the columns
+#' \code{sparseJaccard()} computes the Jaccard similarity between the rows
 #' of a sparse matrix.
 #'
 #' @param m sparse matrix
-#' @return Jaccard similarity matrix between columns of m
+#' @return Jaccard similarity matrix between rows of m
 #' @export
 sparseJaccard = function(m) {
   A = Matrix::tcrossprod(m)

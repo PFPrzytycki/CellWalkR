@@ -170,7 +170,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
     cellTypePeakMap = sapply(labels, function(x) {
       markerGenes = labelGenes[labelGenes[,2]==x,1]
       markerGenes = markerGenes[markerGenes %in% regions$gene_id]
-      markerLocs = regions[regions$gene_id %in% markerGenes]
+      markerLocs = regions[match(markerGenes, regions$gene_id)]
       markerOverlaps = GenomicRanges::findOverlaps(peaks,markerLocs)
       list(peak=markerOverlaps@from,gene=markerGenes[(markerOverlaps@to-1)%%length(markerGenes)+1])
     })
