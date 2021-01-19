@@ -14,14 +14,15 @@ computeLabelEdges(
   filterOut,
   filterGene,
   regions,
-  peaks
+  peaks,
+  whichMat = "bmat"
 )
 }
 \arguments{
 \item{labelGenes}{data.frame with genes of interest in first column and corresponding
 labels in second column, optionally log-fold change in expression values in the third}
 
-\item{ATACMat}{either a cell-by-peak matrix or a SnapATAC object}
+\item{ATACMat}{either a cell-by-peak matrix, a SnapATAC object, or an ArchR project}
 
 \item{ATACGenePeak}{per label mapping of peaks to genes returned by mapPeaksToGenes()}
 
@@ -38,6 +39,8 @@ labels in second column, optionally log-fold change in expression values in the 
 \item{regions}{regions map peaks to genes}
 
 \item{peaks}{GRanges of peaks in ATACMat}
+
+\item{whichMat}{string determing whether to use "bmat" or "gmat" from snap object or "TileMatrix" or "GeneScoreMatrix" from ArchR project}
 }
 \value{
 matrix of weights from each label to each cell

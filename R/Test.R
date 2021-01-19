@@ -66,3 +66,36 @@
 # turn plotting into function?
 # make code work with a gmat (should be its own section later)
 # section headings: Using cell-by-gene matrices
+
+# Working with SnapATAC:
+# snapData = readRDS("../../Data/CellWalkRSampleData/SampleSnap.rds")
+# cellEdges = computeCellSim(snapData, method="Jaccard")
+# regions = getRegions()
+# labelGenes = data.table::fread("../../Data/CellWalkRSampleData/SampleMarkers1.txt")
+# ATACGenePeak = mapSnapATACToGenes(labelGenes, snapData, "bmat", regions)
+# labelEdges = computeLabelEdges(labelGenes, snapData, ATACGenePeak)
+# labelEdgesList = list(labelEdges)
+# edgeWeights = tuneEdgeWeights(cellEdges, labelEdgesList, labelEdgeOpts=10^seq(-2,7,1),sampleDepth=1000)
+# cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights = 1e+07)
+# plotCells(cellWalk, seed = 1)
+
+# inputFiles <- getTutorialData("Hematopoiesis")
+# addArchRGenome("hg19")
+# ArrowFiles <- createArrowFiles(
+# inputFiles = inputFiles,
+# sampleNames = names(inputFiles),
+# filterTSS = 4, #Dont set this too high because you can always increase later
+# filterFrags = 1000,
+# addTileMat = TRUE,
+# addGeneScoreMat = TRUE
+# )
+# proj <- ArchRProject(
+# ArrowFiles = ArrowFiles,
+# outputDirectory = "HemeTutorial",
+# copyArrows = TRUE #This is recommened so that you maintain an unaltered copy for later usage.
+# )
+# cellEdges = computeCellSim(proj, method="Jaccard")
+# ATACGenePeak = mapArchRToGenes(labelGenes, proj, "TileMatrix", regions)
+# labelEdges = computeLabelEdges(labelGenes, proj, ATACGenePeak)
+# labelEdgesList = list(labelEdges)
+# cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights = 1e+07)

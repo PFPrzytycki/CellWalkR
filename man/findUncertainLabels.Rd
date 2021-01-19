@@ -8,6 +8,7 @@ findUncertainLabels(
   cellWalk,
   cellTypes,
   threshold = 0.1,
+  labelThreshold,
   plot = FALSE,
   normalize = FALSE
 )
@@ -18,6 +19,8 @@ findUncertainLabels(
 \item{cellTypes}{character, vector of labels to use, all labels used by default}
 
 \item{threshold}{numeric, quantile threshold for uncertain label}
+
+\item{labelThreshold}{numeric, set a threshold below which cells aren't labeled (e.g. 0)}
 
 \item{plot}{boolean, plot output matrix}
 

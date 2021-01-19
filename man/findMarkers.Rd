@@ -4,7 +4,14 @@
 \alias{findMarkers}
 \title{Find markers in scRNA-seq data}
 \usage{
-findMarkers(RNAMat, genes, barcodes, dims = 1:10, resolution = 0.5)
+findMarkers(
+  RNAMat,
+  genes,
+  barcodes,
+  dims = 1:10,
+  resolution = 0.5,
+  only.pos = FALSE
+)
 }
 \arguments{
 \item{RNAMat}{gene-by-barcode matrix of scRNA data}
@@ -16,6 +23,8 @@ findMarkers(RNAMat, genes, barcodes, dims = 1:10, resolution = 0.5)
 \item{dims}{integer vector of PCA dimensions to use}
 
 \item{resolution}{numeric resolution to use in Louvain clustering}
+
+\item{only.pos}{only return positive markers}
 }
 \value{
 table of marker genes, labels, and logFC in expression

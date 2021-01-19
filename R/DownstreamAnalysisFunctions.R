@@ -44,13 +44,14 @@ clusterLabels = function(cellWalk, cellTypes, distMethod="euclidean", plot=FALSE
 #' counts of cells for each label (default FALSE)
 #'
 #' @param cellWalk a cellWalk object
-#' @param threshold numeric, quantile threshold for uncertain label
 #' @param cellTypes character, vector of labels to use, all labels used by default
+#' @param threshold numeric, quantile threshold for uncertain label
+#' @param labelThreshold numeric, set a threshold below which cells aren't labeled (e.g. 0)
 #' @param plot boolean, plot output matrix
 #' @param normalize boolean, normalize plot scale
 #' @return cellWalk object with label uncertainty matrix (l-by-l) stored in "uncertaintyMatrix"
 #' @export
-findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, plot=FALSE, normalize=FALSE){
+findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold, plot=FALSE, normalize=FALSE){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -65,8 +66,13 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, plot=FALSE, no
   }
   cellTypes = cellTypes[cellTypes %in% colnames(normMat)]
   normMat = normMat[,match(cellTypes, colnames(normMat))]
-
   cellLabels = cellWalk[["cellLabels"]]
+
+  if(!missing(labelThreshold)){
+    cellLabels = cellLabels[apply(normMat, 1, max)>labelThreshold]
+    normMat = normMat[apply(normMat, 1, max)>labelThreshold,]
+  }
+
   #difference between top two label scores
   uncertaintyScore = apply(normMat, 1, function(x) sort(x, decreasing = TRUE)[1]-sort(x, decreasing = TRUE)[2])
   uncertaintyTypes = apply(normMat, 1, function(x) c(cellTypes[order(x, decreasing = TRUE)][1], cellTypes[order(x, decreasing = TRUE)][2]))
@@ -108,6 +114,75 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, plot=FALSE, no
   cellWalk
 
 }
+
+#' Plot Cells
+#'
+#' \code{plotCells()} generates a tSNE plot based on cell-to-cell influence
+#'
+#' @param cellWalk a cellWalk object
+#' @param cellTypes character, optional vector of labels to use, all labels used by default. Most likely label among those listed
+#'  will be used. If only a single label is provided, all cells will be colored by their score for that label. If two labels are
+#'  given, the difference in score for each cell is shown.
+#' @param labelThreshold numeric, set a threshold below which cells aren't labeled (e.g. 0)
+#' @param initial_dims numeric, number of PCA dims to use for tSNE
+#' @param perplexity numeric, perplexity parameter for tSNE
+#' @param seed numeric, random seed
+#' @return cellWalk object with label clustering stored in "cluster"
+#' @export
+plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, perplexity = 50, seed){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+
+  if(!missing(seed)){
+    set.seed(seed)
+  }
+
+  numLabels = dim(cellWalk[["normMat"]])[2]
+  cellCellInf = cellWalk[["infMat"]][-(1:numLabels),-(1:numLabels)]
+
+  if(!requireNamespace("Rtsne", quietly = TRUE)){
+    stop("Must install Rtsne")
+  }
+
+  celltSNE = Rtsne::Rtsne(cellCellInf, initial_dims = initial_dims, perplexity = perplexity)
+
+  plotColor = cellWalk$cellLabels
+  if(!missing(labelThreshold)){
+    plotColor[apply(cellWalk[["normMat"]], 1, max)<=labelThreshold] = "Other"
+  }
+  labelText = "Label"
+  if(!missing(cellTypes)){
+    cellTypes = cellTypes[cellTypes %in% colnames(cellWalk[["normMat"]])]
+    if(length(cellTypes)==0){
+      stop("No labels match cell types")
+    }
+    else if(length(cellTypes)==1){
+      plotColor = cellWalk[["normMat"]][,cellTypes]
+      labelText = paste(cellTypes,"Score")
+    }
+    else if(length(cellTypes)==2){
+      plotColor = cellWalk[["normMat"]][,cellTypes[1]]-cellWalk[["normMat"]][,cellTypes[2]]
+      labelText = paste0(cellTypes[1]," vs\n",cellTypes[2]," Score")
+    }
+    else{
+      normMatTrim = cellWalk[["normMat"]][,cellTypes]
+      plotColor = apply(normMatTrim, 1, function(x) cellTypes[order(x, decreasing = TRUE)][1])
+      if(!missing(labelThreshold)){
+        plotColor[apply(normMatTrim, 1, max)<=labelThreshold] = "Other"
+      }
+    }
+  }
+
+  print(ggplot2::ggplot() +
+          ggplot2::geom_point(ggplot2::aes(celltSNE$Y[,1],celltSNE$Y[,2], color=plotColor), size = 1) +
+          ggplot2::xlab("tSNE_1")+
+          ggplot2::ylab("tSNE_2")+
+          ggplot2::ylab("tSNE_2")+
+          ggplot2::labs(color=labelText)+
+          ggplot2::theme_classic())
+}
+
 
 #' Label bulk data
 #'

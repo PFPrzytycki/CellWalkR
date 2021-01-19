@@ -3,7 +3,7 @@
 #' \code{computeCellSim} computes a cell-to-cell similarity matrix using the given method.
 #' Currently only Jaccard similarity is implemented.
 #'
-#' @param ATACMat either a cell-by-peak matrix or a SnapATAC object
+#' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, or a ArchR project
 #' @param method method used to compute cell similarity
 #' @return matrix of cell-to-cell similarity
 #' @export
@@ -19,9 +19,22 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     if(!requireNamespace("SnapATAC", quietly = TRUE)){
       stop("Must install SnapATAC")
     }
+    if(dim(ATACMat@bmat)[1]==0){
+      stop("No bmat")
+    }
     ATACMat = SnapATAC::makeBinary(ATACMat, mat="bmat")
-    ATACMat = SnapATAC::runJaccard(obj=ATACMat, mat="bmat", tmp.folder=tempdir(), max.var = dim(ATACMat)[1])
-    ATACMat@jmat@jmat
+    sparseJaccard(ATACMat@bmat)
+  }
+  else if(is(ATACMat,"ArchRProject")){
+    if(!requireNamespace("ArchR", quietly = TRUE)){
+      stop("Must install ArchR")
+    }
+    if(!"TileMatrix" %in% ArchR::getAvailableMatrices(ATACMat)){
+      stop("TileMatrix missing from ArchR project")
+    }
+    ATACData = ArchR::getMatrixFromProject(ATACMat, "TileMatrix", verbose=FALSE, binarize = TRUE)
+    ATACMat = Matrix::t(assay(ATACData))
+    sparseJaccard(ATACMat)
   }
   else if(is(ATACMat,"Matrix")|is(ATACMat,"matrix")){
     if(min(dim(ATACMat))==0){
@@ -33,7 +46,7 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     sparseJaccard(ATACMat>0)
   }
   else{
-    stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
+    stop("Must provide either a cell-by-peak matrix, SnapATAC object, or ArchR project")
   }
 }
 
@@ -178,6 +191,119 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
 
 }
 
+
+#' Map peaks to genes
+#'
+#' \code{mapSnapATACToGenes} Generates a mapping from genes to peaks per label
+#'
+#' @param labelGenes data.frame with genes of interest in first column and corresponding
+#' labels in second column
+#' @param snap a snap object
+#' @param whichMat string determing whether to use "bmat" or "gmat" from snap object
+#' @param regions GRanges object of genomic regions associated with genes (only needed for "bmat")
+#' @return list of genes and corresponding peaks by label
+#' @export
+mapSnapATACToGenes = function(labelGenes, snap, whichMat = "bmat", regions){
+  if(missing(snap)){
+    stop("Must provide a SnapATAC object")
+  }
+  if(!is(snap,"snap")){
+    stop("Must provide a SnapATAC object")
+  }
+  if(!requireNamespace("SnapATAC", quietly = TRUE)){
+    stop("Must install SnapATAC")
+  }
+  if(whichMat=="bmat"){
+    mapPeaksToGenes(labelGenes, ATACMat = snap@bmat, peaks=snap@feature, regions)
+  }
+  else if(whichMat=="gmat"){
+    whichGenes = match(unique(labelGenes[,1]),colnames(snap@gmat))
+    if(length(which(!is.na(whichGenes)))<10){
+      warning("Fewer than 10 gene names match")
+    }
+    sapply(unique(labelGenes$cluster), function(c)
+      list(peak=match(labelGenes$gene[labelGenes$cluster==c],colnames(snap@gmat)),
+           gene=labelGenes$gene[labelGenes$cluster==c]))
+  }
+  else{
+    stop("Must use bmat or gmat")
+  }
+}
+
+#' Map peaks to genes
+#'
+#' \code{mapArchRToGenes} Generates a mapping from genes to peaks per label
+#'
+#' @param labelGenes data.frame with genes of interest in first column and corresponding
+#' labels in second column
+#' @param ArchRproj an ArchR project
+#' @param whichMat string determing whether to use "TileMatrix" or "GeneScoreMatrix" from ArchR project
+#' @param regions GRanges object of genomic regions associated with genes (only needed for "TileMatrix")
+#' @return list of genes and corresponding peaks by label
+#' @export
+mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regions){
+  if(missing(ArchRproj)){
+    stop("Must provide an ArchR project")
+  }
+  if(!is(ArchRproj,"ArchRProject")){
+    stop("Must provide an ArchR project")
+  }
+  if(!requireNamespace("ArchR", quietly = TRUE)){
+    stop("Must install ArchR")
+  }
+  if(whichMat=="TileMatrix"){
+    if(!"TileMatrix" %in% ArchR::getAvailableMatrices(ArchRproj)){
+      stop("TileMatrix missing from ArchR project")
+    }
+    ATACData = ArchR::getMatrixFromProject(ArchRproj, "TileMatrix", verbose=FALSE, binarize = TRUE)
+    peaks = GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
+    ATACMat = Matrix::t(assay(ATACData))
+    mapPeaksToGenes(labelGenes, ATACMat = ATACMat, peaks=peaks, regions)
+  }
+  else if(whichMat=="GeneScoreMatrix"){
+    if(!"GeneScoreMatrix" %in% ArchR::getAvailableMatrices(ArchRproj)){
+      stop("GeneScoreMatrix missing from ArchR project")
+    }
+    ATACData = ArchR::getMatrixFromProject(ArchRproj, "GeneScoreMatrix", verbose=FALSE)
+    whichGenes = match(unique(labelGenes[,1]),rowData(ATACData)$name)
+    if(length(which(!is.na(whichGenes)))<10){
+      warning("Fewer than 10 gene names match")
+    }
+    sapply(unique(labelGenes$cluster), function(c)
+      list(peak=match(labelGenes$gene[labelGenes$cluster==c],rowData(ATACData)$name),
+           gene=labelGenes$gene[labelGenes$cluster==c]))
+  }
+  else{
+    stop("Must use TileMatrix or GeneScoreMatrix")
+  }
+}
+
+#' Map peaks to genes
+#'
+#' \code{mapCiceroToGenes} Generates a mapping from genes to peaks per label
+#'
+#' @param labelGenes data.frame with genes of interest in first column and corresponding
+#' labels in second column
+#' @param cicero_gene_activities gene activity matrix
+#' @return list of genes and corresponding peaks by label
+#' @export
+mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
+  if(missing(cicero_gene_activities)){
+    stop("Must provide a gene activity matrix")
+  }
+  if(!is(cicero_gene_activities,"Matrix")){
+    stop("Must provide a gene activity matrix")
+  }
+  whichGenes = match(unique(labelGenes[,1]),rownames(cicero_gene_activities))
+  if(length(which(!is.na(whichGenes)))<10){
+    warning("Fewer than 10 gene names match")
+  }
+  sapply(unique(labelGenes$cluster), function(c)
+    list(peak=match(labelGenes$gene[labelGenes$cluster==c],rownames(cicero_gene_activities)),
+         gene=labelGenes$gene[labelGenes$cluster==c]))
+}
+
+
 #' Compute Label Edges
 #'
 #' \code{computeLabelEdges} generates a matrix of edges from each label to each cell.
@@ -189,7 +315,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
 #'
 #' @param labelGenes data.frame with genes of interest in first column and corresponding
 #' labels in second column, optionally log-fold change in expression values in the third
-#' @param ATACMat either a cell-by-peak matrix or a SnapATAC object
+#' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, or an ArchR project
 #' @param ATACGenePeak per label mapping of peaks to genes returned by mapPeaksToGenes()
 #' @param method scaling method, either "Expression","Correlation", or "None"
 #' @param filters list of GRanges lists for locations that pass filters
@@ -198,6 +324,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
 #' @param filterGene boolean for each filter of whether it applies to genes as a whole or just overlapping peaks (note that weights do not apply to peaks)
 #' @param regions regions map peaks to genes
 #' @param peaks GRanges of peaks in ATACMat
+#' @param whichMat string determing whether to use "bmat" or "gmat" from snap object or "TileMatrix" or "GeneScoreMatrix" from ArchR project
 #' @return matrix of weights from each label to each cell
 #' @export
 computeLabelEdges = function(
@@ -210,7 +337,8 @@ computeLabelEdges = function(
   filterOut,
   filterGene,
   regions,
-  peaks){
+  peaks,
+  whichMat="bmat"){
   if(missing(labelGenes)){
     stop("Must provide a table with genes of interest in first column and corresponding labels in second column")
   }
@@ -223,14 +351,37 @@ computeLabelEdges = function(
   }
 
   if(missing(ATACMat)){
-    stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
-  }
-  if(is(ATACMat,"snap")){
-    stop("Not yet implemented")
+    stop("Must provide either a cell-by-peak matrix, a SnapATAC object, or an ArchR project")
   }
   else{
+    if(is(ATACMat,"snap")){
+      if(whichMat == "bmat"){
+        peaks = ATACMat@feature
+        ATACMat = ATACMat@bmat
+      }
+      else if(whichMat == "gmat"){
+        ATACMat = ATACMat@gmat
+      }
+      else{
+        stop("Must use bmat or gmat")
+      }
+    }
+    if(is(ATACMat,"ArchRProject")){
+      if(whichMat == "TileMatrix"){
+        ATACData = ArchR::getMatrixFromProject(ATACMat, "TileMatrix", verbose=FALSE, binarize = TRUE)
+        peaks = GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
+        ATACMat = Matrix::t(assay(ATACData))
+      }
+      else if(whichMat == "GeneScoreMatrix"){
+        ATACData = ArchR::getMatrixFromProject(ATACMat, "GeneScoreMatrix", verbose=FALSE)
+        ATACMat = Matrix::t(assay(ATACData))
+      }
+      else{
+        stop("Must use TileMatrix or GeneScoreMatrix")
+      }
+    }
     if(!is(ATACMat,"Matrix") & !is(ATACMat,"matrix")){
-      stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
+      stop("Must provide either a cell-by-peak matrix")
     }
     if(min(dim(ATACMat))==0){
       stop("Not enough cells or peaks in matrix")
@@ -737,9 +888,10 @@ tuneFilterWeights = function(
 #' @param barcodes character vector of barcodes
 #' @param dims integer vector of PCA dimensions to use
 #' @param resolution numeric resolution to use in Louvain clustering
+#' @param only.pos only return positive markers
 #' @return table of marker genes, labels, and logFC in expression
 #' @export
-findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5){
+findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.pos = FALSE){
   if(!requireNamespace("Seurat", quietly = TRUE)){
     stop("Must install Seurat")
   }
@@ -761,8 +913,8 @@ findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5){
   RNASeurat = Seurat::RunPCA(RNASeurat)
   RNASeurat = Seurat::FindNeighbors(RNASeurat, dims = dims)
   RNASeurat = Seurat::FindClusters(RNASeurat, resolution = resolution)
-  RNASeuratMarkers = Seurat::FindAllMarkers(RNASeurat)
+  RNASeuratMarkers = Seurat::FindAllMarkers(RNASeurat, only.pos = only.pos)
   data.frame(gene=RNASeuratMarkers$gene,
-             cluster=RNASeuratMarkers$cluster,
+             cluster=as.character(RNASeuratMarkers$cluster),
              logFC=RNASeuratMarkers$avg_logFC)
 }

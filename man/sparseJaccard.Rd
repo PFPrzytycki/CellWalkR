@@ -10,9 +10,9 @@ sparseJaccard(m)
 \item{m}{sparse matrix}
 }
 \value{
-Jaccard similarity matrix between columns of m
+Jaccard similarity matrix between rows of m
 }
 \description{
-\code{sparseJaccard()} computes the Jaccard similarity between the columns
+\code{sparseJaccard()} computes the Jaccard similarity between the rows
 of a sparse matrix.
 }
