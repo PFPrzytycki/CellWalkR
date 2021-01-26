@@ -7,7 +7,7 @@
 computeCellSim(ATACMat, method = "Jaccard")
 }
 \arguments{
-\item{ATACMat}{either a cell-by-peak matrix, a SnapATAC object, or a ArchR project}
+\item{ATACMat}{either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table}
 
 \item{method}{method used to compute cell similarity}
 }

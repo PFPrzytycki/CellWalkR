@@ -19,7 +19,8 @@ knitr::opts_chunk$set(
 ## Getting Started
 
 CellWalkR is an R package implementing the CellWalker method for combining 
-scATAC-seq data with labels and other epigenetic data. This vignette shows
+scATAC-seq data with labels and other epigenetic data (see [paper](https://www.biorxiv.org/content/10.1101/847657v2) for details). 
+This vignette shows
 an example of running CellWalkR on a small set of scATAC-seq data to generate
 a cellWalk object which can then be used to assign labels to cells as well as 
 cell-type specific labels to bulk data.
@@ -33,11 +34,9 @@ set.seed(1)
 ```
 
 First, load scATAC-seq data in the form of a cell-by-peak matrix and load the
-corresponding peaks into a GRanges object. **Please note:** all data needed to
-recreate this vignette locally should already loaded so read commands can be skipped.
-They are included as an example for how new data could be loaded.
-If working with a SnapATAC object, a cell-by-peak matrix should be stored 
-in @pmat.
+corresponding peaks into a GRanges object. CellWalkR can also take SnapATAC, 
+ArchR, or Cicero data as input. See additional vignette for how to load
+these data types.
 
 ```{r loadATACMat, eval=FALSE}
 pathToMat <- system.file("extdata", "SamplePeakMat.mtx", package = "CellWalkR")
@@ -48,7 +47,6 @@ peaks <- as(data.table::fread(pathToPeaks, header = FALSE)$V1, "GRanges")
 
 Next, we compute cell-to-cell similarity in order to build edges in the
 cell-to-cell portion of the graph. 
-If working with a SnapATAC object, Jaccard similarity is stored in @jmat.
 
 ```{r cellEdges, message=FALSE}
 cellEdges <- computeCellSim(ATACMat, method="Jaccard")
@@ -81,15 +79,15 @@ Now we can generate regions, in this case using full gene bodies.
 regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
 ```
 
-regions is a GRanges object with a gene_id field. This gene_id field needs to
-match the genes (or other identifiers) in the labeling data.
+regions is a GRanges object with a gene_id field. **This gene_id field needs to
+match the genes (or other identifiers) in the labeling data**.
 
 ```{r print_getRegions}
 head(regions)
 ```
 
 Now we can load our first set of labeling data. If no labeling data is 
-available, can run findMarkers() on a set of scRNA-seq data. 
+available, findMarkers() can be run on a set of scRNA-seq data. 
 
 ```{r labelGenes, eval=FALSE}
 pathToLabels <- system.file("extdata", "SampleMarkers1.txt", package = "CellWalkR")
@@ -107,12 +105,14 @@ head(labelGenes)
 
 We then need to map between this data and the peaks in the scATAC-seq data.
 
+#' @param whichMat string determing whether to use "bmat" or "gmat" from snap object or "TileMatrix" or "GeneScoreMatrix" from ArchR project
+
 ```{r mapPeaksToGenes}
 ATACGenePeak <- mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
 ```
 
 With this mapping we can compute label-to-cell edges, a matrix where the number
-of rows is the number of labels and the number of columns is the number of 
+of columns is the number of labels and the number of rows is the number of 
 cells.
 
 ```{r computeLabelEdges}
@@ -204,8 +204,9 @@ cellWalk <- walkCells(cellEdges,
 ## Downstream Analysis
 
 Once we have created a cellWalk object, we can use it for downstream analysis.
+
 Most directly, we can look at what labels are the most strongly linked to 
-each cell. This is based on the amount of label-to-cell influence in the
+each cell. This is based on the maxiumum amount of label-to-cell influence in the
 cell walk. Cell labeling can be used for numerous further downstream analyses 
 such as cell-type specific peak calling.
 
@@ -213,21 +214,54 @@ such as cell-type specific peak calling.
 head(cellWalk$cellLabels)
 ```
 
-We can dig further into cell labeling by examining how often labels are confused
-for each other. Plotting requires the packages ggplot2 and reshape2. 
+However, in actuality, labels are "fuzzy" meaning each cell actually has a distribution
+of scores from each label. Thanks to this, we can examine how often labels are confused
+for each other. The label threshold determines the minimum influence score a cell must 
+get to be considered labeled. Plotting requires the packages ggplot2 and reshape2.
+
 ```{r installPlotting, eval=FALSE}
 install.packages("ggplot2")
 install.packages("reshape2")
 ```
 ```{r downstream-uncertainty}
-cellWalk <- findUncertainLabels(cellWalk, plot = TRUE)
+cellWalk <- findUncertainLabels(cellWalk, labelThreshold = 0, plot = TRUE)
 ```
 
 We can also directly examine label similarity by considering label-to-label 
 influence.
 
 ```{r downstream-labelLabels}
-cellWalk <- clusterLabels(cellWalk, plot = TRUE)
+cellWalk <- clusterLabels(cellWalk,  plot = TRUE)
+```
+
+Two-dimensional embeddings of cells can be a very helpful tool for understanding 
+cell diversity. We can directly embed cell-to-cell influence scores. Importantly, 
+this portion of the influence matrix is not used in establishing the labeling of
+cells. Thus this can serve as distinct way to explore how labels were distributed
+accross cells. Because of this, unlike with most scATAC-seq analysis pipelines,
+clusters observed in this embedding may not directly correspond to labels. This 
+can help understand cell diversity, as well as assist in identifying rare cell types.
+In addition to ggplot2, embedding also requires the package Rtsne.
+
+```{r installTSNE, eval=FALSE}
+install.packages("Rtsne")
+```
+```{r downstream-plotCellsLabels}
+plotCells(cellWalk, labelThreshold = 0, seed = 1)
+```
+
+It is also possible to plot how strongly a single label influences each cell in the
+embedding.
+
+```{r downstream-plotCellsInf}
+plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
+```
+
+Furthermore, to analyze rare cell types, it can be helpful to only plot a subset of 
+of all labels.
+
+```{r downstream-plotCellsRare}
+plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
 ```
 
 A very powerful use for the cell walk is mapping data to labels via 
@@ -282,6 +316,4 @@ cellWalkB <- walkCells(cellEdges,
                       labelEdgesListB, 
                       labelEdgeWeights = c(1e+04, 1e+06))
 ```
-
-
 

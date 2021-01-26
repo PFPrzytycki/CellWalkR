@@ -3,7 +3,7 @@
 #' \code{computeCellSim} computes a cell-to-cell similarity matrix using the given method.
 #' Currently only Jaccard similarity is implemented.
 #'
-#' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, or a ArchR project
+#' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table
 #' @param method method used to compute cell similarity
 #' @return matrix of cell-to-cell similarity
 #' @export
@@ -45,8 +45,18 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     }
     sparseJaccard(ATACMat>0)
   }
+  else if(is(ATACMat, "data.frame")){
+    peaks = unique(ATACMat[,1])
+    cells = unique(ATACMat[,2])
+    rowIndex = match(ATACMat[,2], cells)
+    colIndex = match(ATACMat[,1], peaks)
+    ATACMat = sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
+    simMat = sparseJaccard(ATACMat>0)
+    dimnames(simMat) = list(cells,cells)
+    simMat
+  }
   else{
-    stop("Must provide either a cell-by-peak matrix, SnapATAC object, or ArchR project")
+    stop("Must provide either a cell-by-peak matrix, SnapATAC object, ArchR project, or Cicero count table")
   }
 }
 
@@ -302,7 +312,6 @@ mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
     list(peak=match(labelGenes$gene[labelGenes$cluster==c],rownames(cicero_gene_activities)),
          gene=labelGenes$gene[labelGenes$cluster==c]))
 }
-
 
 #' Compute Label Edges
 #'

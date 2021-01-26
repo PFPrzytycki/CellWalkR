@@ -1,18 +1,18 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2020-09-16
+2021-01-26
 
 Getting Started
 ---------------
 
-CellWalkR is an R package implementing the CellWalker method for combining scATAC-seq data with labels and other epigenetic data. This vignette shows an example of running CellWalkR on a small set of scATAC-seq data to generate a cellWalk object which can then be used to assign labels to cells as well as cell-type specific labels to bulk data.
+CellWalkR is an R package implementing the CellWalker method for combining scATAC-seq data with labels and other epigenetic data (see [paper](https://www.biorxiv.org/content/10.1101/847657v2) for details). This vignette shows an example of running CellWalkR on a small set of scATAC-seq data to generate a cellWalk object which can then be used to assign labels to cells as well as cell-type specific labels to bulk data.
 
 ``` r
 library(CellWalkR)
 ```
 
-First, load scATAC-seq data in the form of a cell-by-peak matrix and load the corresponding peaks into a GRanges object. **Please note:** all data needed to recreate this vignette locally should already loaded so read commands can be skipped. They are included as an example for how new data could be loaded. If working with a SnapATAC object, a cell-by-peak matrix should be stored in @pmat.
+First, load scATAC-seq data in the form of a cell-by-peak matrix and load the corresponding peaks into a GRanges object. CellWalkR can also take SnapATAC, ArchR, or Cicero data as input. See [additional vignette](Other_Data_Vignette.md) for how to load these data types.
 
 ``` r
 pathToMat <- system.file("extdata", "SamplePeakMat.mtx", package = "CellWalkR")
@@ -21,7 +21,7 @@ pathToPeaks <- system.file("extdata", "SamplePeaks.txt", package = "CellWalkR")
 peaks <- as(data.table::fread(pathToPeaks, header = FALSE)$V1, "GRanges")
 ```
 
-Next, we compute cell-to-cell similarity in order to build edges in the cell-to-cell portion of the graph. If working with a SnapATAC object, Jaccard similarity is stored in @jmat.
+Next, we compute cell-to-cell similarity in order to build edges in the cell-to-cell portion of the graph.
 
 ``` r
 cellEdges <- computeCellSim(ATACMat, method="Jaccard")
@@ -43,6 +43,8 @@ cellEdges[1:5,1:5]
 In order to generate label-to-cell edges, we need to define which genomic regions correspond to which genes. These could be promoters, gene bodies, or any other definition. If a specific set of regions associated with genes isn't already known, the getRegions() function can be used to generate a mapping. However this will require installing packages for genomic annotaions (GenomicFeatures and a TxDb object). We'll use the Hg38 in this example.
 
 ``` r
+install.packages("BiocManager")
+BiocManager::install(version = "3.10")
 BiocManager::install("GenomicFeatures")
 BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
 ```
@@ -53,7 +55,7 @@ Now we can generate regions, in this case using full gene bodies.
 regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")
 ```
 
-regions is a GRanges object with a gene\_id field. This gene\_id field needs to match the genes (or other identifiers) in the labeling data.
+regions is a GRanges object with a gene\_id field. **This gene\_id field needs to match the genes (or other identifiers) in the labeling data**.
 
 ``` r
 head(regions)
@@ -70,7 +72,7 @@ head(regions)
 #>   seqinfo: 595 sequences (1 circular) from hg38 genome
 ```
 
-Now we can load our first set of labeling data. If no labeling data is available, can run findMarkers() on a set of scRNA-seq data.
+Now we can load our first set of labeling data. If no labeling data is available, findMarkers() can be run on a set of scRNA-seq data.
 
 ``` r
 pathToLabels <- system.file("extdata", "SampleMarkers1.txt", package = "CellWalkR")
@@ -96,18 +98,18 @@ We then need to map between this data and the peaks in the scATAC-seq data.
 ATACGenePeak <- mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
 ```
 
-With this mapping we can compute label-to-cell edges, a matrix where the number of rows is the number of labels and the number of columns is the number of cells.
+With this mapping we can compute label-to-cell edges, a matrix where the number of columns is the number of labels and the number of rows is the number of cells.
 
 ``` r
 labelEdges <- computeLabelEdges(labelGenes, ATACMat, ATACGenePeak)
 head(labelEdges)
-#>      RG-early        oRG         tRG vRG     RG-div1    RG-div2
-#> [1,]        0 0.02591189 0.025962569   0 0.040257391 0.01894717
-#> [2,]        0 0.01897995 0.017158561   0 0.022360435 0.02047899
-#> [3,]        0 0.02585844 0.015839112   0 0.019537577 0.02276763
-#> [4,]        0 0.01583931 0.003441275   0 0.002901203 0.01882845
-#> [5,]        0 0.01466549 0.020814822   0 0.019853461 0.03259348
-#> [6,]        0 0.02243765 0.011575348   0 0.006914287 0.01302038
+#>      RG-early         oRG tRG vRG     RG-div1     RG-div2
+#> [1,]        0 0.000000000   0   0 0.000000000 0.000000000
+#> [2,]        0 0.003770718   0   0 0.004350677 0.003566537
+#> [3,]        0 0.004645493   0   0 0.009579770 0.000000000
+#> [4,]        0 0.011335104   0   0 0.008159736 0.000000000
+#> [5,]        0 0.008066843   0   0 0.005934669 0.000000000
+#> [6,]        0 0.000000000   0   0 0.015706707 0.000000000
 ```
 
 Tuning Label Edges
@@ -128,12 +130,12 @@ We can see which parameter had the highest cell homogeneity:
 ``` r
 head(edgeWeights[order(edgeWeights$cellHomogeneity, decreasing = TRUE),])
 #>    Var1 cellHomogeneity
-#> 7 1e+07      0.08080729
-#> 6 1e+06      0.05416757
-#> 5 1e+05      0.05411512
-#> 4 1e+04      0.04437068
-#> 3 1e+03     -0.01519351
-#> 2 1e+02     -0.23014493
+#> 7 1e+07       1.3175235
+#> 6 1e+06       1.2950706
+#> 5 1e+05       1.2623739
+#> 4 1e+04       0.6141855
+#> 3 1e+03       0.1590979
+#> 2 1e+02      -0.1880981
 ```
 
 And can generate a cellWalk object with this parameter. This object stores the final influence matrix and can be used for downstream analysis.
@@ -171,8 +173,8 @@ filterWeights <- tuneFilterWeights(cellEdges,
                                   sampleDepth = 1000)
 filterWeights
 #>   Var1 cellHomogeneity
-#> 1    0      0.06987248
-#> 2    1      0.08754723
+#> 1    0        1.313830
+#> 2    1        1.314423
 ```
 
 We see that adding this filter improves performance. We can make a new cellWalk object using this filter:
@@ -195,14 +197,16 @@ cellWalk <- walkCells(cellEdges,
 Downstream Analysis
 -------------------
 
-Once we have created a cellWalk object, we can use it for downstream analysis. Most directly, we can look at what labels are the most strongly linked to each cell. This is based on the amount of label-to-cell influence in the cell walk. Cell labeling can be used for numerous further downstream analyses such as cell-type specific peak calling.
+Once we have created a cellWalk object, we can use it for downstream analysis.
+
+Most directly, we can look at what labels are the most strongly linked to each cell. This is based on the maxiumum amount of label-to-cell influence in the cell walk. Cell labeling can be used for numerous further downstream analyses such as cell-type specific peak calling.
 
 ``` r
 head(cellWalk$cellLabels)
-#> [1] "oRG"     "tRG"     "tRG"     "oRG"     "tRG"     "RG-div1"
+#> [1] "vRG"     "RG-div2" "RG-div1" "oRG"     "oRG"     "RG-div1"
 ```
 
-We can dig further into cell labeling by examining how often labels are confused for each other. Plotting requires the packages ggplot2 and reshape2.
+However, in actuality, labels are "fuzzy" meaning each cell actually has a distribution of scores from each label. Thanks to this, we can examine how often labels are confused for each other. The label threshold determines the minimum influence score a cell must get to be considered labeled. Plotting requires the packages ggplot2 and reshape2.
 
 ``` r
 install.packages("ggplot2")
@@ -210,7 +214,7 @@ install.packages("reshape2")
 ```
 
 ``` r
-cellWalk <- findUncertainLabels(cellWalk, plot = TRUE)
+cellWalk <- findUncertainLabels(cellWalk, labelThreshold = 0, plot = TRUE)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-uncertainty-1.png)
@@ -218,12 +222,40 @@ cellWalk <- findUncertainLabels(cellWalk, plot = TRUE)
 We can also directly examine label similarity by considering label-to-label influence.
 
 ``` r
-cellWalk <- clusterLabels(cellWalk, plot = TRUE)
+cellWalk <- clusterLabels(cellWalk,  plot = TRUE)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-labelLabels-1.png)
 
     #> NULL
+
+Two-dimensional embeddings of cells can be a very helpful tool for understanding cell diversity. We can directly embed cell-to-cell influence scores. Importantly, this portion of the influence matrix is not used in establishing the labeling of cells. Thus this can serve as distinct way to explore how labels were distributed accross cells. Because of this, unlike with most scATAC-seq analysis pipelines, clusters observed in this embedding may not directly correspond to labels. This can help understand cell diversity, as well as assist in identifying rare cell types. In addition to ggplot2, embedding also requires the package Rtsne.
+
+``` r
+install.packages("Rtsne")
+```
+
+``` r
+plotCells(cellWalk, labelThreshold = 0, seed = 1)
+```
+
+![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsLabels-1.png)
+
+It is also possible to plot how strongly a single label influences each cell in the embedding.
+
+``` r
+plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
+```
+
+![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsInf-1.png)
+
+Furthermore, to analyze rare cell types, it can be helpful to only plot a subset of of all labels.
+
+``` r
+plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
+```
+
+![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsRare-1.png)
 
 A very powerful use for the cell walk is mapping data to labels via cell-to-label influence. For example, we can map enhancers to cell types.
 
@@ -240,7 +272,7 @@ mappedLabel <- labelBulk(cellWalk,
                         ATACMat, 
                         peaks)
 mappedLabel
-#>  [1] "vRG"      "RG-early" "RG-early" "RG-early" "RG-early" "oRG"     
+#>  [1] "RG-div1"  "RG-early" "RG-early" "RG-early" "RG-early" "RG-div1" 
 #>  [7] "RG-early" "RG-early" "RG-early" "RG-early"
 ```
 
@@ -269,12 +301,12 @@ edgeWeightsB <- tuneEdgeWeights(cellEdges,
                                sampleDepth = 1000)
 head(edgeWeightsB[order(edgeWeightsB$cellHomogeneity, decreasing = TRUE),])
 #>     Var1  Var2 cellHomogeneity
-#> 9  1e+04 1e+06       0.5011993
-#> 13 1e+04 1e+07       0.4894711
-#> 14 1e+05 1e+07       0.4518762
-#> 10 1e+05 1e+06       0.4264239
-#> 15 1e+06 1e+07       0.4203451
-#> 16 1e+07 1e+07       0.3927239
+#> 14 1e+05 1e+07        2.441033
+#> 8  1e+07 1e+05        2.374430
+#> 13 1e+04 1e+07        2.162689
+#> 12 1e+07 1e+06        2.139192
+#> 9  1e+04 1e+06        2.082448
+#> 7  1e+06 1e+05        1.871565
 ```
 
 We can then compute a new cell walk using the list of edges and a vector of optimal weights.
