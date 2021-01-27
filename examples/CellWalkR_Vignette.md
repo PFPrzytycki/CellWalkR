@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-01-26
+2021-01-27
 
 Getting Started
 ---------------
@@ -236,7 +236,7 @@ install.packages("Rtsne")
 ```
 
 ``` r
-plotCells(cellWalk, labelThreshold = 0, seed = 1)
+cellWalk <- plotCells(cellWalk, labelThreshold = 0, seed = 1)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsLabels-1.png)
@@ -244,7 +244,7 @@ plotCells(cellWalk, labelThreshold = 0, seed = 1)
 It is also possible to plot how strongly a single label influences each cell in the embedding.
 
 ``` r
-plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
+cellWalk <- plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsInf-1.png)
@@ -252,7 +252,7 @@ plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
 Furthermore, to analyze rare cell types, it can be helpful to only plot a subset of of all labels.
 
 ``` r
-plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
+cellWalk <- plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsRare-1.png)
@@ -301,12 +301,12 @@ edgeWeightsB <- tuneEdgeWeights(cellEdges,
                                sampleDepth = 1000)
 head(edgeWeightsB[order(edgeWeightsB$cellHomogeneity, decreasing = TRUE),])
 #>     Var1  Var2 cellHomogeneity
-#> 14 1e+05 1e+07        2.441033
-#> 8  1e+07 1e+05        2.374430
-#> 13 1e+04 1e+07        2.162689
-#> 12 1e+07 1e+06        2.139192
-#> 9  1e+04 1e+06        2.082448
-#> 7  1e+06 1e+05        1.871565
+#> 14 1e+05 1e+07        2.565897
+#> 13 1e+04 1e+07        2.222093
+#> 9  1e+04 1e+06        1.985129
+#> 15 1e+06 1e+07        1.773466
+#> 11 1e+06 1e+06        1.638109
+#> 12 1e+07 1e+06        1.609156
 ```
 
 We can then compute a new cell walk using the list of edges and a vector of optimal weights.

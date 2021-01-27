@@ -126,10 +126,12 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold
 #' @param labelThreshold numeric, set a threshold below which cells aren't labeled (e.g. 0)
 #' @param initial_dims numeric, number of PCA dims to use for tSNE
 #' @param perplexity numeric, perplexity parameter for tSNE
+#' @param recompute boolean, recompute tSNE
+#' @param plot boolean, optionally don't plot output and only compute the embedding
 #' @param seed numeric, random seed
-#' @return cellWalk object with label clustering stored in "cluster"
+#' @return cellWalk object with embedding stored in "tSNE"
 #' @export
-plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, perplexity = 50, seed){
+plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, perplexity = 50, recompute = FALSE, plot = TRUE, seed){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -145,7 +147,11 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
     stop("Must install Rtsne")
   }
 
-  celltSNE = Rtsne::Rtsne(cellCellInf, initial_dims = initial_dims, perplexity = perplexity)
+  if(recompute | is.null(cellWalk[["tSNE"]])){
+    celltSNE = Rtsne::Rtsne(cellCellInf, initial_dims = initial_dims, perplexity = perplexity)
+    cellWalk[["tSNE"]] = celltSNE$Y
+  }
+  celltSNE = cellWalk[["tSNE"]]
 
   plotColor = cellWalk$cellLabels
   if(!missing(labelThreshold)){
@@ -174,13 +180,17 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
     }
   }
 
-  print(ggplot2::ggplot() +
-          ggplot2::geom_point(ggplot2::aes(celltSNE$Y[,1],celltSNE$Y[,2], color=plotColor), size = 1) +
-          ggplot2::xlab("tSNE_1")+
-          ggplot2::ylab("tSNE_2")+
-          ggplot2::ylab("tSNE_2")+
-          ggplot2::labs(color=labelText)+
-          ggplot2::theme_classic())
+  if(plot){
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(ggplot2::aes(celltSNE[,1],celltSNE[,2], color=plotColor), size = 1) +
+            ggplot2::xlab("tSNE_1")+
+            ggplot2::ylab("tSNE_2")+
+            ggplot2::ylab("tSNE_2")+
+            ggplot2::labs(color=labelText)+
+            ggplot2::theme_classic())
+  }
+
+  cellWalk
 }
 
 

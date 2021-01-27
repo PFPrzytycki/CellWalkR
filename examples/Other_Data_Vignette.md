@@ -1,7 +1,7 @@
 Load Other Data
 ================
 Pawel F. Przytycki
-2021-01-26
+2021-01-27
 
 Cell edges and label edges can be generated directly from a SnapATAC object, an ArchR project, or from Cicero data.
 
@@ -16,7 +16,7 @@ ATACGenePeak <- mapSnapATACToGenes(labelGenes, snap, whichMat = "bmat", regions)
 labelEdges <- computeLabelEdges(labelGenes, snap, ATACGenePeak)
 ```
 
-These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md).
+These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md#tuning-label-edges).
 
 ArchR
 -----
@@ -29,7 +29,7 @@ ATACGenePeak <- mapArchRToGenes(labelGenes, ArchRproj, whichMat = "TileMatrix", 
 labelEdges <- computeLabelEdges(labelGenes, ArchRproj, ATACGenePeak)
 ```
 
-These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md).
+These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md#tuning-label-edges).
 
 Cicero
 ------
@@ -42,4 +42,4 @@ ATACGenePeak <- mapCiceroToGenes(labelGenes, cicero_gene_activities,)
 labelEdges <- computeLabelEdges(labelGenes, cicero_gene_activities, ATACGenePeak)
 ```
 
-These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md).
+These cell and label edges can then be used as in the [CellWalkR vignette](CellWalkR_Vignette.md#tuning-label-edges).

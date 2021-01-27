@@ -33,10 +33,10 @@ library(CellWalkR)
 set.seed(1)
 ```
 
-First, load scATAC-seq data in the form of a cell-by-peak matrix and load the
+First, load scATAC-seq data in the form of a cell-by-peak matrix and load the 
 corresponding peaks into a GRanges object. CellWalkR can also take SnapATAC, 
-ArchR, or Cicero data as input. See additional vignette for how to load
-these data types.
+ArchR, or Cicero data as input. See [additional vignette](Other_Data_Vignette.md) 
+for how to load these data types.
 
 ```{r loadATACMat, eval=FALSE}
 pathToMat <- system.file("extdata", "SamplePeakMat.mtx", package = "CellWalkR")
@@ -104,8 +104,6 @@ head(labelGenes)
 ```
 
 We then need to map between this data and the peaks in the scATAC-seq data.
-
-#' @param whichMat string determing whether to use "bmat" or "gmat" from snap object or "TileMatrix" or "GeneScoreMatrix" from ArchR project
 
 ```{r mapPeaksToGenes}
 ATACGenePeak <- mapPeaksToGenes(labelGenes, ATACMat, peaks, regions)
@@ -247,21 +245,21 @@ In addition to ggplot2, embedding also requires the package Rtsne.
 install.packages("Rtsne")
 ```
 ```{r downstream-plotCellsLabels}
-plotCells(cellWalk, labelThreshold = 0, seed = 1)
+cellWalk <- plotCells(cellWalk, labelThreshold = 0, seed = 1)
 ```
 
 It is also possible to plot how strongly a single label influences each cell in the
 embedding.
 
 ```{r downstream-plotCellsInf}
-plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
+cellWalk <- plotCells(cellWalk, cellTypes = c("RG-div2"), seed = 1)
 ```
 
 Furthermore, to analyze rare cell types, it can be helpful to only plot a subset of 
 of all labels.
 
 ```{r downstream-plotCellsRare}
-plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
+cellWalk <- plotCells(cellWalk, cellTypes = c("RG-early","tRG","vRG"), labelThreshold = 0, seed = 1)
 ```
 
 A very powerful use for the cell walk is mapping data to labels via 

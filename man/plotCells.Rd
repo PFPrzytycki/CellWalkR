@@ -10,6 +10,8 @@ plotCells(
   labelThreshold,
   initial_dims = 10,
   perplexity = 50,
+  recompute = FALSE,
+  plot = TRUE,
   seed
 )
 }
@@ -26,10 +28,14 @@ given, the difference in score for each cell is shown.}
 
 \item{perplexity}{numeric, perplexity parameter for tSNE}
 
+\item{recompute}{boolean, recompute tSNE}
+
+\item{plot}{boolean, optionally don't plot output and only compute the embedding}
+
 \item{seed}{numeric, random seed}
 }
 \value{
-cellWalk object with label clustering stored in "cluster"
+cellWalk object with embedding stored in "tSNE"
 }
 \description{
 \code{plotCells()} generates a tSNE plot based on cell-to-cell influence
