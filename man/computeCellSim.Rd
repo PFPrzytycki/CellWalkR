@@ -4,12 +4,13 @@
 \alias{computeCellSim}
 \title{Compute Cell Similarity}
 \usage{
-computeCellSim(ATACMat, method = "Jaccard")
+computeCellSim(ATACMat, method = sparseJaccard)
 }
 \arguments{
 \item{ATACMat}{either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table}
 
-\item{method}{method used to compute cell similarity}
+\item{method}{function, the method used to compute cell similarity, should operate on rows of a matrix. The default
+is Jaccard similiarty, but a second built in option is PCAdist which computes the euclidean distance in PCA space}
 }
 \value{
 matrix of cell-to-cell similarity

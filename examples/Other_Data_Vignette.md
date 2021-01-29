@@ -38,7 +38,7 @@ If working with Cicero, two different objects are needed, both of which are part
 
 ``` r
 cellEdges <- computeCellSim(cicero_data, method="Jaccard")
-ATACGenePeak <- mapCiceroToGenes(labelGenes, cicero_gene_activities,)
+ATACGenePeak <- mapCiceroToGenes(labelGenes, cicero_gene_activities)
 labelEdges <- computeLabelEdges(labelGenes, cicero_gene_activities, ATACGenePeak)
 ```
 

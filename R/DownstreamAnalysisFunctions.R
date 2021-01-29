@@ -185,7 +185,6 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
             ggplot2::geom_point(ggplot2::aes(celltSNE[,1],celltSNE[,2], color=plotColor), size = 1) +
             ggplot2::xlab("tSNE_1")+
             ggplot2::ylab("tSNE_2")+
-            ggplot2::ylab("tSNE_2")+
             ggplot2::labs(color=labelText)+
             ggplot2::theme_classic())
   }

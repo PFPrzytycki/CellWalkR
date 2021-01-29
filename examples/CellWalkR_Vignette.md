@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-01-27
+2021-01-28
 
 Getting Started
 ---------------
@@ -24,7 +24,7 @@ peaks <- as(data.table::fread(pathToPeaks, header = FALSE)$V1, "GRanges")
 Next, we compute cell-to-cell similarity in order to build edges in the cell-to-cell portion of the graph.
 
 ``` r
-cellEdges <- computeCellSim(ATACMat, method="Jaccard")
+cellEdges <- computeCellSim(ATACMat)
 ```
 
 cellEdges is a cell-by-cell matrix of cell-to-cell similarity. Any matrix of cell similarity can be used.
@@ -115,7 +115,7 @@ head(labelEdges)
 Tuning Label Edges
 ------------------
 
-Although we now have cell-to-cell edges and label-to-cell edges, we don't know how to correctly weight the two relative to each other. The tuneEdgeWeights method will run CellWalker across a range of possible parameters and compute cell homogeneity for each. We make a list of labelEdges because there can be many of them, and sample down to 1000 cells for faster computation.
+Although we now have cell-to-cell edges and label-to-cell edges, we don't know how to correctly weight the two relative to each other. The tuneEdgeWeights method will run CellWalker across a range of possible parameters and compute cell homogeneity for each. We make a list of labelEdges because there can be many of them, and sample down to 1000 cells for faster computation. Edge weights can optionally be tuned in parallel.
 
 ``` r
 labelEdgesList <- list(labelEdges)

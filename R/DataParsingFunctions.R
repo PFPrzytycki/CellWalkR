@@ -4,15 +4,16 @@
 #' Currently only Jaccard similarity is implemented.
 #'
 #' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table
-#' @param method method used to compute cell similarity
+#' @param method function, the method used to compute cell similarity, should operate on rows of a matrix. The default
+#' is Jaccard similiarty, but a second built in option is PCAdist which computes the euclidean distance in PCA space
 #' @return matrix of cell-to-cell similarity
 #' @export
-computeCellSim = function(ATACMat, method="Jaccard"){
+computeCellSim = function(ATACMat, method=sparseJaccard){
   if(missing(ATACMat)){
     stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
   }
-  if(method!="Jaccard"){
-    stop("Currently only Jaccard similarity is implemented")
+  if(!is(method, "function")){
+    stop("Must provide a similarity function")
   }
 
   if(is(ATACMat,"snap")){
@@ -23,7 +24,7 @@ computeCellSim = function(ATACMat, method="Jaccard"){
       stop("No bmat")
     }
     ATACMat = SnapATAC::makeBinary(ATACMat, mat="bmat")
-    sparseJaccard(ATACMat@bmat)
+    method(ATACMat@bmat)
   }
   else if(is(ATACMat,"ArchRProject")){
     if(!requireNamespace("ArchR", quietly = TRUE)){
@@ -34,7 +35,7 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     }
     ATACData = ArchR::getMatrixFromProject(ATACMat, "TileMatrix", verbose=FALSE, binarize = TRUE)
     ATACMat = Matrix::t(assay(ATACData))
-    sparseJaccard(ATACMat)
+    method(ATACMat)
   }
   else if(is(ATACMat,"Matrix")|is(ATACMat,"matrix")){
     if(min(dim(ATACMat))==0){
@@ -43,7 +44,7 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     if(dim(ATACMat)[1]>dim(ATACMat)[2]){
       warning("ATACMat has more cells than peaks, does it need to be transposed?")
     }
-    sparseJaccard(ATACMat>0)
+    method(ATACMat>0)
   }
   else if(is(ATACMat, "data.frame")){
     peaks = unique(ATACMat[,1])
@@ -51,7 +52,7 @@ computeCellSim = function(ATACMat, method="Jaccard"){
     rowIndex = match(ATACMat[,2], cells)
     colIndex = match(ATACMat[,1], peaks)
     ATACMat = sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
-    simMat = sparseJaccard(ATACMat>0)
+    simMat = method(ATACMat>0)
     dimnames(simMat) = list(cells,cells)
     simMat
   }

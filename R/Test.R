@@ -99,3 +99,14 @@
 # labelEdges = computeLabelEdges(labelGenes, proj, ATACGenePeak)
 # labelEdgesList = list(labelEdges)
 # cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights = 1e+07)
+#
+# snapData = runViz(snapData, tmp.folder = tempdir())
+# plotColor = apply(cellWalk[["normMat"]], 1, function(x) colnames(cellWalk$normMat)[order(x, decreasing = TRUE)][1])
+# plotColor[apply(cellWalk[["normMat"]], 1, max)<=0] = "Other"
+# labelText = "Label"
+# ggplot2::ggplot() +
+#   ggplot2::geom_point(ggplot2::aes(snapData@tsne[,1],snapData@tsne[,2], color=plotColor), size = 1) +
+#   ggplot2::xlab("tSNE_1")+
+#   ggplot2::ylab("tSNE_2")+
+#   ggplot2::labs(color=labelText)+
+#   ggplot2::theme_classic()

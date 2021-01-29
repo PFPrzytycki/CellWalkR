@@ -136,3 +136,18 @@ sparseJaccard = function(m) {
 
   J
 }
+
+#' Compute distance in PCA space for matrix
+#'
+#' \code{PCAdist()} computes Euclidian PCA distance matrix between the rows
+#' of a matrix, scaled by the greatest distance and subtracted from 1.
+#'
+#' @param m  matrix
+#' @return Euclidian PCA distance matrix between rows of m
+#' @export
+PCAdist = function(matrix){
+  pca = prcomp(t(matrix), rank.=10)$rotation
+  distance = dist(pca)
+  distance = distance/max(distance)
+  as.matrix(1 - distance)
+}

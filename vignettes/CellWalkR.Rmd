@@ -49,7 +49,7 @@ Next, we compute cell-to-cell similarity in order to build edges in the
 cell-to-cell portion of the graph. 
 
 ```{r cellEdges, message=FALSE}
-cellEdges <- computeCellSim(ATACMat, method="Jaccard")
+cellEdges <- computeCellSim(ATACMat)
 ```
 
 cellEdges is a cell-by-cell matrix of cell-to-cell similarity. Any matrix of 
@@ -125,7 +125,7 @@ how to correctly weight the two relative to each other. The tuneEdgeWeights
 method will run CellWalker across a range of possible parameters and compute
 cell homogeneity for each.
 We make a list of labelEdges because there can be many of them, and sample down
-to 1000 cells for faster computation.
+to 1000 cells for faster computation. Edge weights can optionally be tuned in parallel.
 
 ```{r tuneEdgeWeights}
 labelEdgesList <- list(labelEdges)
