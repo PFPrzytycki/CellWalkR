@@ -29,7 +29,7 @@ clusterLabels = function(cellWalk, cellTypes, distMethod="euclidean", plot=FALSE
   typeTypeClust = hclust(dist(typeTypeInf, method = distMethod))
 
   if(plot){
-    print(plot(typeTypeClust))
+    print(plot(typeTypeClust, main="Hierarchical Clustering of Labels", sub=NA, xlab=NA))
   }
 
   cellWalk[["cluster"]] = typeTypeClust

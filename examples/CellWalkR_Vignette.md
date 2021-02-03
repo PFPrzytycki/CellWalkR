@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-01-28
+2021-02-03
 
 Getting Started
 ---------------

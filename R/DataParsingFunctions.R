@@ -136,7 +136,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
   if(is.null(dim(labelGenes)) || dim(labelGenes)[2]<2){
     stop("Must provide a table with genes of interest in first column and corresponding labels in second column")
   }
-  labels = unique(labelGenes[,2])
+  labels = as.character(unique(labelGenes[,2]))
   if(length(labels)==1){
     warning("Only one label exists")
   }

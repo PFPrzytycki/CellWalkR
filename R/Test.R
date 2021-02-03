@@ -110,3 +110,21 @@
 #   ggplot2::ylab("tSNE_2")+
 #   ggplot2::labs(color=labelText)+
 #   ggplot2::theme_classic()
+# snapData=runCluster(
+#   obj=snapData,
+#   tmp.folder=tempdir(),
+#   louvain.lib="R-igraph",
+#   seed.use=10
+# )
+# ggplot2::ggplot() +
+#   ggplot2::geom_point(ggplot2::aes(snapData@tsne[,1],snapData@tsne[,2], color=snapData@cluster), size = 1) +
+#   ggplot2::xlab("tSNE_1")+
+#   ggplot2::ylab("tSNE_2")+
+#   ggplot2::labs(color=labelText)+
+#   ggplot2::theme_classic()
+# ggplot2::ggplot() +
+#   ggplot2::geom_point(ggplot2::aes(cellWalk$tSNE[,1],cellWalk$tSNE[,2], color=snapData@cluster), size = 1) +
+#   ggplot2::xlab("tSNE_1")+
+#   ggplot2::ylab("tSNE_2")+
+#   ggplot2::labs(color=labelText)+
+#   ggplot2::theme_classic()
