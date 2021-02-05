@@ -76,14 +76,15 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE){
     if(!requireNamespace("tensorflow", quietly = TRUE)){
       stop("Must install tensorflow")
     }
-    if(length(tf$config$list_physical_devices('GPU'))==0){
+    if(length(tensorflow::tf$config$list_physical_devices('GPU'))==0){
       stop("No GPUs available")
     }
 
-    with(tf$device("GPU:0"), {
-      D = tf$linalg$diag(Matrix::rowSums(adj))
-      W = tf$linalg$matmul(tf$linalg$inv(tf$constant(D)),tf$constant(adj, dtype = "float32"))
-      infMat = r*tf$linalg$inv(tf$linalg$diag(rep(1,len))-r*W)
+    with(tensorflow::tf$device("GPU:0"), {
+      D = tensorflow::tf$linalg$diag(Matrix::rowSums(adj))
+      W = tensorflow::tf$linalg$matmul(tensorflow::tf$linalg$inv(tensorflow::tf$constant(D)),
+                                       tensorflow::tf$constant(adj, dtype = "float32"))
+      infMat = r*tensorflow::tf$linalg$inv(tensorflow::tf$linalg$diag(rep(1,len))-r*W)
     })
 
     as.matrix(infMat)
@@ -172,16 +173,16 @@ tensorJaccard = function(m) {
   if(!requireNamespace("tensorflow", quietly = TRUE)){
     stop("Must install tensorflow")
   }
-  if(length(tf$config$list_physical_devices('GPU'))==0){
+  if(length(tensorflow::tf$config$list_physical_devices('GPU'))==0){
     stop("No GPUs available")
   }
-  with(tf$device("GPU:0"), {
-    tfM = tf$constant(as.matrix(m), dtype="float16")
-    A = tf$linalg$matmul(tfM, tfM, transpose_b=TRUE)
+  with(tensorflow::tf$device("GPU:0"), {
+    tfM = tensorflow::tf$constant(as.matrix(m), dtype="float16")
+    A = tensorflow::tf$linalg$matmul(tfM, tfM, transpose_b=TRUE)
 
-    b = tf$math$reduce_sum(tfM, as.integer(1))
-    b_row = tf$expand_dims(b, as.integer(0))
-    b_col = tf$expand_dims(b, as.integer(1))
+    b = tensorflow::tf$math$reduce_sum(tfM, as.integer(1))
+    b_row = tensorflow::tf$expand_dims(b, as.integer(0))
+    b_col = tensorflow::tf$expand_dims(b, as.integer(1))
 
     J = A / (b_row + b_col - A)
   })
