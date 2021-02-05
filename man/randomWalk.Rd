@@ -4,12 +4,14 @@
 \alias{randomWalk}
 \title{Random walk with restarts}
 \usage{
-randomWalk(adj, r = 0.5)
+randomWalk(adj, r = 0.5, tensorflow = FALSE)
 }
 \arguments{
 \item{adj}{adjacency matrix}
 
 \item{r}{restart probability}
+
+\item{tensorflow}{boolean to indicate whether to compute on GPU}
 }
 \value{
 influence matrix, each column is the vector of influences on each row

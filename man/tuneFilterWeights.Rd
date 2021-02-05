@@ -22,7 +22,8 @@ tuneFilterWeights(
   cellTypes,
   parallel = FALSE,
   numCores = 1,
-  trackProgress = FALSE
+  trackProgress = FALSE,
+  tensorflow = FALSE
 )
 }
 \arguments{
@@ -62,6 +63,8 @@ labels in second column, optionally log-fold change in expression values in the 
 \item{numCores}{integer, number of cores to use for parallel execution}
 
 \item{trackProgress}{boolean, print percent run completed}
+
+\item{tensorflow}{boolean to indicate whether to compute on GPU}
 }
 \value{
 data frame of parameters with corresponding cell homogeneity

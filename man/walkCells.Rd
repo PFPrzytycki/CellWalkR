@@ -4,7 +4,13 @@
 \alias{walkCells}
 \title{Run CellWalker Method}
 \usage{
-walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth)
+walkCells(
+  cellEdges,
+  labelEdgesList,
+  labelEdgeWeights,
+  sampleDepth,
+  tensorflow = FALSE
+)
 }
 \arguments{
 \item{cellEdges}{matrix of cell-to-cell similarity (c-by-c)}
@@ -14,6 +20,8 @@ walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth)
 \item{labelEdgeWeights}{vector of weights to test for label edges}
 
 \item{sampleDepth}{depth to subsample cells to for faster calculation}
+
+\item{tensorflow}{boolean to indicate whether to compute on GPU}
 }
 \value{
 cellWalk object with influence matrix and labels

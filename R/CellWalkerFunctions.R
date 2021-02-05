@@ -55,17 +55,40 @@ combineMultiLabelGraph = function(labelEdgesList, cellEdges, weights){
 #'
 #' @param adj adjacency matrix
 #' @param r restart probability
+#' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return influence matrix, each column is the vector of influences on each row
 #' @export
-randomWalk = function(adj, r=0.5){
+randomWalk = function(adj, r=0.5, tensorflow=FALSE){
+
   len = dim(adj)[1]
 
-  D = Matrix::Diagonal(x=Matrix::rowSums(adj))
-  W = solve(D)%*%adj
+  if(!tensorflow){
 
-  infMat = r*solve(Matrix::Diagonal(len)-r*W)
+    D = Matrix::Diagonal(x=Matrix::rowSums(adj))
+    W = solve(D)%*%adj
 
-  infMat
+    infMat = r*solve(Matrix::Diagonal(len)-r*W)
+
+    infMat
+
+  }else{
+
+    if(!requireNamespace("tensorflow", quietly = TRUE)){
+      stop("Must install tensorflow")
+    }
+    if(length(tf$config$list_physical_devices('GPU'))==0){
+      stop("No GPUs available")
+    }
+
+    with(tf$device("GPU:0"), {
+      D = tf$linalg$diag(Matrix::rowSums(adj))
+      W = tf$linalg$matmul(tf$linalg$inv(tf$constant(D)),tf$constant(adj, dtype = "float32"))
+      infMat = r*tf$linalg$inv(tf$linalg$diag(rep(1,len))-r*W)
+    })
+
+    as.matrix(infMat)
+
+  }
 }
 
 #' Normalize influence matrix
@@ -136,6 +159,38 @@ sparseJaccard = function(m) {
 
   J
 }
+
+#' Compute Jaccard on matrix using tensorflow
+#'
+#' \code{tensorJaccard()} computes the Jaccard similarity between the rows
+#' of a sparse matrix using tensorflow on a GPU
+#'
+#' @param m sparse matrix
+#' @return Jaccard similarity matrix between rows of m
+#' @export
+tensorJaccard = function(m) {
+  if(!requireNamespace("tensorflow", quietly = TRUE)){
+    stop("Must install tensorflow")
+  }
+  if(length(tf$config$list_physical_devices('GPU'))==0){
+    stop("No GPUs available")
+  }
+  with(tf$device("GPU:0"), {
+    tfM = tf$constant(as.matrix(m), dtype="float16")
+    A = tf$linalg$matmul(tfM, tfM, transpose_b=TRUE)
+
+    b = tf$math$reduce_sum(tfM, as.integer(1))
+    b_row = tf$expand_dims(b, as.integer(0))
+    b_col = tf$expand_dims(b, as.integer(1))
+
+    J = A / (b_row + b_col - A)
+  })
+
+  J = as.matrix(J)
+  J[is.nan(J)]=0
+  J
+}
+
 
 #' Compute distance in PCA space for matrix
 #'

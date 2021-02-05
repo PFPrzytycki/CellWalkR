@@ -12,7 +12,8 @@ tuneEdgeWeights(
   cellTypes,
   parallel = FALSE,
   numCores = 1,
-  trackProgress = FALSE
+  trackProgress = FALSE,
+  tensorflow = FALSE
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ tuneEdgeWeights(
 \item{numCores}{integer, number of cores to use for parallel execution}
 
 \item{trackProgress}{boolean, print percent run completed}
+
+\item{tensorflow}{boolean to indicate whether to compute on GPU}
 }
 \value{
 data frame of weights with corresponding cell homogeneity

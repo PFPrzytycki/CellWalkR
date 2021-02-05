@@ -520,9 +520,10 @@ computeLabelEdges = function(
 #' @param labelEdgesList list of cell-to-label similarity matrices each with dimensions c-by-l
 #' @param labelEdgeWeights vector of weights to test for label edges
 #' @param sampleDepth depth to subsample cells to for faster calculation
+#' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return cellWalk object with influence matrix and labels
 #' @export
-walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
+walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, tensorflow=FALSE){
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
   }
@@ -567,7 +568,7 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
   }
 
   combinedGraph = combinedGraph[Matrix::colSums(combinedGraph)!=0, Matrix::colSums(combinedGraph)!=0]
-  infMat = randomWalk(combinedGraph)
+  infMat = randomWalk(combinedGraph, tensorflow=tensorflow)
 
   if(! is.null(colnames(cellEdges))){
     rownames(infMat) = rownames(combinedGraph)
@@ -600,6 +601,7 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth){
 #' @param parallel boolean, execute in parallel
 #' @param numCores integer, number of cores to use for parallel execution
 #' @param trackProgress boolean, print percent run completed
+#' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return data frame of weights with corresponding cell homogeneity
 #' @export
 tuneEdgeWeights = function(
@@ -610,7 +612,8 @@ tuneEdgeWeights = function(
   cellTypes,
   parallel = FALSE,
   numCores = 1,
-  trackProgress = FALSE ){
+  trackProgress = FALSE,
+  tensorflow=FALSE){
 
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
@@ -655,6 +658,9 @@ tuneEdgeWeights = function(
     if(trackProgress){
       warning("Cant track progress in parallel")
     }
+    if(tensorflow){
+      warning("Cant run both on GPU and in parallel, running in parallel")
+    }
 
     cellHomogeneity = parallel::mcmapply(function(param){
       theseWeights = as.numeric(parameterCombos[param,])
@@ -674,7 +680,7 @@ tuneEdgeWeights = function(
     for(param in 1:dim(parameterCombos)[1]){
       theseWeights = as.numeric(parameterCombos[param,])
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth)
+      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth, tensorflow)
 
       if(cellTypesMissing){
         cellTypes = unique(cellWalk[["cellLabels"]])
@@ -725,6 +731,7 @@ tuneEdgeWeights = function(
 #' @param parallel boolean, execute in parallel
 #' @param numCores integer, number of cores to use for parallel execution
 #' @param trackProgress boolean, print percent run completed
+#' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return data frame of parameters with corresponding cell homogeneity
 #' @export
 tuneFilterWeights = function(
@@ -745,7 +752,8 @@ tuneFilterWeights = function(
   cellTypes,
   parallel = FALSE,
   numCores = 1,
-  trackProgress = FALSE){
+  trackProgress = FALSE,
+  tensorflow = FALSE){
 
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
@@ -814,6 +822,9 @@ tuneFilterWeights = function(
     if(trackProgress){
       warning("Cant track progress in parallel")
     }
+    if(tensorflow){
+      warning("Cant run both on GPU and in parallel, running in parallel")
+    }
     if(missing(filterOut)){
       filterOut = rep(FALSE, length(filters))
     }
@@ -863,7 +874,7 @@ tuneFilterWeights = function(
       }
       l = sum(sapply(labelEdgesList, function(x) dim(x)[2]))
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth)
+      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, tensorflow)
       infMat = cellWalk[["infMat"]]
       normMat = cellWalk[["normMat"]]
       cellLabels = cellWalk[["cellLabels"]]
