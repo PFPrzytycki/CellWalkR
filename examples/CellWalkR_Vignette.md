@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-02-03
+2021-02-05
 
 Getting Started
 ---------------
@@ -40,16 +40,9 @@ cellEdges[1:5,1:5]
 #> [5,] 0.09813385 0.09035017 0.11350499 0.06237177 1.00000000
 ```
 
-In order to generate label-to-cell edges, we need to define which genomic regions correspond to which genes. These could be promoters, gene bodies, or any other definition. If a specific set of regions associated with genes isn't already known, the getRegions() function can be used to generate a mapping. However this will require installing packages for genomic annotaions (GenomicFeatures and a TxDb object). We'll use the Hg38 in this example.
+In order to generate label-to-cell edges, we need to define which genomic regions correspond to which genes. These could be promoters, gene bodies, or any other definition. If a specific set of regions associated with genes isn't already known, the getRegions() function can be used to generate a mapping. This function can retreive hg38 and mm10 mappings. Other mappings can be generated using TxDb objects or biomaRt.
 
-``` r
-install.packages("BiocManager")
-BiocManager::install(version = "3.10")
-BiocManager::install("GenomicFeatures")
-BiocManager::install("TxDb.Hsapiens.UCSC.hg38.knownGene")
-```
-
-Now we can generate regions, in this case using full gene bodies.
+We'll use hg38 with Entrez identifiers in this example, using full gene bodies.
 
 ``` r
 regions <- getRegions(geneBody = TRUE, genome = "hg38", names = "Entrez")

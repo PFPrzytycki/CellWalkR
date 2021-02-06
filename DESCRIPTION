@@ -1,7 +1,7 @@
 Package: CellWalkR
 Type: Package
 Title: R implementation of CellWalker for analysis of scATAC-seq 
-Version: 0.2.1
+Version: 0.2.2
 Author: Pawel F. Przytycki
 Maintainer: Pawel F. Przytycki <pawel.przytycki@gladstone.ucsf.edu>
 Description: R implementation of CellWalker for analysis of scATAC-seq
@@ -15,10 +15,6 @@ Imports:
 	data.table,
 	Matrix,
 Suggests:
-    TxDb.Hsapiens.UCSC.hg38.knownGene,
-    TxDb.Mmusculus.UCSC.mm10.ensGene,
-    TxDb.Mmusculus.UCSC.mm10.knownGene,
-    GenomicFeatures,
     SnapATAC,
     Archr,
     Cicero,

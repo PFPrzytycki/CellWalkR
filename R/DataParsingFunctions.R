@@ -72,18 +72,13 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
 #' @return GRanges list of regions with gene_id
 #' @export
 getRegions = function(geneBody=TRUE, genome="hg38", names="Entrez"){
-  if(!requireNamespace("GenomicFeatures", quietly = TRUE)){
-    stop("Please install GenomicFeatures to use getRegions")
-  }
   if(genome=="hg38"){
     if(names=="Ensembl"){
       stop("Not an implemented gene name identifier")
     }
     else if(names=="Entrez"){
-      if(!requireNamespace("TxDb.Hsapiens.UCSC.hg38.knownGene", quietly = TRUE)){
-        stop("Must install TxDb.Hsapiens.UCSC.hg38.knownGene")
-      }
-      TxDb = TxDb.Hsapiens.UCSC.hg38.knownGene::TxDb.Hsapiens.UCSC.hg38.knownGene
+      pathToGenes <- system.file("extdata", "Hg38_knownGene.rds", package = "CellWalkR")
+      genes <- readRDS(pathToGenes)
     }
     else{
       stop("Not a valid gene name identifier")
@@ -91,16 +86,12 @@ getRegions = function(geneBody=TRUE, genome="hg38", names="Entrez"){
   }
   else if(genome=="mm10"){
     if(names=="Ensembl"){
-      if(!requireNamespace("TxDb.Mmusculus.UCSC.mm10.ensGene", quietly = TRUE)){
-        stop("Must install TxDb.Mmusculus.UCSC.mm10.ensGene")
-      }
-      TxDb = TxDb.Mmusculus.UCSC.mm10.ensGene::TxDb.Mmusculus.UCSC.mm10.ensGene
+      pathToGenes <- system.file("extdata", "Mm10_ensGene.rds", package = "CellWalkR")
+      genes <- readRDS(pathToGenes)
     }
     else if(names=="Entrez"){
-      if(!requireNamespace("TxDb.Mmusculus.UCSC.mm10.knownGene", quietly = TRUE)){
-        stop("Must install TxDb.Mmusculus.UCSC.mm10.knownGene")
-      }
-      TxDb = TxDb.Mmusculus.UCSC.mm10.knownGene::TxDb.Mmusculus.UCSC.mm10.knownGene
+      pathToGenes <- system.file("extdata", "Mm10_knownGene.rds", package = "CellWalkR")
+      genes <- readRDS(pathToGenes)
     }
     else{
       stop("Not a valid gene name identifier")
@@ -110,13 +101,14 @@ getRegions = function(geneBody=TRUE, genome="hg38", names="Entrez"){
     stop("Not an implemented genome build")
   }
 
-  regions = GenomicRanges::promoters(GenomicFeatures::genes(TxDb))
+  regions = GenomicRanges::promoters(genes)
   if(geneBody){
-    regions = c(regions, GenomicFeatures::genes(TxDb))
+    regions = c(regions, genes)
   }
 
   regions
 }
+
 
 #' Map peaks to genes
 #'
