@@ -1,12 +1,12 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-02-05
+2021-02-16
 
 Getting Started
 ---------------
 
-CellWalkR is an R package implementing the CellWalker method for combining scATAC-seq data with labels and other epigenetic data (see [paper](https://www.biorxiv.org/content/10.1101/847657v2) for details). This vignette shows an example of running CellWalkR on a small set of scATAC-seq data to generate a cellWalk object which can then be used to assign labels to cells as well as cell-type specific labels to bulk data.
+CellWalkR is an R package implementing the CellWalker method for combining scATAC-seq data with labels and other epigenetic data (see [paper](https://doi.org/10.1186/s13059-021-02279-1) for details). This vignette shows an example of running CellWalkR on a small set of scATAC-seq data to generate a cellWalk object which can then be used to assign labels to cells as well as cell-type specific labels to bulk data.
 
 ``` r
 library(CellWalkR)

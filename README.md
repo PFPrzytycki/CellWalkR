@@ -17,7 +17,10 @@ Usage
 
 For a guide to using CellWalkR, see the provided [vignette](examples/CellWalkR_Vignette.md).
 
+If you use CellWalkR please cite our paper:
+Przytycki, P.F., Pollard, K.S. CellWalker integrates single-cell and bulk data to resolve regulatory elements across cell types in complex tissues. Genome Biol 22, 61 (2021). <https://doi.org/10.1186/s13059-021-02279-1>
+
 AWS + TensorFlow
 ----------------
 
-CellWalkR can also be run on AWS which vastly simplifies the process of running on GPUs using TensorFlow. Using GPUs allows the code to run more than 10 times faster. For a guide to running CellWalkr on AWS using GPUs see this [vignette](examples/CellWalkR_TensorFlow_Vignette.md).
+CellWalkR can also be run on AWS which vastly simplifies the process of running on GPUs using TensorFlow. Using GPUs allows the code to run more than 15 times faster. For a guide to running CellWalkR on AWS using GPUs see this [vignette](examples/CellWalkR_TensorFlow_Vignette.md).
