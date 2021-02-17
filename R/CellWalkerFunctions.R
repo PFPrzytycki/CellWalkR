@@ -67,7 +67,7 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE){
     D = Matrix::Diagonal(x=Matrix::rowSums(adj))
     W = solve(D)%*%adj
 
-    infMat = r*solve(Matrix::Diagonal(len)-r*W)
+    infMat = r*solve(Matrix::Diagonal(len)-(1-r)*W)
 
     infMat
 
@@ -84,7 +84,7 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE){
       D = tensorflow::tf$linalg$diag(Matrix::rowSums(adj))
       W = tensorflow::tf$linalg$matmul(tensorflow::tf$linalg$inv(tensorflow::tf$constant(D)),
                                        tensorflow::tf$constant(adj, dtype = "float32"))
-      infMat = r*tensorflow::tf$linalg$inv(tensorflow::tf$linalg$diag(rep(1,len))-r*W)
+      infMat = r*tensorflow::tf$linalg$inv(tensorflow::tf$linalg$diag(rep(1,len))-(1-r)*W)
     })
 
     as.matrix(infMat)
