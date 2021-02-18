@@ -199,7 +199,7 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
 #' the calculated information matrix
 #'
 #' @param cellWalk a cellWalk object
-#' @param bulkPeaks GRanges of peaks in bulk data
+#' @param bulkPeaks GRanges of peaks in bulk data or GRangesList of sets of peaks
 #' @param ATACMat cell-by-peak matrix
 #' @param peaks GRanges of peaks in ATACMat
 #' @param cellTypes character, vector of labels to use, all labels used by default
@@ -228,6 +228,12 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
                   -which(!colnames(normMat) %in% cellTypes)]
   }
 
+  if(missing(peaks)){
+    stop("Must provide a GRanges object of peaks")
+  }
+  if(missing(bulkPeaks)){
+    stop("Must provide a GRanges or GRangesList object of peaks to map")
+  }
   peakOverlaps = findOverlaps(peaks, bulkPeaks)
 
   if(parallel){
@@ -241,7 +247,7 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
     infCellOnType = parallel::mcmapply(function(e) {
       whichPeaks = peakOverlaps@from[peakOverlaps@to==e]
       if(length(whichPeaks)==0){
-        rep(0, length(cellTypes))
+        rep(NA, length(cellTypes))
       } else{
         testCells = ATACMat[,whichPeaks]
         if(length(whichPeaks)==1){
@@ -249,7 +255,12 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
         } else{
           whichCells = which(Matrix::rowSums(testCells)>0)
         }
-        Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+        if(length(whichCells)==1){
+          infMat[1:length(cellTypes),length(cellTypes)+whichCells]
+        }
+        else{
+          Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+        }
       }
     }, e=1:length(bulkPeaks), mc.cores = numCores)
   }
@@ -257,7 +268,7 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
     infCellOnType = sapply(1:length(bulkPeaks), function(e) {
       whichPeaks = peakOverlaps@from[peakOverlaps@to==e]
       if(length(whichPeaks)==0){
-        rep(0, length(cellTypes))
+        rep(NA, length(cellTypes))
       } else{
         testCells = ATACMat[,whichPeaks]
         if(length(whichPeaks)==1){
@@ -265,13 +276,18 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
         } else{
           whichCells = which(Matrix::rowSums(testCells)>0)
         }
-        Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+        if(length(whichCells)==1){
+          infMat[1:length(cellTypes),length(cellTypes)+whichCells]
+        }
+        else{
+          Matrix::rowSums(infMat[1:length(cellTypes),length(cellTypes)+whichCells])/length(whichCells)
+        }
       }
     })
   }
 
-  mappedLabel = apply(infCellOnType, 2, function(x) cellTypes[order(x, decreasing = TRUE)[1]])
-  mappedScore = apply(infCellOnType, 2, function(x) sort(x, decreasing = TRUE)[1])
+  mappedLabel = apply(infCellOnType, 2, function(x) ifelse(length(which(is.na(x)))==0,cellTypes[order(x, decreasing = TRUE)[1]],NA))
+  # mappedScore = apply(infCellOnType, 2, function(x) sort(x, decreasing = TRUE)[1])
 
   mappedLabel
 

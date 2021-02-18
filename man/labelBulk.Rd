@@ -17,7 +17,7 @@ labelBulk(
 \arguments{
 \item{cellWalk}{a cellWalk object}
 
-\item{bulkPeaks}{GRanges of peaks in bulk data}
+\item{bulkPeaks}{GRanges of peaks in bulk data or GRangesList of sets of peaks}
 
 \item{ATACMat}{cell-by-peak matrix}
 

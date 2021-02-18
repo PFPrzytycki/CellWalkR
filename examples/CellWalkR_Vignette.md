@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-02-16
+2021-02-18
 
 Getting Started
 ---------------
@@ -261,12 +261,13 @@ sampleEnhancers <- GRanges(sampleEnhancers$V1,
 
 ``` r
 mappedLabel <- labelBulk(cellWalk, 
-                        sampleEnhancers[1:10], 
+                        sampleEnhancers[1:1000], 
                         ATACMat, 
                         peaks)
-mappedLabel
-#>  [1] "RG-div1"  "RG-early" "RG-early" "RG-early" "RG-early" "RG-div1" 
-#>  [7] "RG-early" "RG-early" "RG-early" "RG-early"
+table(mappedLabel)
+#> mappedLabel
+#>      oRG  RG-div1  RG-div2 RG-early      tRG      vRG 
+#>       69      146        4        6        5        5
 ```
 
 Adding a Second Set of Labels
