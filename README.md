@@ -17,8 +17,11 @@ Usage
 
 For a guide to using CellWalkR, see the provided [vignette](examples/CellWalkR_Vignette.md).
 
-If you use CellWalkR please cite our paper:
-Przytycki, P.F., Pollard, K.S. CellWalker integrates single-cell and bulk data to resolve regulatory elements across cell types in complex tissues. Genome Biol 22, 61 (2021). <https://doi.org/10.1186/s13059-021-02279-1>
+If you use CellWalkR please cite:
+
+1.  Przytycki, P.F., Pollard, K.S. CellWalker integrates single-cell and bulk data to resolve regulatory elements across cell types in complex tissues. Genome Biol 22, 61 (2021). <https://doi.org/10.1186/s13059-021-02279-1>
+
+2.  Przytycki, P.F., Pollard, K.S. CellWalkR: An R Package for integrating single-cell and bulk data to resolve regulatory elements. bioRxiv (2021). <https://doi.org/10.1101/2021.02.23.432593>
 
 AWS + TensorFlow
 ----------------
