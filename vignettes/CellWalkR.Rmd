@@ -265,11 +265,13 @@ sampleEnhancers <- GRanges(sampleEnhancers$V1,
                            IRanges(sampleEnhancers$V2, sampleEnhancers$V3))
 ```
 ```{r downstream-mapLabels}
-mappedLabel <- labelBulk(cellWalk, 
+labelScores <- labelBulk(cellWalk, 
                         sampleEnhancers[1:1000], 
                         ATACMat, 
-                        peaks)
-table(mappedLabel)
+                        peaks,
+                        allScores = TRUE)
+mappedLabel <- selectLabels(labelScores, z = 1.5)
+table(unlist(mappedLabel))
 ```
 
 ## Adding a Second Set of Labels

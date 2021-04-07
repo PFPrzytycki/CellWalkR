@@ -10,6 +10,7 @@ labelBulk(
   ATACMat,
   peaks,
   cellTypes,
+  allScores = FALSE,
   parallel = FALSE,
   numCores = 1
 )
@@ -24,6 +25,8 @@ labelBulk(
 \item{peaks}{GRanges of peaks in ATACMat}
 
 \item{cellTypes}{character, vector of labels to use, all labels used by default}
+
+\item{allScores}{return full table of scores}
 
 \item{parallel}{execute in parallel}
 

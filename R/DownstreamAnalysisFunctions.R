@@ -203,11 +203,12 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
 #' @param ATACMat cell-by-peak matrix
 #' @param peaks GRanges of peaks in ATACMat
 #' @param cellTypes character, vector of labels to use, all labels used by default
+#' @param allScores return full table of scores
 #' @param parallel execute in parallel
 #' @param numCores number of cores to use for parallel execution
 #' @return labels for each region in bulk data
 #' @export
-labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FALSE, numCores=1){
+labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -286,9 +287,29 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, parallel=FA
     })
   }
 
-  mappedLabel = apply(infCellOnType, 2, function(x) ifelse(length(which(is.na(x)))==0,cellTypes[order(x, decreasing = TRUE)[1]],NA))
-  # mappedScore = apply(infCellOnType, 2, function(x) sort(x, decreasing = TRUE)[1])
+  if(allScores){
+    rownames(infCellOnType) = cellTypes
+    t(apply(infCellOnType, 2, function(x) (x-mean(x))/sd(x)))
+  }
+  else{
+    mappedLabel = apply(infCellOnType, 2, function(x) ifelse(length(which(is.na(x)))==0,cellTypes[order(x, decreasing = TRUE)[1]],NA))
+    mappedLabel
+  }
+}
 
-  mappedLabel
-
+#' Select significant labels
+#'
+#' \code{selectLabels()} Determines labels for bulk data by mapping them via
+#' the calculated information matrix
+#'
+#' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
+#' @param z numeric z-score threshold for significance
+#' @return list of signficant labels for each region in bulk data
+#' @export
+selectLabels = function(labelScores, z=2){
+  if(missing(labelScores) || !is(labelScores, "matrix")){
+    stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
+  }
+  sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
+  sigTypes
 }

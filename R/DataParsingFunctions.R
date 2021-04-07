@@ -499,6 +499,7 @@ computeLabelEdges = function(
       cellsInMarkers = cbind(cellsInMarkers,cellsInLabelMarkers)
     }
     colnames(cellsInMarkers) = labels
+    cellsInMarkers = cellsInMarkers[,colSums(cellsInMarkers)!=0]
     cellsInMarkers
   }
 }
