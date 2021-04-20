@@ -9,6 +9,7 @@ labelBulk(
   bulkPeaks,
   ATACMat,
   peaks,
+  extendRegion,
   cellTypes,
   allScores = FALSE,
   parallel = FALSE,
@@ -23,6 +24,8 @@ labelBulk(
 \item{ATACMat}{cell-by-peak matrix}
 
 \item{peaks}{GRanges of peaks in ATACMat}
+
+\item{extendRegion}{GRanges defining where to extend mapping to consider peaks in a larger region (e.g. in LD) with bulk data}
 
 \item{cellTypes}{character, vector of labels to use, all labels used by default}
 

@@ -202,13 +202,14 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
 #' @param bulkPeaks GRanges of peaks in bulk data or GRangesList of sets of peaks
 #' @param ATACMat cell-by-peak matrix
 #' @param peaks GRanges of peaks in ATACMat
+#' @param extendRegion GRanges defining where to extend mapping to consider peaks in a larger region (e.g. in LD) with bulk data
 #' @param cellTypes character, vector of labels to use, all labels used by default
 #' @param allScores return full table of scores
 #' @param parallel execute in parallel
 #' @param numCores number of cores to use for parallel execution
 #' @return labels for each region in bulk data
 #' @export
-labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
+labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -235,6 +236,15 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, cellTypes, allScores=F
   if(missing(bulkPeaks)){
     stop("Must provide a GRanges or GRangesList object of peaks to map")
   }
+
+  if(!missing(extendRegion)){
+    if(!is(extendRegion, "GRanges")){
+      stop("extendRegion must be a GRanges object")
+    }
+    whichExtends = findOverlaps(bulkPeaks, extendRegion)
+    bulkPeaks[whichExtends@from] = extendRegion[whichExtends@to]
+  }
+
   peakOverlaps = findOverlaps(peaks, bulkPeaks)
 
   if(parallel){
