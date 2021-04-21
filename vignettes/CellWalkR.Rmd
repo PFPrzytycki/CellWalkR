@@ -274,6 +274,19 @@ mappedLabel <- selectLabels(labelScores, z = 1.5)
 table(unlist(mappedLabel))
 ```
 
+It can help to visualize how these enhancers map to the full heirarchy of cell types. We can see the
+total counts of enhancers:
+
+```{r downstream-plotLabels}
+p <- plotMultiLevelLabels(labelScores, z = 1.5)
+```
+
+Or look where a single enhancer is enriched or depleted:
+
+```{r downstream-plotSingleLabel}
+p <- plotMultiLevelLabels(labelScores, z = 1.5, whichBulk = 32)
+```
+
 ## Adding a Second Set of Labels
 
 CellWalkR can be run on an arbitrary number of sets of labels and filters, each

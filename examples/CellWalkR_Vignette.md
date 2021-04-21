@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-04-07
+2021-04-21
 
 Getting Started
 ---------------
@@ -271,6 +271,26 @@ table(unlist(mappedLabel))
 #>      oRG  RG-div1  RG-div2 RG-early      tRG      vRG 
 #>        6       16        1        2        2        3
 ```
+
+It can help to visualize how these enhancers map to the full heirarchy of cell types. We can see the total counts of enhancers:
+
+``` r
+p <- plotMultiLevelLabels(labelScores, z = 1.5)
+```
+
+![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotLabels-1.png)
+
+    #> 'dendrogram' with 2 branches and 6 members total, at height 0.04581557
+
+Or look where a single enhancer is enriched or depleted:
+
+``` r
+p <- plotMultiLevelLabels(labelScores, z = 1.5, whichBulk = 32)
+```
+
+![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotSingleLabel-1.png)
+
+    #> 'dendrogram' with 2 branches and 6 members total, at height 0.04581557
 
 Adding a Second Set of Labels
 -----------------------------

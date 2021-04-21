@@ -436,14 +436,21 @@ plotMultiLevelLabels = function(labelScores, z=2, whichBulk){
   adjClust$height = adjClust$height-min(adjClust$height)
   if(missing(whichBulk)){
     weights = colSums(plotScores>z, na.rm=TRUE)/max(colSums(plotScores>z, na.rm=TRUE))
-    p = adjClust %>% as.dendrogram %>%
-      dendextend::set("branches_lwd", weights*5+1) %>%
-      dendextend::set("branches_col", colorRampPalette(c("gray", "#1F77B4"))(8)[cut(weights*5, breaks=c(-Inf,0,.5,1,1.5,2,2.5,3,Inf))])
+    # p = adjClust %>% as.dendrogram %>%
+    #   dendextend::set("branches_lwd", weights*5+1) %>%
+    #   dendextend::set("branches_col", colorRampPalette(c("gray", "#1F77B4"))(8)[cut(weights*5, breaks=c(-Inf,0,.5,1,1.5,2,2.5,3,Inf))])
+    p = dendextend::set(dendextend::set(as.dendrogram(adjClust),
+            what="branches_lwd", value=weights*5+1),
+            what="branches_col", value=colorRampPalette(c("gray", "#1F77B4"))(8)[cut(weights*5, breaks=c(-Inf,0,.5,1,1.5,2,2.5,3,Inf))])
+
   }
   else{
-    p = adjClust %>% as.dendrogram %>%
-      dendextend::set("branches_lwd", abs(plotScores[whichBulk,])) %>%
-      dendextend::set("branches_col", colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
+    # p = adjClust %>% as.dendrogram %>%
+    #   dendextend::set("branches_lwd", abs(plotScores[whichBulk,])) %>%
+    #   dendextend::set("branches_col", colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
+    p = dendextend::set(dendextend::set(as.dendrogram(adjClust),
+      what="branches_lwd", abs(plotScores[whichBulk,])),
+      what="branches_col", value=colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
   }
 
   print(dendextend::circlize_dendrogram(p, dend_track_height = .85))
