@@ -323,3 +323,130 @@ selectLabels = function(labelScores, z=2){
   sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
   sigTypes
 }
+
+#' Select significant labels across heirarchy
+#'
+#' \code{selectMultiLevelLabels()} Determines labels across heirarchy for bulk data by mapping them via
+#' the calculated information matrix
+#'
+#' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
+#' @param z numeric z-score threshold for significance
+#' @return list of signficant labels for each region in bulk data
+#' @export
+selectMultiLevelLabels = function(labelScores, z=2){
+  if(missing(labelScores) || !is(labelScores, "matrix")){
+    stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
+  }
+  sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
+
+  #check for cluster
+  if(!any(names(cellWalk) == "cluster")){
+    stop("Must first run clusterLabels on cellWalk")
+  }
+
+  #compute merge scores
+  mergeScore = c()
+  for(i in 1:dim(cellWalk$cluster$merge)[1]){
+    a = if(cellWalk$cluster$merge[i,1]<0){labelScores[,-cellWalk$cluster$merge[i,1]]}else{mergeScore[,cellWalk$cluster$merge[i,1]]}
+    b = if(cellWalk$cluster$merge[i,2]<0){labelScores[,-cellWalk$cluster$merge[i,2]]}else{mergeScore[,cellWalk$cluster$merge[i,2]]}
+    c = (a+b)/2
+    d = (2-cellWalk$cluster$height[i])*c
+    mergeScore = cbind(mergeScore, d)
+  }
+
+  sigTypesLoc = sapply(1:length(sigTypes), function(x){
+    as.numeric(which(mergeScore[x,]>z))
+  })
+  sigTypesList = sapply(1:length(sigTypes), function(x){
+    sigGroups = rep(list(c()), length(sigTypesLoc[[x]]))
+    if(length(sigTypesLoc[[x]])>0){
+      for(i in 1:length(sigTypesLoc[[x]])){
+        theseTypes = c()
+        mergeList = sigTypesLoc[[x]][i]
+        while(length(mergeList)>0) {
+          thisMerge = mergeList[1]
+          mergeList = mergeList[-1]
+          if(thisMerge<0){
+            theseTypes = c(theseTypes, colnames(labelScores)[-thisMerge])
+          } else{
+            mergeList = c(mergeList, cellWalk$cluster$merge[thisMerge,])
+          }
+        }
+        sigGroups[[i]] = theseTypes
+      }
+    }
+    sigGroups
+  })
+  sigTypes
+
+}
+
+#' Plot significant labels across heirarchy
+#'
+#' \code{plotMultiLevelLabels()} Plots labels across heirarchy for bulk data by mapping them via
+#' the calculated information matrix
+#'
+#' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
+#' @param z numeric z-score threshold for significance
+#' @param whichBulk, numeric optionally identify which bulk peak to plot
+#' @return plot object p of either counts of signifcant labels or enrichment/depletion for single peak
+#' @export
+plotMultiLevelLabels = function(labelScores, z=2, whichBulk){
+  if(missing(labelScores) || !is(labelScores, "matrix")){
+    stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
+  }
+  sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
+
+  #check for cluster
+  if(!any(names(cellWalk) == "cluster")){
+    stop("Must first run clusterLabels on cellWalk")
+  }
+
+  #compute merge scores
+  mergeScore = c()
+  for(i in 1:dim(cellWalk$cluster$merge)[1]){
+    a = if(cellWalk$cluster$merge[i,1]<0){labelScores[,-cellWalk$cluster$merge[i,1]]}else{mergeScore[,cellWalk$cluster$merge[i,1]]}
+    b = if(cellWalk$cluster$merge[i,2]<0){labelScores[,-cellWalk$cluster$merge[i,2]]}else{mergeScore[,cellWalk$cluster$merge[i,2]]}
+    c = (a+b)/2
+    d = (2-cellWalk$cluster$height[i])*c
+    mergeScore = cbind(mergeScore, d)
+  }
+
+  plotScores = mergeScore[,dim(cellWalk$cluster$merge)[1]]
+  testList = cellWalk$cluster$merge[dim(cellWalk$cluster$merge)[1],]
+  while(length(testList)>0){
+    thisTest = testList[1]
+    testList = testList[-1]
+    if(thisTest<0){
+      plotScores = cbind(plotScores, labelScores[,-thisTest])
+    } else{
+      plotScores = cbind(plotScores, mergeScore[,thisTest])
+      testList = c(cellWalk$cluster$merge[thisTest,], testList)
+    }
+  }
+
+  if(!requireNamespace("dendextend", quietly = TRUE)){
+    stop("Must install dendextend")
+  }
+  if(!requireNamespace("circlize", quietly = TRUE)){
+    stop("Must install circlize")
+  }
+
+  adjClust = cellWalk$cluster
+  adjClust$height = adjClust$height-min(adjClust$height)
+  if(missing(whichBulk)){
+    weights = colSums(plotScores>z, na.rm=TRUE)/max(colSums(plotScores>z, na.rm=TRUE))
+    p = adjClust %>% as.dendrogram %>%
+      dendextend::set("branches_lwd", weights*5+1) %>%
+      dendextend::set("branches_col", colorRampPalette(c("gray", "#1F77B4"))(8)[cut(weights*5, breaks=c(-Inf,0,.5,1,1.5,2,2.5,3,Inf))])
+  }
+  else{
+    p = adjClust %>% as.dendrogram %>%
+      dendextend::set("branches_lwd", abs(plotScores[whichBulk,])) %>%
+      dendextend::set("branches_col", colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
+  }
+
+  print(dendextend::circlize_dendrogram(p, dend_track_height = .85))
+
+  p
+}
