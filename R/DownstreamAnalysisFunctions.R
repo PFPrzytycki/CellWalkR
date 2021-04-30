@@ -203,13 +203,14 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
 #' @param ATACMat cell-by-peak matrix
 #' @param peaks GRanges of peaks in ATACMat
 #' @param extendRegion GRanges defining where to extend mapping to consider peaks in a larger region (e.g. in LD) with bulk data
+#' @param extendDistance numeric maximum distance to extend region by (if region is missing, just distance is used, if distance is missing whole region is used)
 #' @param cellTypes character, vector of labels to use, all labels used by default
 #' @param allScores return full table of scores
 #' @param parallel execute in parallel
 #' @param numCores number of cores to use for parallel execution
 #' @return labels for each region in bulk data
 #' @export
-labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
+labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDistance, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -242,10 +243,23 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, cellType
       stop("extendRegion must be a GRanges object")
     }
     whichExtends = findOverlaps(bulkPeaks, extendRegion)
-    bulkPeaks[whichExtends@from] = extendRegion[whichExtends@to]
+    extensions = extendRegion[whichExtends@to]
+    #restore original range if it was trimmed
+    start(extensions) = sapply(1:length(extensions), function(x) min(start(extensions)[x], start(bulkPeaks[whichExtends@from[x]])))
+    end(extensions) = sapply(1:length(extensions), function(x) max(end(extensions)[x], end(bulkPeaks[whichExtends@from[x]])))
+    #cut extension to distance
+    if(!missing(extendDistance)){
+        start(extensions) = sapply(1:length(extensions), function(x) max(start(extensions)[x], start(bulkPeaks[whichExtends@from[x]])-extendDistance))
+        end(extensions) = sapply(1:length(extensions), function(x) min(end(extensions)[x], end(bulkPeaks[whichExtends@from[x]])+extendDistance))
+    }
+    bulkPeaks[whichExtends@from] = extensions
   }
 
-  peakOverlaps = findOverlaps(peaks, bulkPeaks)
+  if(missing(extendDistance) | !missing(extendRegion)){
+    extendDistance = -1
+  }
+
+  peakOverlaps = findOverlaps(peaks, bulkPeaks, maxgap = extendDistance)
 
   if(parallel){
     if(!requireNamespace("parallel", quietly = TRUE)){
