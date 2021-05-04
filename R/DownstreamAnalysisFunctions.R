@@ -391,7 +391,7 @@ selectMultiLevelLabels = function(labelScores, z=2){
     }
     sigGroups
   })
-  sigTypes
+  sigTypesList
 
 }
 
