@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-04-21
+2021-05-14
 
 Getting Started
 ---------------
@@ -275,7 +275,7 @@ table(unlist(mappedLabel))
 It can help to visualize how these enhancers map to the full heirarchy of cell types. We can see the total counts of enhancers:
 
 ``` r
-p <- plotMultiLevelLabels(labelScores, z = 1.5)
+p <- plotMultiLevelLabels(cellWalk, labelScores, z = 1.5)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotLabels-1.png)
@@ -285,7 +285,7 @@ p <- plotMultiLevelLabels(labelScores, z = 1.5)
 Or look where a single enhancer is enriched or depleted:
 
 ``` r
-p <- plotMultiLevelLabels(labelScores, z = 1.5, whichBulk = 32)
+p <- plotMultiLevelLabels(cellWalk, labelScores, z = 1.5, whichBulk = 32)
 ```
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotSingleLabel-1.png)

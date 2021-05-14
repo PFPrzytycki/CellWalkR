@@ -343,14 +343,19 @@ selectLabels = function(labelScores, z=2){
 #' \code{selectMultiLevelLabels()} Determines labels across heirarchy for bulk data by mapping them via
 #' the calculated information matrix
 #'
+#' @param cellWalk a cellWalk object
 #' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
 #' @param z numeric z-score threshold for significance
 #' @return list of signficant labels for each region in bulk data
 #' @export
-selectMultiLevelLabels = function(labelScores, z=2){
+selectMultiLevelLabels = function(cellWalk, labelScores, z=2){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
   if(missing(labelScores) || !is(labelScores, "matrix")){
     stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
   }
+
   sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
 
   #check for cluster
@@ -400,15 +405,20 @@ selectMultiLevelLabels = function(labelScores, z=2){
 #' \code{plotMultiLevelLabels()} Plots labels across heirarchy for bulk data by mapping them via
 #' the calculated information matrix
 #'
+#' @param cellWalk a cellWalk object
 #' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
 #' @param z numeric z-score threshold for significance
 #' @param whichBulk, numeric optionally identify which bulk peak to plot
 #' @return plot object p of either counts of signifcant labels or enrichment/depletion for single peak
 #' @export
-plotMultiLevelLabels = function(labelScores, z=2, whichBulk){
+plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
   if(missing(labelScores) || !is(labelScores, "matrix")){
     stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
   }
+
   sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
 
   #check for cluster
