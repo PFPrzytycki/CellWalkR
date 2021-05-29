@@ -195,7 +195,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
 }
 
 
-#' Map peaks to genes
+#' Map SnapATAC peaks to genes
 #'
 #' \code{mapSnapATACToGenes} Generates a mapping from genes to peaks per label
 #'
@@ -224,16 +224,19 @@ mapSnapATACToGenes = function(labelGenes, snap, whichMat = "bmat", regions){
     if(length(which(!is.na(whichGenes)))<10){
       warning("Fewer than 10 gene names match")
     }
-    sapply(unique(labelGenes$cluster), function(c)
-      list(peak=match(labelGenes$gene[labelGenes$cluster==c],colnames(snap@gmat)),
-           gene=labelGenes$gene[labelGenes$cluster==c]))
+    sapply(as.character(unique(labelGenes$cluster)), function(x) {
+      markerGenes = labelGenes[labelGenes[,2]==x,1]
+      markerGenes = markerGenes[markerGenes %in% colnames(snap@gmat)]
+      list(peak=match(markerGenes,colnames(snap@gmat)),
+           gene=markerGenes)
+    })
   }
   else{
     stop("Must use bmat or gmat")
   }
 }
 
-#' Map peaks to genes
+#' Map ArchR peaks to genes
 #'
 #' \code{mapArchRToGenes} Generates a mapping from genes to peaks per label
 #'
@@ -272,9 +275,12 @@ mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regio
     if(length(which(!is.na(whichGenes)))<10){
       warning("Fewer than 10 gene names match")
     }
-    sapply(unique(labelGenes$cluster), function(c)
-      list(peak=match(labelGenes$gene[labelGenes$cluster==c],rowData(ATACData)$name),
-           gene=labelGenes$gene[labelGenes$cluster==c]))
+    sapply(as.character(unique(labelGenes$cluster)), function(x) {
+      markerGenes = labelGenes[labelGenes[,2]==x,1]
+      markerGenes = markerGenes[markerGenes %in% rowData(ATACData)$name]
+      list(peak=match(markerGenes,rowData(ATACData)$name),
+           gene=markerGenes)
+    })
   }
   else{
     stop("Must use TileMatrix or GeneScoreMatrix")
@@ -301,9 +307,12 @@ mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
   if(length(which(!is.na(whichGenes)))<10){
     warning("Fewer than 10 gene names match")
   }
-  sapply(unique(labelGenes$cluster), function(c)
-    list(peak=match(labelGenes$gene[labelGenes$cluster==c],rownames(cicero_gene_activities)),
-         gene=labelGenes$gene[labelGenes$cluster==c]))
+  sapply(as.character(unique(labelGenes$cluster)), function(x) {
+    markerGenes = labelGenes[labelGenes[,2]==x,1]
+    markerGenes = markerGenes[markerGenes %in% rownames(cicero_gene_activities)]
+    list(peak=match(markerGenes,rownames(cicero_gene_activities)),
+         gene=markerGenes)
+  })
 }
 
 #' Compute Label Edges

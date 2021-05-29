@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataParsingFunctions.R
 \name{mapArchRToGenes}
 \alias{mapArchRToGenes}
-\title{Map peaks to genes}
+\title{Map ArchR peaks to genes}
 \usage{
 mapArchRToGenes(labelGenes, ArchRproj, whichMat = "TileMatrix", regions)
 }

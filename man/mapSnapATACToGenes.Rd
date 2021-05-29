@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataParsingFunctions.R
 \name{mapSnapATACToGenes}
 \alias{mapSnapATACToGenes}
-\title{Map peaks to genes}
+\title{Map SnapATAC peaks to genes}
 \usage{
 mapSnapATACToGenes(labelGenes, snap, whichMat = "bmat", regions)
 }
