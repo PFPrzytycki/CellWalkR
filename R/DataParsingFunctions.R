@@ -224,7 +224,7 @@ mapSnapATACToGenes = function(labelGenes, snap, whichMat = "bmat", regions){
     if(length(which(!is.na(whichGenes)))<10){
       warning("Fewer than 10 gene names match")
     }
-    sapply(as.character(unique(labelGenes$cluster)), function(x) {
+    sapply(as.character(unique(labelGenes[,2])), function(x) {
       markerGenes = labelGenes[labelGenes[,2]==x,1]
       markerGenes = markerGenes[markerGenes %in% colnames(snap@gmat)]
       list(peak=match(markerGenes,colnames(snap@gmat)),
@@ -275,7 +275,7 @@ mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regio
     if(length(which(!is.na(whichGenes)))<10){
       warning("Fewer than 10 gene names match")
     }
-    sapply(as.character(unique(labelGenes$cluster)), function(x) {
+    sapply(as.character(unique(labelGenes[,2])), function(x) {
       markerGenes = labelGenes[labelGenes[,2]==x,1]
       markerGenes = markerGenes[markerGenes %in% rowData(ATACData)$name]
       list(peak=match(markerGenes,rowData(ATACData)$name),
@@ -307,7 +307,7 @@ mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
   if(length(which(!is.na(whichGenes)))<10){
     warning("Fewer than 10 gene names match")
   }
-  sapply(as.character(unique(labelGenes$cluster)), function(x) {
+  sapply(as.character(unique(labelGenes[,2])), function(x) {
     markerGenes = labelGenes[labelGenes[,2]==x,1]
     markerGenes = markerGenes[markerGenes %in% rownames(cicero_gene_activities)]
     list(peak=match(markerGenes,rownames(cicero_gene_activities)),
