@@ -192,6 +192,86 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
   cellWalk
 }
 
+#' Comptute Minimum Spanning Tree
+#'
+#' \code{computeMST()} computes a minimum spanning tree based on cell-to-cell influence
+#'
+#' @param cellWalk a cellWalk object
+#' @param cellTypes character, optional vector of labels to use, all labels used by default. Most likely label among those listed
+#'  will be used. If only a single label is provided, all cells will be colored by their score for that label. If two labels are
+#'  given, the difference in score for each cell is shown.
+#' @param labelThreshold numeric, set a threshold below which cells aren't labeled (e.g. 0)
+#' @param recompute boolean, recompute layout for MST plot
+#' @param plot boolean, optionally don't plot output and only compute the embedding
+#' @param seed numeric, random seed
+#' @return cellWalk object with MST stored in "MST" and layout stored in "MST_layout"
+#' @export
+computeMST = function(cellWalk, cellTypes, labelThreshold, recompute = FALSE, plot = TRUE, seed){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+
+  if(!missing(seed)){
+    set.seed(seed)
+  }
+
+  numLabels = dim(cellWalk[["normMat"]])[2]
+  cellCellInf = cellWalk[["infMat"]][-(1:numLabels),-(1:numLabels)]
+
+  if(!requireNamespace("igraph", quietly = TRUE)){
+    stop("Must install igraph")
+  }
+
+  if(recompute | is.null(cellWalk[["MST"]]) | is.null(cellWalk[["MST_layout"]])){
+    graph = igraph::graph_from_adjacency_matrix(cellCellInf, weighted = TRUE)
+    MST = igraph::mst(graph, weights = max(igraph::E(graph)$weight)-igraph::E(graph)$weight)
+    cellWalk[["MST"]] = MST
+    cellWalk[["MST_layout"]] = igraph::layout_with_lgl(MST)
+  }
+
+  if(plot){
+    plotColor = cellWalk$cellLabels
+    if(!missing(labelThreshold)){
+      plotColor[apply(cellWalk[["normMat"]], 1, max)<=labelThreshold] = "Other"
+    }
+    labelText = "Label"
+    if(!missing(cellTypes)){
+      cellTypes = cellTypes[cellTypes %in% colnames(cellWalk[["normMat"]])]
+      if(length(cellTypes)==0){
+        stop("No labels match cell types")
+      }
+      else if(length(cellTypes)==1){
+        plotColor = cellWalk[["normMat"]][,cellTypes]
+        labelText = paste(cellTypes,"Score")
+      }
+      else if(length(cellTypes)==2){
+        plotColor = cellWalk[["normMat"]][,cellTypes[1]]-cellWalk[["normMat"]][,cellTypes[2]]
+        labelText = paste0(cellTypes[1]," vs\n",cellTypes[2]," Score")
+      }
+      else{
+        normMatTrim = cellWalk[["normMat"]][,cellTypes]
+        plotColor = apply(normMatTrim, 1, function(x) cellTypes[order(x, decreasing = TRUE)][1])
+        if(!missing(labelThreshold)){
+          plotColor[apply(normMatTrim, 1, max)<=labelThreshold] = "Other"
+        }
+      }
+    }
+    else{cellTypes = colnames(cellWalk[["normMat"]])}
+    if(length(cellTypes)==1){
+      plotColor = cut(plotColor, 100)
+      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)]))
+    } else if(length(cellTypes)==2){
+      plotColor = cut(plotColor, 100)
+      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)]))
+    }
+    else{
+      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)]))
+    }
+  }
+
+  cellWalk
+}
+
 
 #' Label bulk data
 #'
@@ -234,7 +314,7 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDi
   if(missing(peaks)){
     stop("Must provide a GRanges object of peaks")
   }
-  if(missing(bulkPeaks)){
+  if(missing(bulkPeaks) || !(is(bulkPeaks, "GRanges") | is(bulkPeaks, "GRangesList"))){
     stop("Must provide a GRanges or GRangesList object of peaks to map")
   }
 
@@ -319,6 +399,68 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDi
     mappedLabel = apply(infCellOnType, 2, function(x) ifelse(length(which(is.na(x)))==0,cellTypes[order(x, decreasing = TRUE)[1]],NA))
     mappedLabel
   }
+}
+
+#' Store bulk label data
+#'
+#' \code{storeBulk()} stores labels for bulk data in the cellWalk object
+#'
+#' @param cellWalk a cellWalk object
+#' @param bulkPeaks GRanges of peaks in bulk data or GRangesList of sets of peaks
+#' @param labelScores a matrix of label scores, output of labelBulk with allScores set to TRUE
+#' @param bulkID character string assigning name to bulk data
+#' @return cellWalk object with labels for each region in bulk data
+#' @export
+storeBulk = function(cellWalk, bulkPeaks, labelScores, bulkID){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  if(missing(bulkPeaks) || !(is(bulkPeaks, "GRanges") | is(bulkPeaks, "GRangesList"))){
+    stop("Must provide a GRanges or GRangesList object of bulk peaks")
+  }
+  if(missing(labelScores) || !is(labelScores, "matrix")){
+    stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
+  }
+  if(dim(labelScores)[2] != dim(cellWalk$normMat)[2]){
+    stop("label scores has wrong number of labels")
+  }
+  if(dim(labelScores)[1] != length(bulkPeaks)){
+    stop("label scores has wrong number of mapped ranges")
+  }
+
+  if(missing(bulkID) || !is(bulkID, "character")){
+    bulkID = deparse(substitute(bulkPeaks))
+  }
+
+  cellWalk[["labelBulk"]][[bulkID]] = list(bulkPeaks=bulkPeaks, labelScores=labelScores)
+
+  cellWalk
+}
+
+#' Store ATACMat data
+#'
+#' \code{storeMat()} stores the original ATAC matrix
+#'
+#' @param cellWalk a cellWalk object
+#' @param ATACMat cell-by-peak matrix
+#' @param peaks GRanges of peaks in ATACMat
+#' @return cellWalk object with original ATAC matrix stored
+#' @export
+storeMat = function(cellWalk, ATACMat, peaks){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  if(missing(ATACMat)){
+    stop("Must provide a cell-by-peak matrix")
+  }
+  if(missing(peaks)){
+    stop("Must provide a GRanges object of peaks")
+  }
+
+  cellWalk[["ATACMat"]] = ATACMat
+  cellWalk[["peaks"]] = peaks
+
+  cellWalk
 }
 
 #' Select significant labels
@@ -419,8 +561,6 @@ plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
     stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
   }
 
-  sigTypes = apply(labelScores, 1, function(x) colnames(labelScores)[x>z & !is.na(x)])
-
   #check for cluster
   if(!any(names(cellWalk) == "cluster")){
     stop("Must first run clusterLabels on cellWalk")
@@ -460,6 +600,7 @@ plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
   adjClust$height = adjClust$height-min(adjClust$height)
   if(missing(whichBulk)){
     weights = colSums(plotScores>z, na.rm=TRUE)/max(colSums(plotScores>z, na.rm=TRUE))
+    weights[is.na(weights)] = 0
     # p = adjClust %>% as.dendrogram %>%
     #   dendextend::set("branches_lwd", weights*5+1) %>%
     #   dendextend::set("branches_col", colorRampPalette(c("gray", "#1F77B4"))(8)[cut(weights*5, breaks=c(-Inf,0,.5,1,1.5,2,2.5,3,Inf))])

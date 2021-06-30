@@ -1,10 +1,10 @@
 Package: CellWalkR
 Type: Package
-Title: R implementation of CellWalker for analysis of scATAC-seq 
-Version: 0.2.9
+Title: R implementation of CellWalker for analysis and visualization of scATAC-seq 
+Version: 0.3.0
 Author: Pawel F. Przytycki
 Maintainer: Pawel F. Przytycki <pawel.przytycki@gladstone.ucsf.edu>
-Description: R implementation of CellWalker for analysis of scATAC-seq
+Description: R implementation of CellWalker for analysis and visualization of scATAC-seq
 License: GPL-2 + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -23,6 +23,8 @@ Suggests:
     ggplot2,
     reshape2,
     dendextend,
+    plotly,
+    shiny,
     parallel,
     knitr,
     rmarkdown
