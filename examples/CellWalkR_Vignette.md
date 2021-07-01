@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2021-05-14
+2021-07-01
 
 Getting Started
 ---------------
@@ -190,7 +190,7 @@ cellWalk <- walkCells(cellEdges,
 Downstream Analysis
 -------------------
 
-Once we have created a cellWalk object, we can use it for downstream analysis.
+Once we have created a cellWalk object, we can use it for downstream analysis. At this stage a visualization can be launched for interactive downstream analysis. See the [interacting with your cellWalk object vignette](Interacting_Vignette.md) for details.
 
 Most directly, we can look at what labels are the most strongly linked to each cell. This is based on the maxiumum amount of label-to-cell influence in the cell walk. Cell labeling can be used for numerous further downstream analyses such as cell-type specific peak calling.
 
