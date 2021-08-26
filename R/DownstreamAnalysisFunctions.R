@@ -259,13 +259,13 @@ computeMST = function(cellWalk, cellTypes, labelThreshold, recompute = FALSE, pl
     else{cellTypes = colnames(cellWalk[["normMat"]])}
     if(length(cellTypes)==1){
       plotColor = cut(plotColor, 100)
-      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)]))
+      print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)]))
     } else if(length(cellTypes)==2){
       plotColor = cut(plotColor, 100)
-      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)]))
+      print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)]))
     }
     else{
-      print(plot(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)]))
+      print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)]))
     }
   }
 
@@ -614,7 +614,7 @@ plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
     #   dendextend::set("branches_lwd", abs(plotScores[whichBulk,])) %>%
     #   dendextend::set("branches_col", colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
     p = dendextend::set(dendextend::set(as.dendrogram(adjClust),
-      what="branches_lwd", abs(plotScores[whichBulk,])),
+      what="branches_lwd", abs(plotScores[whichBulk,])+2),
       what="branches_col", value=colorRampPalette(c("red", "white", "blue"))(8)[cut(plotScores[whichBulk,], breaks=c(-Inf,-3,-2,-1,0,1,2,3,Inf))])
   }
 

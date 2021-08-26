@@ -9,6 +9,7 @@ walkCells(
   labelEdgesList,
   labelEdgeWeights,
   sampleDepth,
+  steps,
   tensorflow = FALSE
 )
 }
@@ -20,6 +21,8 @@ walkCells(
 \item{labelEdgeWeights}{vector of weights to test for label edges}
 
 \item{sampleDepth}{depth to subsample cells to for faster calculation}
+
+\item{steps}{integer indicating number of steps to take if walk should not be run to convergence}
 
 \item{tensorflow}{boolean to indicate whether to compute on GPU}
 }

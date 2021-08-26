@@ -56,20 +56,32 @@ combineMultiLabelGraph = function(labelEdgesList, cellEdges, weights){
 #' @param adj adjacency matrix
 #' @param r restart probability
 #' @param tensorflow boolean to indicate whether to compute on GPU
+#' @param steps integer indicating number of steps to take if walk should not be run to convergence
 #' @return influence matrix, each column is the vector of influences on each row
 #' @export
-randomWalk = function(adj, r=0.5, tensorflow=FALSE){
+randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
 
   len = dim(adj)[1]
 
   if(!tensorflow){
+      D = Matrix::Diagonal(x=Matrix::rowSums(adj))
+      W = solve(D)%*%adj
 
-    D = Matrix::Diagonal(x=Matrix::rowSums(adj))
-    W = solve(D)%*%adj
+      if(missing(steps)){
 
-    infMat = r*solve(Matrix::Diagonal(len)-(1-r)*W)
+        infMat = r*solve(Matrix::Diagonal(len)-(1-r)*W)
 
-    infMat
+      }else{
+
+        infMat = Matrix::Diagonal(1, n = dim(W)[1])
+        for(i in 1:steps){
+          infMat =  (1-r)*(infMat %*% W)
+          Matrix::diag(infMat) = Matrix::diag(infMat) + r
+        }
+
+      }
+
+      infMat
 
   }else{
 

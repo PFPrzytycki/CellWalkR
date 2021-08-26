@@ -176,7 +176,7 @@ launchViz = function(cellWalk){
 
       observeEvent(input$renderMST, {
         withProgress(message = "Generating MST", {
-          cellWalk <<- computeMST(cellWalk)
+          cellWalk <<- computeMST(cellWalk, plot=FALSE)
         })
         if(!is.null(cellWalk[["tSNE"]])){
           output$tSNE_box <- renderUI({})
@@ -267,13 +267,13 @@ launchViz = function(cellWalk){
         }
         if(length(theseTypes)==1){
           plotColor = cut(plotColor, 100)
-          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)])
+          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)])
         } else if(length(theseTypes)==2){
           plotColor = cut(plotColor, 100)
-          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)])
+          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)])
         }
         else{
-          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)])
+          igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)])
         }
       }, width = 600, height = 600)
 

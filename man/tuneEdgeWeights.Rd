@@ -9,6 +9,7 @@ tuneEdgeWeights(
   labelEdgesList,
   labelEdgeOpts = 10^seq(-4, 4, 1),
   sampleDepth = 10000,
+  steps,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
@@ -24,6 +25,8 @@ tuneEdgeWeights(
 \item{labelEdgeOpts}{vector of weights to test for label edges}
 
 \item{sampleDepth}{integer depth to subsample cells to for faster calculation}
+
+\item{steps}{integer indicating number of steps to take if walk should not be run to convergence}
 
 \item{cellTypes}{list of names of cell types, if not provided unique cell labels are used}
 

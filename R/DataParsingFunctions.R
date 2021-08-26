@@ -522,10 +522,11 @@ computeLabelEdges = function(
 #' @param labelEdgesList list of cell-to-label similarity matrices each with dimensions c-by-l
 #' @param labelEdgeWeights vector of weights to test for label edges
 #' @param sampleDepth depth to subsample cells to for faster calculation
+#' @param steps integer indicating number of steps to take if walk should not be run to convergence
 #' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return cellWalk object with influence matrix and labels
 #' @export
-walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, tensorflow=FALSE){
+walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps, tensorflow=FALSE){
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
   }
@@ -570,7 +571,7 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, t
   }
 
   combinedGraph = combinedGraph[Matrix::colSums(combinedGraph)!=0, Matrix::colSums(combinedGraph)!=0]
-  infMat = randomWalk(combinedGraph, tensorflow=tensorflow)
+  infMat = randomWalk(combinedGraph, tensorflow=tensorflow, steps=steps)
 
   if(! is.null(colnames(cellEdges))){
     rownames(infMat) = rownames(combinedGraph)
@@ -599,6 +600,7 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, t
 #' @param labelEdgesList list of cell-to-label similarity matrices each with dimensions c-by-l
 #' @param labelEdgeOpts vector of weights to test for label edges
 #' @param sampleDepth integer depth to subsample cells to for faster calculation
+#' @param steps integer indicating number of steps to take if walk should not be run to convergence
 #' @param cellTypes list of names of cell types, if not provided unique cell labels are used
 #' @param parallel boolean, execute in parallel
 #' @param numCores integer, number of cores to use for parallel execution
@@ -611,6 +613,7 @@ tuneEdgeWeights = function(
   labelEdgesList,
   labelEdgeOpts = 10^seq(-4,4,1),
   sampleDepth = 10000,
+  steps,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
@@ -667,7 +670,7 @@ tuneEdgeWeights = function(
     cellHomogeneity = parallel::mcmapply(function(param){
       theseWeights = as.numeric(parameterCombos[param,])
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth)
+      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth, steps)
 
       if(cellTypesMissing){
         cellTypes = unique(cellWalk[["cellLabels"]])
@@ -682,7 +685,7 @@ tuneEdgeWeights = function(
     for(param in 1:dim(parameterCombos)[1]){
       theseWeights = as.numeric(parameterCombos[param,])
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth, tensorflow)
+      cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth, steps, tensorflow=tensorflow)
 
       if(cellTypesMissing){
         cellTypes = unique(cellWalk[["cellLabels"]])
@@ -729,6 +732,7 @@ tuneEdgeWeights = function(
 #' @param regions regions map peaks to genes
 #' @param peaks GRanges of peaks in ATACMat
 #' @param sampleDepth integer, depth to subsample cells to for faster calculation
+#' @param steps integer indicating number of steps to take if walk should not be run to convergence
 #' @param cellTypes list of names of cell types, if not provided unique cell labels are used
 #' @param parallel boolean, execute in parallel
 #' @param numCores integer, number of cores to use for parallel execution
@@ -751,6 +755,7 @@ tuneFilterWeights = function(
   regions,
   peaks,
   sampleDepth=5000,
+  steps,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
@@ -852,7 +857,7 @@ tuneFilterWeights = function(
       }
       l = sum(sapply(labelEdgesList, function(x) dim(x)[2]))
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth)
+      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps)
 
       if(cellTypesMissing){
         cellTypes = unique(cellWalk[["cellLabels"]])
@@ -876,7 +881,7 @@ tuneFilterWeights = function(
       }
       l = sum(sapply(labelEdgesList, function(x) dim(x)[2]))
 
-      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, tensorflow)
+      cellWalk = walkCells(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps, tensorflow=tensorflow)
       infMat = cellWalk[["infMat"]]
       normMat = cellWalk[["normMat"]]
       cellLabels = cellWalk[["cellLabels"]]

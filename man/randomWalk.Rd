@@ -4,7 +4,7 @@
 \alias{randomWalk}
 \title{Random walk with restarts}
 \usage{
-randomWalk(adj, r = 0.5, tensorflow = FALSE)
+randomWalk(adj, r = 0.5, tensorflow = FALSE, steps)
 }
 \arguments{
 \item{adj}{adjacency matrix}
@@ -12,6 +12,8 @@ randomWalk(adj, r = 0.5, tensorflow = FALSE)
 \item{r}{restart probability}
 
 \item{tensorflow}{boolean to indicate whether to compute on GPU}
+
+\item{steps}{integer indicating number of steps to take if walk should not be run to convergence}
 }
 \value{
 influence matrix, each column is the vector of influences on each row

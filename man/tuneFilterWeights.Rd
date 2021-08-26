@@ -19,6 +19,7 @@ tuneFilterWeights(
   regions,
   peaks,
   sampleDepth = 5000,
+  steps,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
@@ -55,6 +56,8 @@ labels in second column, optionally log-fold change in expression values in the 
 \item{peaks}{GRanges of peaks in ATACMat}
 
 \item{sampleDepth}{integer, depth to subsample cells to for faster calculation}
+
+\item{steps}{integer indicating number of steps to take if walk should not be run to convergence}
 
 \item{cellTypes}{list of names of cell types, if not provided unique cell labels are used}
 
