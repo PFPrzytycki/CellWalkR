@@ -94,15 +94,18 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold
     }
     if(normalize){
       uncertainMatMelt = reshape2::melt(uncertainMatNorm)
+      labelText = "Fraction of \nnearly equal \nscoring cells"
     }
     else{
       uncertainMatMelt = reshape2::melt(uncertainMat)
+      labelText = "Number of \nnearly equal \nscoring cells"
     }
     uncertainMatMelt$Var1 = factor(uncertainMatMelt$Var1, levels = cellTypes)
     uncertainMatMelt$Var2 = factor(uncertainMatMelt$Var2, levels = cellTypes)
     print(ggplot2::ggplot(uncertainMatMelt, ggplot2::aes(Var1, Var2)) +
-      ggplot2::geom_tile(ggplot2::aes(fill = value), colour = "black") +
+      ggplot2::geom_tile(ggplot2::aes(fill = value), color = "black") +
       ggplot2::scale_fill_gradient(low = "white",high = "steelblue") +
+      ggplot2::labs(fill=labelText) +
       ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 45, hjust=0),
                      axis.title.x = ggplot2::element_blank(),
                      axis.text.y = ggplot2::element_text(angle = 45),
@@ -124,14 +127,15 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold
 #'  will be used. If only a single label is provided, all cells will be colored by their score for that label. If two labels are
 #'  given, the difference in score for each cell is shown.
 #' @param labelThreshold numeric, set a threshold below which cells aren't labeled (e.g. 0)
+#' @param embedding method with which to embed data, either "tSNE" or "UMAP"
 #' @param initial_dims numeric, number of PCA dims to use for tSNE
 #' @param perplexity numeric, perplexity parameter for tSNE
 #' @param recompute boolean, recompute tSNE
 #' @param plot boolean, optionally don't plot output and only compute the embedding
 #' @param seed numeric, random seed
-#' @return cellWalk object with embedding stored in "tSNE"
+#' @return cellWalk object with embedding stored in "tSNE" or "UMAP"
 #' @export
-plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, perplexity = 50, recompute = FALSE, plot = TRUE, seed){
+plotCells = function(cellWalk, cellTypes, labelThreshold, embedding = "tSNE", initial_dims = 10, perplexity = 50, recompute = FALSE, plot = TRUE, seed){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
   }
@@ -143,15 +147,27 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
   numLabels = dim(cellWalk[["normMat"]])[2]
   cellCellInf = cellWalk[["infMat"]][-(1:numLabels),-(1:numLabels)]
 
-  if(!requireNamespace("Rtsne", quietly = TRUE)){
-    stop("Must install Rtsne")
-  }
+  if(embedding=="tSNE"){
+    if(!requireNamespace("Rtsne", quietly = TRUE)){
+      stop("Must install 'Rtsne' to compute tSNE")
+    }
 
-  if(recompute | is.null(cellWalk[["tSNE"]])){
-    celltSNE = Rtsne::Rtsne(cellCellInf, initial_dims = initial_dims, perplexity = perplexity)
-    cellWalk[["tSNE"]] = celltSNE$Y
+    if(recompute | is.null(cellWalk[["tSNE"]])){
+      celltSNE = Rtsne::Rtsne(cellCellInf, initial_dims = initial_dims, perplexity = perplexity)
+      cellWalk[["tSNE"]] = celltSNE$Y
+    }
+    celltSNE = cellWalk[["tSNE"]]
+  }else{
+    if(!requireNamespace("uwot", quietly = TRUE)){
+      stop("Must install 'uwot' to compute UMAP")
+    }
+
+    if(recompute | is.null(cellWalk[["UMAP"]])){
+      celltSNE = uwot::umap(cellCellInf)
+      cellWalk[["UMAP"]] = celltSNE
+    }
+    celltSNE = cellWalk[["UMAP"]]
   }
-  celltSNE = cellWalk[["tSNE"]]
 
   plotColor = cellWalk$cellLabels
   if(!missing(labelThreshold)){
@@ -183,8 +199,8 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, initial_dims = 10, per
   if(plot){
     print(ggplot2::ggplot() +
             ggplot2::geom_point(ggplot2::aes(celltSNE[,1],celltSNE[,2], color=plotColor), size = 1) +
-            ggplot2::xlab("tSNE_1")+
-            ggplot2::ylab("tSNE_2")+
+            ggplot2::xlab(paste0(embedding,"_1"))+
+            ggplot2::ylab(paste0(embedding,"_2"))+
             ggplot2::labs(color=labelText)+
             ggplot2::theme_classic())
   }
@@ -258,14 +274,20 @@ computeMST = function(cellWalk, cellTypes, labelThreshold, recompute = FALSE, pl
     }
     else{cellTypes = colnames(cellWalk[["normMat"]])}
     if(length(cellTypes)==1){
+      legendScores = round(quantile(plotColor, seq(0,1,1/5)), 2)
       plotColor = cut(plotColor, 100)
       print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("white","blue"))(100)[as.factor(plotColor)]))
+      legend(title=labelText, x=par()$usr[2],y=par()$usr[4], legend = legendScores, bty = "n", fill=(colorRampPalette(c("white","blue"))(100))[seq(1,100,19)], xpd=TRUE)
     } else if(length(cellTypes)==2){
+      legendScores = round(quantile(plotColor, seq(0,1,1/5)), 2)
       plotColor = cut(plotColor, 100)
       print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=colorRampPalette(c("red","blue"))(100)[as.factor(plotColor)]))
+      legend(title=labelText, x=par()$usr[2],y=par()$usr[4], legend = legendScores, bty = "n", fill=(colorRampPalette(c("red","blue"))(100))[seq(1,100,19)], xpd=TRUE)
     }
     else{
-      print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2, edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)]))
+      print(igraph::plot.igraph(cellWalk$MST, layout=cellWalk$MST_layout, vertex.size=2, vertex.label=NA, edge.width=2,
+                                edge.arrow.size=.1, vertex.color=scales::hue_pal()(length(unique(plotColor)))[as.factor(plotColor)]))
+      legend(title=labelText, x=par()$usr[2],y=par()$usr[4],legend=unique(plotColor), bty = "n", fill=scales::hue_pal()(length(unique(plotColor)))[as.factor(unique(plotColor))], xpd=TRUE)
     }
   }
 

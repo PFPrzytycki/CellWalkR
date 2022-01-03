@@ -8,6 +8,7 @@ plotCells(
   cellWalk,
   cellTypes,
   labelThreshold,
+  embedding = "tSNE",
   initial_dims = 10,
   perplexity = 50,
   recompute = FALSE,
@@ -24,6 +25,8 @@ given, the difference in score for each cell is shown.}
 
 \item{labelThreshold}{numeric, set a threshold below which cells aren't labeled (e.g. 0)}
 
+\item{embedding}{method with which to embed data, either "tSNE" or "UMAP"}
+
 \item{initial_dims}{numeric, number of PCA dims to use for tSNE}
 
 \item{perplexity}{numeric, perplexity parameter for tSNE}
@@ -35,7 +38,7 @@ given, the difference in score for each cell is shown.}
 \item{seed}{numeric, random seed}
 }
 \value{
-cellWalk object with embedding stored in "tSNE"
+cellWalk object with embedding stored in "tSNE" or "UMAP"
 }
 \description{
 \code{plotCells()} generates a tSNE plot based on cell-to-cell influence
