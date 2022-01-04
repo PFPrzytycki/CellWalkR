@@ -17,16 +17,16 @@ Usage
 
 For a guide to using CellWalkR, see the provided [vignette](examples/CellWalkR_Vignette.md), which covers the following:
 
-1.  [Data Pre-processing](examples/CellWalkR_Vignette.md#Data%20Pre-processing)
-2.  Getting Started with CellWalkR
-    1.  Loading scATAC-seq Data
-    2.  Defining Label Nodes
-3.  Building a Network
-    1.  Computing Cell-Cell Edges
-    2.  Computing Label-Cell Edges
-4.  Tuning Label Edges
-5.  Making a cellWalk Object
-6.  Adding Filters
+1.  [Data Pre-processing](examples/CellWalkR_Vignette.md#data-pre-processing)
+2.  [Getting Started with CellWalkR](examples/CellWalkR_Vignette.md#getting-started-with-cellwalkr)
+    1.  [Loading scATAC-seq Data](examples/CellWalkR_Vignette.md#loading-scatac-seq-data)
+    2.  [Defining Label Nodes](examples/CellWalkR_Vignette.md#defining-label-nodes)
+3.  [Building a Network](examples/CellWalkR_Vignette.md#building-a-network)
+    1.  [Computing Cell-Cell Edges](examples/CellWalkR_Vignette.md#computing-cell-cell-edges)
+    2.  [Computing Label-Cell Edges](examples/CellWalkR_Vignette.md#computing-label-cell-edges)
+4.  [Tuning Label Edges](examples/CellWalkR_Vignette.md#tuning-label-edges)
+5.  [Making a cellWalk Object](examples/CellWalkR_Vignette.md#making-a-cellwalk-object)
+6.  [Adding Filters](examples/CellWalkR_Vignette.md#adding-filters)
 7.  Downstream Analysis
     1.  Cell Labels
     2.  Confusion Matrix

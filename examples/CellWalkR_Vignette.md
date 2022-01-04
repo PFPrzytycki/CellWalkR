@@ -11,12 +11,12 @@ CellWalkR is an R package (described [here](https://doi.org/10.1101/2021.02.23.4
 Data Pre-processing
 -------------------
 
-CellWalkR can work directly with scATAC-seq data pre-processed by many pipelines including CellRanger, ArchR, SnapATAC, and Cicero. We recommend using [ArchR](https://www.archrproject.com/) to pre-process data. ArchR processes BAM or Fragemnt files into project files that CellWalkR can use as input. Other common output types of of pre-processing pipelines such as Cell-by-Peak and Cell-by-Bin matricies can also be used as input.
+CellWalkR can work directly with scATAC-seq data pre-processed by many pipelines including CellRanger, ArchR, SnapATAC, and Cicero. We recommend using [ArchR](https://www.archrproject.com/) to pre-process data. ArchR processes BAM or Fragment files into project files that CellWalkR can use as input. Other common output types of of pre-processing pipelines such as Cell-by-Peak and Cell-by-Bin matrices can also be used as input.
 
 Getting Started with CellWalkR
 ------------------------------
 
-Currently, CellWalkR must be installed useding devtools:
+Currently, CellWalkR must be installed useing devtools:
 
 ``` r
 install.packages("devtools")
@@ -53,14 +53,14 @@ To work with SnapATAC, or Cicero data as input (not provided). See [additional v
 
 #### Defining Label Nodes
 
-Now we can load our first set of labeling data. For this vignette we provide a set of labeles for radial glia subtypes from [Nowakowski et al](https://doi.org/10.1126/science.aap8809).
+Now we can load our first set of labeling data. For this vignette we provide a set of labels for radial glia subtypes from [Nowakowski et al](https://doi.org/10.1126/science.aap8809).
 
 ``` r
 pathToLabels <- system.file("extdata", "SampleMarkers1.txt", package = "CellWalkR")
 labelGenes <- data.table::fread(pathToLabels)
 ```
 
-If no labeling data is available, findMarkers() can be run on a set of scRNA-seq data. This requies the Seurat package to be installed and a gene-by-cell matrix represnting the scRNA-data.
+If no labeling data is available, findMarkers() can be run on a set of scRNA-seq data. This requires the Seurat package to be installed and a gene-by-cell matrix representing the scRNA-data.
 
 ``` r
 labelGenes <- findMarkers(RNAMat)
@@ -105,7 +105,7 @@ cellEdges[1:5,1:5]
 
 #### Computing Label-Cell Edges
 
-In order to generate label-to-cell edges, we need to define which genomic regions correspond to which genes. These could be promoters, gene bodies, or any other definition. If a specific set of regions associated with genes isn't already known, the getRegions() function can be used to generate a mapping. This function can retreive hg38 and mm10 mappings. Other mappings can be generated using TxDb objects or biomaRt.
+In order to generate label-to-cell edges, we need to define which genomic regions correspond to which genes. These could be promoters, gene bodies, or any other definition. If a specific set of regions associated with genes isn't already known, the getRegions() function can be used to generate a mapping. This function can retrieve hg38 and mm10 mappings. Other mappings can be generated using TxDb objects or biomaRt.
 
 We'll use hg38 with Entrez identifiers in this example, using full gene bodies.
 
@@ -190,7 +190,7 @@ cellWalk <- walkCells(cellEdges,
 Adding Filters
 --------------
 
-We may have some bulk epigenetic data that can help filter down which peaks are relevant to our analysis. We can tune weights on each filter to determine how signficant it is to our data. For our example we have H3K4me3 data which indicates active promoters. Thus we apply this filter permissively (setting filterOut=FALSE) and at the whole gene level (filterGene=TRUE) rather than just to overlaping peaks.
+We may have some bulk epigenetic data that can help filter down which peaks are relevant to our analysis. We can tune weights on each filter to determine how significant it is to our data. For our example we have H3K4me3 data which indicates active promoters. Thus we apply this filter permissively (setting filterOut=FALSE) and at the whole gene level (filterGene=TRUE) rather than just to overlapping peaks.
 
 ``` r
 pathToFilter <- system.file("extdata", "SampleFilter.bed", package = "CellWalkR")
@@ -235,7 +235,7 @@ cellWalk <- walkCells(cellEdges,
                      labelEdgeWeights = 1e+07)
 ```
 
-Any number of filters can be applied this way. The filters paramaters takes a list of GRanges describing the regions each filter applies to. Each GRange in the list must have an associated weight, permissivness, and gene parameter.
+Any number of filters can be applied this way. The filters parameters takes a list of GRanges describing the regions each filter applies to. Each GRange in the list must have an associated weight, permissiveness, and gene parameter.
 
 Downstream Analysis
 -------------------
@@ -244,7 +244,7 @@ Once we have created a cellWalk object, we can use it for downstream analysis.
 
 #### Cell Labels
 
-Most directly, we can look at what labels are the most strongly linked to each cell. This is based on the maxiumum amount of label-to-cell influence in the cell walk. Cell labeling can be used for numerous further downstream analyses such as cell-type specific peak calling.
+Most directly, we can look at what labels are the most strongly linked to each cell. This is based on the maximum amount of label-to-cell influence in the cell walk. Cell labeling can be used for numerous further downstream analyses such as cell-type specific peak calling.
 
 ``` r
 head(cellWalk$cellLabels)
@@ -280,7 +280,7 @@ cellWalk <- clusterLabels(cellWalk,  plot = TRUE)
 
 #### Plotting Cells
 
-Two-dimensional embeddings of cells can be a very helpful tool for understanding cell diversity. We can directly embed cell-to-cell influence scores. Importantly, this portion of the influence matrix is not used in establishing the labeling of cells. Thus this can serve as distinct way to explore how labels were distributed accross cells. Because of this, unlike with most scATAC-seq analysis pipelines, clusters observed in this embedding may not directly correspond to labels. This can help understand cell diversity, as well as assist in identifying rare cell types. In addition to ggplot2, embedding also requires the package Rtsne. Cells can alternatively be embedding using a UMAP which requires the package uwot.
+Two-dimensional embeddings of cells can be a very helpful tool for understanding cell diversity. We can directly embed cell-to-cell influence scores. Importantly, this portion of the influence matrix is not used in establishing the labeling of cells. Thus this can serve as distinct way to explore how labels were distributed across cells. Because of this, unlike with most scATAC-seq analysis pipelines, clusters observed in this embedding may not directly correspond to labels. This can help understand cell diversity, as well as assist in identifying rare cell types. In addition to ggplot2, embedding also requires the package Rtsne. Cells can alternatively be embedding using a UMAP which requires the package uwot.
 
 ``` r
 install.packages("Rtsne")
@@ -292,7 +292,7 @@ cellWalk <- plotCells(cellWalk, labelThreshold = 0, seed = 1)
 
 ![](CellWalkR_Vignette_files/figure-markdown_github/downstream-plotCellsLabels-1.png)
 
-For comparison, we can take a look at the tSNE that is generated by SnapATAC directly from the chromatin accessinility data (see code [here](SnapPlot.md)):<br> <img src="CellWalkR_Vignette_files/figure-markdown_github/SnapATAC.png" id="id" class="class" width="800" height="300" /><br> This embedding does not create a clear separation of labeled cell types as identified by CellWalkR (left). SnapATAC detects a very large number of clusters and has no built in ability to detect what cell type they represent. The clusters all include similar numbers of cells (right). <br>
+For comparison, we can take a look at the tSNE that is generated by SnapATAC directly from the chromatin accessibility data (see code [here](SnapPlot.md)):<br> <img src="CellWalkR_Vignette_files/figure-markdown_github/SnapATAC.png" id="id" class="class" width="800" height="300" /><br> This embedding does not create a clear separation of labeled cell types as identified by CellWalkR (left). SnapATAC detects a very large number of clusters and has no built in ability to detect what cell type they represent. The clusters all include similar numbers of cells (right). <br>
 
 It is also possible to plot how strongly a single label influences each cell in the embedding.
 
@@ -348,7 +348,7 @@ table(unlist(mappedLabel))
 #>        6       16        1        2        2        3
 ```
 
-It can help to visualize how these enhancers map to the full heirarchy of cell types. We can see the total counts of enhancers:
+It can help to visualize how these enhancers map to the full hierarchy of cell types. We can see the total counts of enhancers:
 
 ``` r
 p <- plotMultiLevelLabels(cellWalk, labelScores, z = 1.5)
@@ -371,7 +371,7 @@ p <- plotMultiLevelLabels(cellWalk, labelScores, z = 1.5, whichBulk = 32)
 Interactive Visualzation
 ------------------------
 
-Once a cellWalk object has been created, downstream analysis can be performed using an interactive interace. Several additional R packages are required for the interface to function:
+Once a cellWalk object has been created, downstream analysis can be performed using an interactive interface. Several additional R packages are required for the interface to function:
 
 ``` r
 install.packages("shiny")
@@ -386,7 +386,7 @@ To be able to compute label scores for bulk data, the cellWalk object will need 
 cellWalk <- storeMat(cellWalk, ATACMat, peaks)
 ```
 
-Alternatively, if label scores for bulk data have already been computed, they can be added to the cellWalk object before launching the vizualization:
+Alternatively, if label scores for bulk data have already been computed, they can be added to the cellWalk object before launching the visualization:
 
 ``` r
 cellWalk <- storeBulk(cellWalk, bulkPeaks=sampleEnhancers[1:1000], labelScores)
@@ -401,7 +401,7 @@ launchViz(cellWalk)
 Adding a Second Set of Labels
 -----------------------------
 
-CellWalkR can be run on an arbitrary number of sets of labels and filters, each with it's own weight. Filters can selectively be applied to some sets of labels and not others. Here for example, we will add a second set of labels to which the above filter does not apply. These labels are for radial glia derived from the ganglionic emminence rather than the cortex.
+CellWalkR can be run on an arbitrary number of sets of labels and filters, each with it's own weight. Filters can selectively be applied to some sets of labels and not others. Here for example, we will add a second set of labels to which the above filter does not apply. These labels are for radial glia derived from the ganglionic eminence rather than the cortex.
 
 ``` r
 pathToLabelsB <- system.file("extdata", "SampleMarkers2.txt", package = "CellWalkR")
