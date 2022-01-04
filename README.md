@@ -27,14 +27,14 @@ For a guide to using CellWalkR, see the provided [vignette](examples/CellWalkR_V
 4.  [Tuning Label Edges](examples/CellWalkR_Vignette.md#tuning-label-edges)
 5.  [Making a cellWalk Object](examples/CellWalkR_Vignette.md#making-a-cellwalk-object)
 6.  [Adding Filters](examples/CellWalkR_Vignette.md#adding-filters)
-7.  Downstream Analysis
-    1.  Cell Labels
-    2.  Confusion Matrix
-    3.  Hierarchical Clustering of Labels
-    4.  Plotting Cells
-    5.  Bulk Data Mapping
-8.  Interactive Visualizaiton
-9.  Adding a Second Set of Labels
+7.  [Downstream Analysis](examples/CellWalkR_Vignette.md#downstream-analysis)
+    1.  [Cell Labels](examples/CellWalkR_Vignette.md#cell-labels)
+    2.  [Confusion Matrix](examples/CellWalkR_Vignette.md#confusion-matrix)
+    3.  [Hierarchical Clustering of Labels](examples/CellWalkR_Vignette.md#hierarchical-clustering-of-labels)
+    4.  [Plotting Cells](examples/CellWalkR_Vignette.md#plotting-cells)
+    5.  [Bulk Data Mapping](examples/CellWalkR_Vignette.md#bulk-data-mapping)
+8.  [Interactive Visualizaiton](examples/CellWalkR_Vignette.md#interactive-visualzation)
+9.  [Adding a Second Set of Labels](CellWalkR_Vignette.md#adding-a-second-set-of-labels)
 
 If you use CellWalkR please cite:
 

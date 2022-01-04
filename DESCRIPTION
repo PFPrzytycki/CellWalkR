@@ -1,7 +1,7 @@
 Package: CellWalkR
 Type: Package
 Title: R implementation of CellWalker for analysis and visualization of scATAC-seq 
-Version: 0.3.0
+Version: 0.3.1
 Author: Pawel F. Przytycki
 Maintainer: Pawel F. Przytycki <pawel.przytycki@gladstone.ucsf.edu>
 Description: R implementation of CellWalker for analysis and visualization of scATAC-seq
