@@ -4,7 +4,7 @@
 \alias{PCAdist}
 \title{Compute distance in PCA space for matrix}
 \usage{
-PCAdist(matrix)
+PCAdist(m)
 }
 \arguments{
 \item{m}{matrix}

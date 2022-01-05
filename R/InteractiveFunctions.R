@@ -9,11 +9,9 @@ launchViz = function(cellWalk){
   if(!requireNamespace("shiny", quietly = TRUE)){
     stop("Must install shiny")
   }
-  require("shiny")
   if(!requireNamespace("plotly", quietly = TRUE)){
     stop("Must install plotly")
   }
-  require("plotly")
 
   options(shiny.maxRequestSize=500*1024^2)
 

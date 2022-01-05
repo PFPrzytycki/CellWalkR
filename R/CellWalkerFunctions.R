@@ -213,8 +213,8 @@ tensorJaccard = function(m) {
 #' @param m  matrix
 #' @return Euclidian PCA distance matrix between rows of m
 #' @export
-PCAdist = function(matrix){
-  pca = prcomp(t(matrix), rank.=10)$rotation
+PCAdist = function(m){
+  pca = prcomp(t(m), rank.=10)$rotation
   distance = dist(pca)
   distance = distance/max(distance)
   as.matrix(1 - distance)

@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2022-01-03
+2022-01-05
 
 Introduction
 ------------
@@ -31,7 +31,7 @@ library(CellWalkR)
 
 #### Loading scATAC-seq Data
 
-CellWalkR can work directly with scATAC-seq data pre-processed by many pipelines. For this vignette we provide sample data in the form of a cell-by-peak matrix (included) or an ArchR project (download here). This data is the subset of radial glia cells from [Ziffra et al](https://doi.org/10.1038/s41586-021-03209-8).
+CellWalkR can work directly with scATAC-seq data pre-processed by many pipelines. For this vignette we provide sample data in the form of a cell-by-peak matrix (included) or an ArchR project (download [here](https://doi.org/10.6084/m9.figshare.17869094)). This data is the subset of radial glia cells from [Ziffra et al](https://doi.org/10.1038/s41586-021-03209-8).
 
 To work with scATAC-seq data in the form of a a cell-by-peak matrix, load the matrix and the corresponding peaks into a GRanges object as follows:
 

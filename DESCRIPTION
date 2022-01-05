@@ -16,11 +16,12 @@ Imports:
 	Matrix,
 Suggests:
     SnapATAC,
-    Archr,
+    ArchR,
     Cicero,
     Seurat (>= 3.0),
     tensorflow,
     ggplot2,
+    scales,
     reshape2,
     Rtsne,
     uwot,
