@@ -365,7 +365,7 @@ launchViz = function(cellWalk){
         validate(need(!is.null(bedFile), "Please select a bed file"))
 
         bedData = data.table::fread(bedFile$datapath, header=FALSE)
-        bedRanges = GRanges(bedData$V1, IRanges(bedData$V2, bedData$V3))
+        bedRanges = GenomicRanges::GRanges(bedData$V1, IRanges(bedData$V2, bedData$V3))
 
         if(is.null(cellWalk$ATACMat) | is.null(cellWalk$peaks)){
           showNotification("cellWalk needs ATACMat and peaks, can be added using storeMat()")

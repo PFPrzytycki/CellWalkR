@@ -1,10 +1,11 @@
 Package: CellWalkR
 Type: Package
-Title: R implementation of CellWalker for analysis and visualization of scATAC-seq 
+Date: 2022-5-1
+Title: An R Package for integrating and visualizing single-cell and bulk data to resolve regulatory elements 
 Version: 0.3.1
 Author: Pawel F. Przytycki
 Maintainer: Pawel F. Przytycki <pawel.przytycki@gladstone.ucsf.edu>
-Description: R implementation of CellWalker for analysis and visualization of scATAC-seq
+Description: CellWalkR is an R package for analysis and visualization of scATAC-seq. It is based on the CellWalker alglorithm.
 License: GPL-2 + file LICENSE
 Encoding: UTF-8
 LazyData: true
@@ -17,7 +18,7 @@ Imports:
 Suggests:
     SnapATAC,
     ArchR,
-    Cicero,
+    cicero,
     Seurat (>= 3.0),
     tensorflow,
     ggplot2,
@@ -33,7 +34,6 @@ Suggests:
     parallel,
     knitr,
     rmarkdown
-Remotes:
-  bioc::3.10/GenomicRanges
 RoxygenNote: 7.1.1
 VignetteBuilder: knitr
+biocViews: SingleCell, ATACSeq, Software

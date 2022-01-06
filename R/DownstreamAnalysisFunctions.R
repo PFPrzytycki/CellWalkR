@@ -344,15 +344,15 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDi
     if(!is(extendRegion, "GRanges")){
       stop("extendRegion must be a GRanges object")
     }
-    whichExtends = findOverlaps(bulkPeaks, extendRegion)
+    whichExtends = GenomicRanges::findOverlaps(bulkPeaks, extendRegion)
     extensions = extendRegion[whichExtends@to]
     #restore original range if it was trimmed
-    start(extensions) = sapply(1:length(extensions), function(x) min(start(extensions)[x], start(bulkPeaks[whichExtends@from[x]])))
-    end(extensions) = sapply(1:length(extensions), function(x) max(end(extensions)[x], end(bulkPeaks[whichExtends@from[x]])))
+    GenomicRanges::start(extensions) = sapply(1:length(extensions), function(x) min(GenomicRanges::start(extensions)[x], GenomicRanges::start(bulkPeaks[whichExtends@from[x]])))
+    GenomicRanges::end(extensions) = sapply(1:length(extensions), function(x) max(GenomicRanges::end(extensions)[x], GenomicRanges::end(bulkPeaks[whichExtends@from[x]])))
     #cut extension to distance
     if(!missing(extendDistance)){
-        start(extensions) = sapply(1:length(extensions), function(x) max(start(extensions)[x], start(bulkPeaks[whichExtends@from[x]])-extendDistance))
-        end(extensions) = sapply(1:length(extensions), function(x) min(end(extensions)[x], end(bulkPeaks[whichExtends@from[x]])+extendDistance))
+      GenomicRanges::start(extensions) = sapply(1:length(extensions), function(x) max(GenomicRanges::start(extensions)[x], GenomicRanges::start(bulkPeaks[whichExtends@from[x]])-extendDistance))
+      GenomicRanges::end(extensions) = sapply(1:length(extensions), function(x) min(GenomicRanges::end(extensions)[x], GenomicRanges::end(bulkPeaks[whichExtends@from[x]])+extendDistance))
     }
     bulkPeaks[whichExtends@from] = extensions
   }
@@ -361,7 +361,7 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDi
     extendDistance = -1
   }
 
-  peakOverlaps = findOverlaps(peaks, bulkPeaks, maxgap = extendDistance)
+  peakOverlaps = GenomicRanges::findOverlaps(peaks, bulkPeaks, maxgap = extendDistance)
 
   if(parallel){
     if(!requireNamespace("parallel", quietly = TRUE)){

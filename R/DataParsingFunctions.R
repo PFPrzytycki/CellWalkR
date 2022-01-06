@@ -51,7 +51,7 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
     cells = unique(ATACMat[,2])
     rowIndex = match(ATACMat[,2], cells)
     colIndex = match(ATACMat[,1], peaks)
-    ATACMat = sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
+    ATACMat = Matrix::sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
     simMat = method(ATACMat>0)
     dimnames(simMat) = list(cells,cells)
     simMat
@@ -262,7 +262,7 @@ mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regio
       stop("TileMatrix missing from ArchR project")
     }
     ATACData = ArchR::getMatrixFromProject(ArchRproj, "TileMatrix", verbose=FALSE, binarize = TRUE)
-    peaks = GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
+    peaks = GenomicRanges::GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
     ATACMat = Matrix::t(assay(ATACData))
     mapPeaksToGenes(labelGenes, ATACMat = ATACMat, peaks=peaks, regions)
   }
@@ -380,7 +380,7 @@ computeLabelEdges = function(
     if(is(ATACMat,"ArchRProject")){
       if(whichMat == "TileMatrix"){
         ATACData = ArchR::getMatrixFromProject(ATACMat, "TileMatrix", verbose=FALSE, binarize = TRUE)
-        peaks = GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
+        peaks = GenomicRanges::GRanges(ATACData@elementMetadata$seqnames, IRanges(start = ATACData@elementMetadata$start, width = 500))
         ATACMat = Matrix::t(assay(ATACData))
       }
       else if(whichMat == "GeneScoreMatrix"){
@@ -432,7 +432,7 @@ computeLabelEdges = function(
       geneFilter = rep(1, length(labelGenes[,1]))
       for(filterIndex in which(filterGene)){
         filterRanges = filters[[filterIndex]]
-        regionFilterOverlap = countOverlaps(regions, filterRanges)
+        regionFilterOverlap = GenomicRanges::countOverlaps(regions, filterRanges)
         if(filterOut[filterIndex]){
           geneFilterHit = labelGenes[,1] %in% names(which(regionFilterOverlap>0))
           geneFilter[geneFilterHit] = geneFilter[geneFilterHit]*(1-filterWeights[filterIndex])
@@ -490,7 +490,7 @@ computeLabelEdges = function(
 
         for(filterIndex in which(!filterGene)){
           filterRanges = filters[[filterIndex]]
-          peakFilterOverlap = countOverlaps(peaks, filterRanges)
+          peakFilterOverlap = GenomicRanges::countOverlaps(peaks, filterRanges)
           if(filterOut[filterIndex]){
             peaksInMarkers = peaksInMarkers[peakFilterOverlap==0]
             geneExp = geneExp[peakFilterOverlap==0]
@@ -945,4 +945,20 @@ findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.
   data.frame(gene=RNASeuratMarkers$gene,
              cluster=as.character(RNASeuratMarkers$cluster),
              logFC=RNASeuratMarkers$avg_logFC)
+}
+
+#' Download Sample Data
+#'
+#' \code{downloadSampleData} Download sample data for use with vignette
+#'
+#' @param dest folder to download data to
+#' @return destination folder
+#' @export
+downloadSampleData = function(dest="inst/extdata"){
+  if(!dir.exists(dest)){
+    dir.create(dest, showWarnings = FALSE)
+  }
+  downloadFiles = download.file(url = "https://figshare.com/ndownloader/files/32630126", destfile = file.path(dest,"SamplePeakMat.mtx"))
+  downloadFiles = download.file(url = "https://figshare.com/ndownloader/files/32670425", destfile = file.path(dest,"SamplePeaks.txt"))
+  dest
 }
