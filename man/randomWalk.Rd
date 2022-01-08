@@ -25,3 +25,9 @@ the closed form solution for the influence matrix
 where \ifelse{html}{\out{W = D<sup>−1</sup>A}}{\eqn{W = D^{−1}A}} and D is a diagonal
 matrix of the sums of edge weights for each node and r is the restart probability
 }
+\examples{
+data("SampleCellWalkRData")
+adj <- combineGraph(SampleCellWalkRData$labelEdges, SampleCellWalkRData$cellEdges)
+randomWalk(adj)
+
+}

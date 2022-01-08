@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataParsingFunctions.R
 \name{mapCiceroToGenes}
 \alias{mapCiceroToGenes}
-\title{Map peaks to genes}
+\title{Map peaks to genes based on Cicero coaccessibility}
 \usage{
 mapCiceroToGenes(labelGenes, cicero_gene_activities)
 }

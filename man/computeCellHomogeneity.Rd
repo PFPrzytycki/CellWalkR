@@ -19,3 +19,8 @@ cell homogeneity
 type compared to cells of other types. This serves as a proxy for for how well cells
 are labeled and can be used to tune parameters such as label edge weight
 }
+\examples{
+data("SampleCellWalkRData")
+computeCellHomogeneity(SampleCellWalkRData$cellWalk)
+
+}

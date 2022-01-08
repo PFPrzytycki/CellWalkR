@@ -21,3 +21,10 @@ cellWalk object with labels for each region in bulk data
 \description{
 \code{storeBulk()} stores labels for bulk data in the cellWalk object
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- storeBulk(SampleCellWalkRData$cellWalk,
+                      SampleCellWalkRData$sampleEnhancers,
+                      SampleCellWalkRData$labelScores)
+
+}

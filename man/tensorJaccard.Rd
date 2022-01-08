@@ -16,3 +16,8 @@ Jaccard similarity matrix between rows of m
 \code{tensorJaccard()} computes the Jaccard similarity between the rows
 of a sparse matrix using tensorflow on a GPU
 }
+\examples{
+data("SampleCellWalkRData")
+\dontrun{tensorJaccard(SampleCellWalkRData$ATACMat)}
+
+}

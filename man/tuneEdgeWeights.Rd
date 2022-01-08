@@ -46,3 +46,9 @@ data frame of weights with corresponding cell homogeneity
 weight settings across all labelEdge matrices. To speed up calculations cells
 can be subsampled to a specified sampleDepth (default 10000).
 }
+\examples{
+data("SampleCellWalkRData")
+labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+tuneEdgeWeights(SampleCellWalkRData$cellEdges, labelEdgesList, 10^seq(1,7,1))
+
+}

@@ -43,3 +43,8 @@ cellWalk object with embedding stored in "tSNE" or "UMAP"
 \description{
 \code{plotCells()} generates a tSNE plot based on cell-to-cell influence
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- plotCells(SampleCellWalkRData$cellWalk, perplexity=3, plot=FALSE)
+
+}

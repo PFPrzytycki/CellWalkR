@@ -8,6 +8,10 @@
 #' @param plot boolean, plot output matrix
 #' @return cellWalk object with label clustering stored in "cluster"
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+#'
 clusterLabels = function(cellWalk, cellTypes, distMethod="euclidean", plot=FALSE){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -51,6 +55,10 @@ clusterLabels = function(cellWalk, cellTypes, distMethod="euclidean", plot=FALSE
 #' @param normalize boolean, normalize plot scale
 #' @return cellWalk object with label uncertainty matrix (l-by-l) stored in "uncertaintyMatrix"
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- findUncertainLabels(SampleCellWalkRData$cellWalk, threshold = .5)
+#'
 findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold, plot=FALSE, normalize=FALSE){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -135,6 +143,10 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold
 #' @param seed numeric, random seed
 #' @return cellWalk object with embedding stored in "tSNE" or "UMAP"
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- plotCells(SampleCellWalkRData$cellWalk, perplexity=3, plot=FALSE)
+#'
 plotCells = function(cellWalk, cellTypes, labelThreshold, embedding = "tSNE", initial_dims = 10, perplexity = 50, recompute = FALSE, plot = TRUE, seed){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -222,6 +234,10 @@ plotCells = function(cellWalk, cellTypes, labelThreshold, embedding = "tSNE", in
 #' @param seed numeric, random seed
 #' @return cellWalk object with MST stored in "MST" and layout stored in "MST_layout"
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- computeMST(SampleCellWalkRData$cellWalk, plot=FALSE)
+#'
 computeMST = function(cellWalk, cellTypes, labelThreshold, recompute = FALSE, plot = TRUE, seed){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -312,6 +328,13 @@ computeMST = function(cellWalk, cellTypes, labelThreshold, recompute = FALSE, pl
 #' @param numCores number of cores to use for parallel execution
 #' @return labels for each region in bulk data
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' labelBulk(SampleCellWalkRData$cellWalk,
+#'           SampleCellWalkRData$sampleEnhancers,
+#'           SampleCellWalkRData$ATACMat,
+#'           SampleCellWalkRData$peaks)
+#'
 labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDistance, cellTypes, allScores=FALSE, parallel=FALSE, numCores=1){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -433,6 +456,12 @@ labelBulk = function(cellWalk, bulkPeaks, ATACMat, peaks, extendRegion, extendDi
 #' @param bulkID character string assigning name to bulk data
 #' @return cellWalk object with labels for each region in bulk data
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- storeBulk(SampleCellWalkRData$cellWalk,
+#'                       SampleCellWalkRData$sampleEnhancers,
+#'                       SampleCellWalkRData$labelScores)
+#'
 storeBulk = function(cellWalk, bulkPeaks, labelScores, bulkID){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -468,6 +497,12 @@ storeBulk = function(cellWalk, bulkPeaks, labelScores, bulkID){
 #' @param peaks GRanges of peaks in ATACMat
 #' @return cellWalk object with original ATAC matrix stored
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- storeMat(SampleCellWalkRData$cellWalk,
+#'                      SampleCellWalkRData$ATACMat,
+#'                      SampleCellWalkRData$peaks)
+#'
 storeMat = function(cellWalk, ATACMat, peaks){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -494,6 +529,10 @@ storeMat = function(cellWalk, ATACMat, peaks){
 #' @param z numeric z-score threshold for significance
 #' @return list of signficant labels for each region in bulk data
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' selectLabels(SampleCellWalkRData$labelScores)
+#'
 selectLabels = function(labelScores, z=2){
   if(missing(labelScores) || !is(labelScores, "matrix")){
     stop("Must provide a matrix of label scores (the output of labelBulk with allScores set to TRUE)")
@@ -512,6 +551,11 @@ selectLabels = function(labelScores, z=2){
 #' @param z numeric z-score threshold for significance
 #' @return list of signficant labels for each region in bulk data
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+#' \dontrun{selectMultiLevelLabels(cellWalk,SampleCellWalkRData$labelScores)}
+#'
 selectMultiLevelLabels = function(cellWalk, labelScores, z=2){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -575,6 +619,11 @@ selectMultiLevelLabels = function(cellWalk, labelScores, z=2){
 #' @param whichBulk, numeric optionally identify which bulk peak to plot
 #' @return plot object p of either counts of signifcant labels or enrichment/depletion for single peak
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+#' \dontrun{p <- plotMultiLevelLabels(cellWalk,SampleCellWalkRData$labelScores)}
+#'
 plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")

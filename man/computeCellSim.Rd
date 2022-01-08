@@ -19,3 +19,8 @@ matrix of cell-to-cell similarity
 \code{computeCellSim} computes a cell-to-cell similarity matrix using the given method.
 Currently only Jaccard similarity is implemented.
 }
+\examples{
+data("SampleCellWalkRData")
+computeCellSim(SampleCellWalkRData$ATACMat)
+
+}

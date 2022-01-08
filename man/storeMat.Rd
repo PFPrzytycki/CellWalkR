@@ -19,3 +19,10 @@ cellWalk object with original ATAC matrix stored
 \description{
 \code{storeMat()} stores the original ATAC matrix
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- storeMat(SampleCellWalkRData$cellWalk,
+                     SampleCellWalkRData$ATACMat,
+                     SampleCellWalkRData$peaks)
+
+}

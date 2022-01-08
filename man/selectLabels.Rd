@@ -18,3 +18,8 @@ list of signficant labels for each region in bulk data
 \code{selectLabels()} Determines labels for bulk data by mapping them via
 the calculated information matrix
 }
+\examples{
+data("SampleCellWalkRData")
+selectLabels(SampleCellWalkRData$labelScores)
+
+}

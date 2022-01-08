@@ -20,3 +20,9 @@ list of signficant labels for each region in bulk data
 \code{selectMultiLevelLabels()} Determines labels across heirarchy for bulk data by mapping them via
 the calculated information matrix
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+\dontrun{selectMultiLevelLabels(cellWalk,SampleCellWalkRData$labelScores)}
+
+}

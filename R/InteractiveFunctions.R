@@ -3,6 +3,7 @@
 #' \code{launchViz()} launches an interactve visualization
 #'
 #' @param cellWalk a cellWalk object
+#' @return a shinyApp
 #' @export
 launchViz = function(cellWalk){
 
@@ -254,16 +255,16 @@ launchViz = function(cellWalk){
           labelThreshold = as.numeric(input$labelThreshold)
           plotColor[apply(normMatTrim, 1, max)<=labelThreshold] = "Other"
         }
-        plotTable = data.frame(tSNE_1=cellWalk$tSNE[,1], tSNE_2=cellWalk$tSNE[,2], label=plotColor, score=apply(cellWalk$normMat, 1, max))
+        plotTable = data.frame(tSNE_1=cellWalk$tSNE[,1], tSNE_2=cellWalk$tSNE[,2], label=plotColor, scores=apply(cellWalk$normMat, 1, max))
         if(length(theseTypes)==1){
-          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
+          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
             scale_color_gradient(low="gray")
         } else if(length(theseTypes)==2){
-          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
+          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
             scale_color_gradient(low="red", high = "blue")
         }
         else{
-          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none")
+          p = ggplot(plotTable) + geom_point(aes(tSNE_1, tSNE_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none")
         }
         ggplotly(p)
       })
@@ -283,16 +284,16 @@ launchViz = function(cellWalk){
           labelThreshold = as.numeric(input$labelThreshold)
           plotColor[apply(normMatTrim, 1, max)<=labelThreshold] = "Other"
         }
-        plotTable = data.frame(UMAP_1=cellWalk$UMAP[,1], UMAP_2=cellWalk$UMAP[,2], label=plotColor, score=apply(cellWalk$normMat, 1, max))
+        plotTable = data.frame(UMAP_1=cellWalk$UMAP[,1], UMAP_2=cellWalk$UMAP[,2], label=plotColor, scores=apply(cellWalk$normMat, 1, max))
         if(length(theseTypes)==1){
-          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
+          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
             scale_color_gradient(low="gray")
         } else if(length(theseTypes)==2){
-          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
+          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none") +
             scale_color_gradient(low="red", high = "blue")
         }
         else{
-          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=score), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none")
+          p = ggplot(plotTable) + geom_point(aes(UMAP_1, UMAP_2, color=label, alpha=scores), size=1) + labs(color=labelText) + theme_classic() + guides(alpha="none")
         }
         ggplotly(p)
       })

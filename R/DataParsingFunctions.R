@@ -8,6 +8,10 @@
 #' is Jaccard similiarty, but a second built in option is PCAdist which computes the euclidean distance in PCA space
 #' @return matrix of cell-to-cell similarity
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' computeCellSim(SampleCellWalkRData$ATACMat)
+#'
 computeCellSim = function(ATACMat, method=sparseJaccard){
   if(missing(ATACMat)){
     stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
@@ -71,6 +75,9 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
 #' @param names which gene names to use (Entrez, Ensembl)
 #' @return GRanges list of regions with gene_id
 #' @export
+#' @examples
+#' getRegions()
+#'
 getRegions = function(geneBody=TRUE, genome="hg38", names="Entrez"){
   if(genome=="hg38"){
     if(names=="Ensembl"){
@@ -121,6 +128,14 @@ getRegions = function(geneBody=TRUE, genome="hg38", names="Entrez"){
 #' @param regions GRanges object of genomic regions associated with genes
 #' @return list of genes and corresponding peaks by label
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' regions <- getRegions()
+#' mapPeaksToGenes(SampleCellWalkRData$labelGenes,
+#'                 SampleCellWalkRData$ATACMat,
+#'                 SampleCellWalkRData$peaks,
+#'                 regions)
+#'
 mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
   if(missing(labelGenes)){
     stop("Must provide a table with genes of interest in first column and corresponding labels in second column")
@@ -206,6 +221,7 @@ mapPeaksToGenes = function(labelGenes, ATACMat, peaks, regions){
 #' @param regions GRanges object of genomic regions associated with genes (only needed for "bmat")
 #' @return list of genes and corresponding peaks by label
 #' @export
+#'
 mapSnapATACToGenes = function(labelGenes, snap, whichMat = "bmat", regions){
   if(missing(snap)){
     stop("Must provide a SnapATAC object")
@@ -247,6 +263,7 @@ mapSnapATACToGenes = function(labelGenes, snap, whichMat = "bmat", regions){
 #' @param regions GRanges object of genomic regions associated with genes (only needed for "TileMatrix")
 #' @return list of genes and corresponding peaks by label
 #' @export
+#'
 mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regions){
   if(missing(ArchRproj)){
     stop("Must provide an ArchR project")
@@ -287,7 +304,7 @@ mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regio
   }
 }
 
-#' Map peaks to genes
+#' Map peaks to genes based on Cicero coaccessibility
 #'
 #' \code{mapCiceroToGenes} Generates a mapping from genes to peaks per label
 #'
@@ -296,6 +313,7 @@ mapArchRToGenes = function(labelGenes, ArchRproj, whichMat = "TileMatrix", regio
 #' @param cicero_gene_activities gene activity matrix
 #' @return list of genes and corresponding peaks by label
 #' @export
+#'
 mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
   if(missing(cicero_gene_activities)){
     stop("Must provide a gene activity matrix")
@@ -338,6 +356,12 @@ mapCiceroToGenes = function(labelGenes, cicero_gene_activities){
 #' @param whichMat string determing whether to use "bmat" or "gmat" from snap object or "TileMatrix" or "GeneScoreMatrix" from ArchR project
 #' @return matrix of weights from each label to each cell
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' computeLabelEdges(SampleCellWalkRData$labelGenes,
+#'                   SampleCellWalkRData$ATACMat,
+#'                   SampleCellWalkRData$ATACGenePeak)
+#'
 computeLabelEdges = function(
   labelGenes,
   ATACMat,
@@ -526,6 +550,11 @@ computeLabelEdges = function(
 #' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return cellWalk object with influence matrix and labels
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+#' cellWalk <- walkCells(SampleCellWalkRData$cellEdges, labelEdgesList, 1)
+#'
 walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps, tensorflow=FALSE){
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
@@ -608,6 +637,11 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, s
 #' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return data frame of weights with corresponding cell homogeneity
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+#' tuneEdgeWeights(SampleCellWalkRData$cellEdges, labelEdgesList, 10^seq(1,7,1))
+#'
 tuneEdgeWeights = function(
   cellEdges,
   labelEdgesList,
@@ -740,6 +774,21 @@ tuneEdgeWeights = function(
 #' @param tensorflow boolean to indicate whether to compute on GPU
 #' @return data frame of parameters with corresponding cell homogeneity
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' regions <- getRegions()
+#' filters <- list(SampleCellWalkRData$filter)
+#' labelGenesList <- list(SampleCellWalkRData$labelGenes)
+#' labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+#' \dontrun{tuneFilterWeights(SampleCellWalkRData$cellEdges,
+#'                   labelGenesList,
+#'                   labelEdgesList,
+#'                   1,
+#'                   SampleCellWalkRData$ATACMat,
+#'                   SampleCellWalkRData$ATACGenePeak,
+#'                   filters=filters,
+#'                   regions=regions)}
+#'
 tuneFilterWeights = function(
   cellEdges,
   labelGenesList,
@@ -919,6 +968,7 @@ tuneFilterWeights = function(
 #' @param only.pos only return positive markers
 #' @return table of marker genes, labels, and logFC in expression
 #' @export
+#'
 findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.pos = FALSE){
   if(!requireNamespace("Seurat", quietly = TRUE)){
     stop("Must install Seurat")
@@ -954,6 +1004,7 @@ findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.
 #' @param dest folder to download data to
 #' @return destination folder
 #' @export
+#'
 downloadSampleData = function(dest="inst/extdata"){
   if(!dir.exists(dest)){
     dir.create(dest, showWarnings = FALSE)
@@ -961,4 +1012,17 @@ downloadSampleData = function(dest="inst/extdata"){
   downloadFiles = download.file(url = "https://figshare.com/ndownloader/files/32630126", destfile = file.path(dest,"SamplePeakMat.mtx"))
   downloadFiles = download.file(url = "https://figshare.com/ndownloader/files/32670425", destfile = file.path(dest,"SamplePeaks.txt"))
   dest
+}
+
+#' Load Sample Data
+#'
+#' \code{loadSampleData} Download sample data for use with vignette
+#' @export
+#' @return sample data
+#' @examples
+#' loadSampleData()
+#'
+loadSampleData = function(){
+  data("SampleCellWalkRData")
+  SampleCellWalkRData
 }

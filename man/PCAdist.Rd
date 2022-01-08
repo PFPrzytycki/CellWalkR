@@ -16,3 +16,8 @@ Euclidian PCA distance matrix between rows of m
 \code{PCAdist()} computes Euclidian PCA distance matrix between the rows
 of a matrix, scaled by the greatest distance and subtracted from 1.
 }
+\examples{
+data("SampleCellWalkRData")
+PCAdist(SampleCellWalkRData$ATACMat)
+
+}

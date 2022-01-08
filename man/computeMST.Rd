@@ -34,3 +34,8 @@ cellWalk object with MST stored in "MST" and layout stored in "MST_layout"
 \description{
 \code{computeMST()} computes a minimum spanning tree based on cell-to-cell influence
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- computeMST(SampleCellWalkRData$cellWalk, plot=FALSE)
+
+}

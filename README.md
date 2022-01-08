@@ -1,6 +1,11 @@
 <img src="examples/CellWalkR_Vignette_files/figure-markdown_github/cellwalker_icon.png" id="id" class="class" width="50" height="50" /> CellWalkR
 ================
 
+About
+-----
+
+CellWalkR is an R package that integrates single-cell open chromatin (scATAC-seq) data with cell type labels and bulk epigenetic data to identify cell type-specific regulatory regions. A GPU implementation and downsampling strategies enable thousands of cells to be processed in seconds. CellWalkR’s user-friendly interface provides interactive analysis and visualization of cell labels and regulatory region mappings.
+
 Installation
 ------------
 

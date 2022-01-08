@@ -20,3 +20,9 @@ combined matrix with dimensions (c+L)-by-(c+L) where L is the sum of l's
 \code{combineMultiLabelGraph()} combines list of weighted label edges with
 cell edges into a single graph
 }
+\examples{
+data("SampleCellWalkRData")
+labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+combineMultiLabelGraph(labelEdgesList, SampleCellWalkRData$cellEdges)
+
+}

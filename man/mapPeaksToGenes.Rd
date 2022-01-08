@@ -22,3 +22,12 @@ list of genes and corresponding peaks by label
 \description{
 \code{mapPeaksToGenes} Generates a mapping from genes to peaks per label
 }
+\examples{
+data("SampleCellWalkRData")
+regions <- getRegions()
+mapPeaksToGenes(SampleCellWalkRData$labelGenes,
+                SampleCellWalkRData$ATACMat,
+                SampleCellWalkRData$peaks,
+                regions)
+
+}

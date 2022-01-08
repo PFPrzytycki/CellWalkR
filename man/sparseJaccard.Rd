@@ -16,3 +16,8 @@ Jaccard similarity matrix between rows of m
 \code{sparseJaccard()} computes the Jaccard similarity between the rows
 of a sparse matrix.
 }
+\examples{
+data("SampleCellWalkRData")
+sparseJaccard(SampleCellWalkRData$ATACMat)
+
+}

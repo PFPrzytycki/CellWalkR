@@ -8,6 +8,10 @@
 #' @param weight numeric indicating label edge weight
 #' @return combined matrix with dimensions (c+l)-by-(c+l)
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' combineGraph(SampleCellWalkRData$labelEdges, SampleCellWalkRData$cellEdges)
+#'
 combineGraph = function(labelEdges, cellEdges, weight=1){
   l = dim(labelEdges)[2]
 
@@ -27,6 +31,11 @@ combineGraph = function(labelEdges, cellEdges, weight=1){
 #' @param weights numeric vector indicating label edge weight for each label edge in list
 #' @return combined matrix with dimensions (c+L)-by-(c+L) where L is the sum of l's
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+#' combineMultiLabelGraph(labelEdgesList, SampleCellWalkRData$cellEdges)
+#'
 combineMultiLabelGraph = function(labelEdgesList, cellEdges, weights){
   numLabelLists = length(labelEdgesList)
   if(missing(weights)){
@@ -59,6 +68,11 @@ combineMultiLabelGraph = function(labelEdgesList, cellEdges, weights){
 #' @param steps integer indicating number of steps to take if walk should not be run to convergence
 #' @return influence matrix, each column is the vector of influences on each row
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' adj <- combineGraph(SampleCellWalkRData$labelEdges, SampleCellWalkRData$cellEdges)
+#' randomWalk(adj)
+#'
 randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
 
   len = dim(adj)[1]
@@ -112,6 +126,10 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
 #' @param labelCellInf label-to-cell portion of influence matrix
 #' @return normalized influence matrix
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' normalizeInfluence(SampleCellWalkRData$cellWalk$infMat)
+#'
 normalizeInfluence = function(labelCellInf){
   normMat = apply(labelCellInf, 2, function(x) (x-mean(x))/sd(x))
   normMat = apply(normMat, 2, function(x) x/max(x))
@@ -129,6 +147,10 @@ normalizeInfluence = function(labelCellInf){
 #' @param cellTypes list of names of cell types, if not provided unique labels are used
 #' @return cell homogeneity
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' computeCellHomogeneity(SampleCellWalkRData$cellWalk)
+#'
 computeCellHomogeneity = function(cellWalk, cellTypes){
   if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
     stop("Must provide a cellWalk object")
@@ -156,6 +178,10 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
 #' @param m sparse matrix
 #' @return Jaccard similarity matrix between rows of m
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' sparseJaccard(SampleCellWalkRData$ATACMat)
+#'
 sparseJaccard = function(m) {
   A = Matrix::tcrossprod(m)
   im = Matrix::which(A>0, arr.ind=TRUE)
@@ -181,6 +207,10 @@ sparseJaccard = function(m) {
 #' @param m sparse matrix
 #' @return Jaccard similarity matrix between rows of m
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' \dontrun{tensorJaccard(SampleCellWalkRData$ATACMat)}
+#'
 tensorJaccard = function(m) {
   if(!requireNamespace("tensorflow", quietly = TRUE)){
     stop("Must install tensorflow")
@@ -213,8 +243,12 @@ tensorJaccard = function(m) {
 #' @param m  matrix
 #' @return Euclidian PCA distance matrix between rows of m
 #' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' PCAdist(SampleCellWalkRData$ATACMat)
+#'
 PCAdist = function(m){
-  pca = prcomp(t(m), rank.=10)$rotation
+  pca = prcomp(Matrix::t(m), rank.=10)$rotation
   distance = dist(pca)
   distance = distance/max(distance)
   as.matrix(1 - distance)

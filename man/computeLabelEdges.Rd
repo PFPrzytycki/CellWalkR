@@ -53,3 +53,10 @@ filtering out (filterOut, FALSE by default). Regions mapping peaks to genes must
 provided to use filters. If filters are applied to specific peaks, peaks for the ATAC
 data must also be provided.
 }
+\examples{
+data("SampleCellWalkRData")
+computeLabelEdges(SampleCellWalkRData$labelGenes,
+                  SampleCellWalkRData$ATACMat,
+                  SampleCellWalkRData$ATACGenePeak)
+
+}

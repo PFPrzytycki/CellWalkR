@@ -45,3 +45,11 @@ labels for each region in bulk data
 \code{labelBulk()} Determines labels for bulk data by mapping them via
 the calculated information matrix
 }
+\examples{
+data("SampleCellWalkRData")
+labelBulk(SampleCellWalkRData$cellWalk,
+          SampleCellWalkRData$sampleEnhancers,
+          SampleCellWalkRData$ATACMat,
+          SampleCellWalkRData$peaks)
+
+}

@@ -82,3 +82,19 @@ provided to use filters. If filters are applied to specific peaks, peaks for the
 data must also be provided. To speed up calculations cells
 can be subsampled to a specified sampleDepth (default 5000).
 }
+\examples{
+data("SampleCellWalkRData")
+regions <- getRegions()
+filters <- list(SampleCellWalkRData$filter)
+labelGenesList <- list(SampleCellWalkRData$labelGenes)
+labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+\dontrun{tuneFilterWeights(SampleCellWalkRData$cellEdges,
+                  labelGenesList,
+                  labelEdgesList,
+                  1,
+                  SampleCellWalkRData$ATACMat,
+                  SampleCellWalkRData$ATACGenePeak,
+                  filters=filters,
+                  regions=regions)}
+
+}

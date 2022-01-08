@@ -9,6 +9,9 @@ launchViz(cellWalk)
 \arguments{
 \item{cellWalk}{a cellWalk object}
 }
+\value{
+a shinyApp
+}
 \description{
 \code{launchViz()} launches an interactve visualization
 }

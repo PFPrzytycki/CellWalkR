@@ -22,3 +22,9 @@ plot object p of either counts of signifcant labels or enrichment/depletion for 
 \code{plotMultiLevelLabels()} Plots labels across heirarchy for bulk data by mapping them via
 the calculated information matrix
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+\dontrun{p <- plotMultiLevelLabels(cellWalk,SampleCellWalkRData$labelScores)}
+
+}

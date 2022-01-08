@@ -20,3 +20,8 @@ combined matrix with dimensions (c+l)-by-(c+l)
 \code{combineGraph()} combines weighted cell-to-label edges (dimensions
 c-by-l) with cell-to-cell edges (dimensions c-by-c) into a single large graph
 }
+\examples{
+data("SampleCellWalkRData")
+combineGraph(SampleCellWalkRData$labelEdges, SampleCellWalkRData$cellEdges)
+
+}

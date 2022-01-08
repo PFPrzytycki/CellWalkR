@@ -21,3 +21,8 @@ cellWalk object with label clustering stored in "cluster"
 \description{
 \code{clusterLabels()} Computes hierarchical clustering of labels
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- clusterLabels(SampleCellWalkRData$cellWalk)
+
+}

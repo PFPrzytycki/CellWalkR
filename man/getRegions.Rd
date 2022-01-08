@@ -20,3 +20,7 @@ GRanges list of regions with gene_id
 \code{getRegions} returns a GRanges object of how gene name identifiers map to
 genomic regions either based on gene promoters or the full gene body
 }
+\examples{
+getRegions()
+
+}

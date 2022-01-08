@@ -16,3 +16,8 @@ normalized influence matrix
 \code{normalizeInfluence()} normalizes the label-to-cell portions of the
 influence matrix for cross-label comparisons
 }
+\examples{
+data("SampleCellWalkRData")
+normalizeInfluence(SampleCellWalkRData$cellWalk$infMat)
+
+}

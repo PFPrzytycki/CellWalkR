@@ -33,3 +33,9 @@ cellWalk object with influence matrix and labels
 \code{walkCells} applies the CellWalker method to the given cell-to-cell and
 cell-to-label edges.
 }
+\examples{
+data("SampleCellWalkRData")
+labelEdgesList <- list(SampleCellWalkRData$labelEdges)
+cellWalk <- walkCells(SampleCellWalkRData$cellEdges, labelEdgesList, 1)
+
+}

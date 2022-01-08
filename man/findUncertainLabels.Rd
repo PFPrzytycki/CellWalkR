@@ -34,3 +34,8 @@ cellWalk object with label uncertainty matrix (l-by-l) stored in "uncertaintyMat
 confused for each other label at a given threshold, optinally normalized for total
 counts of cells for each label (default FALSE)
 }
+\examples{
+data("SampleCellWalkRData")
+cellWalk <- findUncertainLabels(SampleCellWalkRData$cellWalk, threshold = .5)
+
+}
