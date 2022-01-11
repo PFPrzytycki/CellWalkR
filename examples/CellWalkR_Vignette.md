@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2022-01-07
+2022-01-11
 
 ## Introduction
 
@@ -53,10 +53,10 @@ load the matrix and the corresponding peaks into a GRanges object as
 follows:
 
 ``` r
-pathToMat <- system.file("extdata", "SamplePeakMat.mtx", package = "CellWalkR")
-ATACMat <- Matrix::readMM(pathToMat)
-pathToPeaks <- system.file("extdata", "SamplePeaks.txt", package = "CellWalkR")
-peaks <- as(data.table::fread(pathToPeaks, header = FALSE)$V1, "GRanges")
+downloadSampleData("vignette_data")
+#> [1] "vignette_data"
+ATACMat <- Matrix::readMM("vignette_data/SamplePeakMat.mtx")
+peaks <- as(data.table::fread("vignette_data/SamplePeaks.txt", header = FALSE)$V1, "GRanges")
 ```
 
 To work with the ArchR project:
