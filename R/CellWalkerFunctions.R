@@ -79,7 +79,7 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
 
   if(!tensorflow){
       D = Matrix::Diagonal(x=Matrix::rowSums(adj))
-      W = solve(D)%*%adj
+      W = as.matrix(solve(D)%*%adj)
 
       if(missing(steps)){
 
