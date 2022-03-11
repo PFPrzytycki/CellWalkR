@@ -22,7 +22,7 @@ influence matrix, each column is the vector of influences on each row
 \code{randomWalk()} solves a random walk with restarts on an adjacency matrix A using
 the closed form solution for the influence matrix
 \ifelse{html}{\out{F = r(I - (1 - r)W)<sup>-1</sup>}}{\eqn{F = r(I - (1 - r)W)^{-1}}}
-where \ifelse{html}{\out{W = D<sup>−1</sup>A}}{\eqn{W = D^{−1}A}} and D is a diagonal
+where \ifelse{html}{\out{W = D<sup>-1</sup>A}}{\eqn{W = D^{-1}A}} and D is a diagonal
 matrix of the sums of edge weights for each node and r is the restart probability
 }
 \examples{

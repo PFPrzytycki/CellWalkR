@@ -496,13 +496,15 @@ computeLabelEdges = function(
           stop("Must provide a table with genes of interest in first column and corresponding labels in
                second column and log fold gene expression in the third")
         }
-        geneExp = labelGenes[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1]),3]
+        # geneExp = labelGenes[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1]),3]
+        geneExp = labelGenes[labelGenes[,2]==label,3][match(genesInMarkers,labelGenes[labelGenes[,2]==label,1])]
       }
       else{
         stop("Not a recognized scaling method")
       }
 
-      geneFilterScale = geneFilter[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1])]
+      # geneFilterScale = geneFilter[match(genesInMarkers,labelGenes[labelGenes[,2]==label,1])]
+      geneFilterScale = geneFilter[labelGenes[,2]==label][match(genesInMarkers,labelGenes[labelGenes[,2]==label,1])]
 
       if(!missing(filters) && sum(!filterGene)>0){
         if(missing(peaks) || !is(peaks,"GRanges")){
@@ -1016,13 +1018,14 @@ downloadSampleData = function(dest="inst/extdata"){
 
 #' Load Sample Data
 #'
-#' \code{loadSampleData} Download sample data for use with vignette
+#' \code{loadSampleData} Download sample data for use with vignette, only used for testing.
+#' To load sampel data, simply call \code{data("SampleCellWalkRData")}
 #' @export
 #' @return sample data
 #' @examples
 #' loadSampleData()
 #'
 loadSampleData = function(){
-  data("SampleCellWalkRData")
-  SampleCellWalkRData
+  # data("SampleCellWalkRData")
+  # SampleCellWalkRData
 }

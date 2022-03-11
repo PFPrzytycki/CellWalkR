@@ -438,6 +438,12 @@ cellWalkB <- findUncertainLabels(cellWalkB, threshold = .5, plot = TRUE)
 cellWalkB <- clusterLabels(cellWalkB,  plot = TRUE)
 ```
 
+## Detecting Doublets
+It is possible to detect potential doublets using CellWalkR by identifing cells that have high scores from two dissimilar cell types. 
+```{r detect-doublets}
+cellWalk <- scoreDoublets(cellWalk, plot=TRUE)
+```
+
 ##Session Information
 ```{r session-info}
 sessionInfo()

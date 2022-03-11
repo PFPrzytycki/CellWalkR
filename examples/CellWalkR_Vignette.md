@@ -1,7 +1,7 @@
 CellWalkR Vignette
 ================
 Pawel F. Przytycki
-2022-01-11
+2022-03-08
 
 ## Introduction
 
@@ -569,3 +569,14 @@ cellWalkB <- clusterLabels(cellWalkB,  plot = TRUE)
 ![](CellWalkR_Vignette_files/figure-gfm/moreLabels-plots-2.png)<!-- -->
 
     #> NULL
+
+## Detecting Doublets
+
+It is possible to detect potential doublets using CellWalkR by
+identifing cells that have high scores from two dissimilar cell types.
+
+``` r
+cellWalk <- scoreDoublets(cellWalk, plot=TRUE)
+```
+
+![](CellWalkR_Vignette_files/figure-gfm/detect-doublets-1.png)<!-- -->

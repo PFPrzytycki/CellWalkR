@@ -10,7 +10,8 @@ loadSampleData()
 sample data
 }
 \description{
-\code{loadSampleData} Download sample data for use with vignette
+\code{loadSampleData} Download sample data for use with vignette, only used for testing.
+To load sampel data, simply call \code{data("SampleCellWalkRData")}
 }
 \examples{
 loadSampleData()

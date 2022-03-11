@@ -126,6 +126,47 @@ findUncertainLabels = function(cellWalk, cellTypes, threshold=.1, labelThreshold
 
 }
 
+#' Score doublets
+#'
+#' \code{scoreDoublets()} generates an l-by-l matrix for how often each label is
+#' confused for each other label at a given threshold, optinally normalized for total
+#' counts of cells for each label (default FALSE)
+#'
+#' @param cellWalk a cellWalk object
+#' @param plot boolean, optionally plot doublet scores in embedding space
+#' @param embedding method with which to embed data, either "tSNE" or "UMAP"
+#' @return cellWalk object with vector of doublet scores stored in "doubletScore"
+#' @export
+#' @examples
+#' data("SampleCellWalkRData")
+#' cellWalk <- scoreDoublets(SampleCellWalkRData$cellWalk)
+#'
+scoreDoublets = function(cellWalk, plot=FALSE, embedding="tSNE"){
+  if(missing(cellWalk) || !is(cellWalk, "cellWalk")){
+    stop("Must provide a cellWalk object")
+  }
+  normMat = cellWalk[["normMat"]]
+  uncertaintyScore = apply(normMat, 1, function(x) sort(x, decreasing = TRUE)[1]-sort(x, decreasing = TRUE)[2])
+  corGrid = sapply(1:ncol(normMat), function(i) sapply(1:ncol(normMat), function(j)
+    cor.test(normMat[,i],normMat[,j])$estimate))
+  pairCorScore = apply(normMat, 1, function(x) corGrid[order(x, decreasing = TRUE)[1],order(x, decreasing = TRUE)[2]])
+  doubletScore = -exp(-pairCorScore)*log(uncertaintyScore)
+  if(plot){
+    if(is.null(cellWalk[[embedding]])){
+      stop("Embedding hasn't been computed")
+    }
+    celltSNE = cellWalk[[embedding]]
+    print(ggplot2::ggplot() +
+            ggplot2::geom_point(ggplot2::aes(celltSNE[,1],celltSNE[,2], color=doubletScore), size = 1) +
+            ggplot2::xlab(paste0(embedding,"_1"))+
+            ggplot2::ylab(paste0(embedding,"_2"))+
+            ggplot2::labs(color="Doublet Score")+
+            ggplot2::theme_classic())
+  }
+  cellWalk[["doubletScore"]] = doubletScore
+  cellWalk
+}
+
 #' Plot Cells
 #'
 #' \code{plotCells()} generates a tSNE plot based on cell-to-cell influence
