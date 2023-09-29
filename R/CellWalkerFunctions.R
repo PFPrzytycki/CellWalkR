@@ -78,7 +78,8 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
   len = dim(adj)[1]
 
   if(!tensorflow){
-      W = adj/Matrix::rowSums(adj)
+      D = Matrix::Diagonal(x=Matrix::rowSums(adj))
+      W = as.matrix(solve(D)%*%adj)
 
       if(missing(steps)){
 
@@ -183,17 +184,16 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
 #'
 sparseJaccard = function(m) {
   A = Matrix::tcrossprod(m)
-  im = Matrix::summary(A)
+  im = Matrix::which(A>0, arr.ind=TRUE)
   b = Matrix::rowSums(m!=0)
 
-  Aim = im[,3]
+  Aim = A[im]
 
   J = Matrix::sparseMatrix(
     i = im[,1],
     j = im[,2],
     x = Aim / (b[im[,1]] + b[im[,2]] - Aim),
-    dims = dim(A),
-    symmetric = T
+    dims = dim(A)
   )
 
   J
