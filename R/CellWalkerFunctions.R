@@ -183,16 +183,17 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
 #'
 sparseJaccard = function(m) {
   A = Matrix::tcrossprod(m)
-  im = Matrix::which(A>0, arr.ind=TRUE)
+  im = Matrix::summary(A)
   b = Matrix::rowSums(m!=0)
 
-  Aim = A[im]
+  Aim = im[,3]
 
   J = Matrix::sparseMatrix(
     i = im[,1],
     j = im[,2],
     x = Aim / (b[im[,1]] + b[im[,2]] - Aim),
-    dims = dim(A)
+    dims = dim(A),
+    symmetric = T
   )
 
   J
