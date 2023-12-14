@@ -94,6 +94,10 @@ constructCellGraph = function(RNA_Mat, ATAC_Mat, peaks, RNA_Mat2=NULL, ATAC_Mat2
     message('compute cell-cell similarity for unpaired RNASeq data')
     mergeRNA = mergeRNASeq(list(RNA_Mat, RNA_Mat2), integrate = T, computeKNN = F) # generate cell-cell graph combining RNASeq datasets
     cellgraph_R = mergeRNA$cellGraph
+    if(logarithm){
+      cellgraph_R = -log(1-cellgraph_R + 0.01)
+      cellgraph_R = (cellgraph_R - mean(cellgraph_R))/sd(cellgraph_R)
+    }
   }
   if(!is.null(ATAC_Mat2))
   {
@@ -192,6 +196,13 @@ constructCellGraphFromATAC = function(ATAC_Mat, peaks, distan = 'sparseCosine', 
   cellEdges = computeCellSim(Matrix::t(ATAC_Mat),distan) # celll-to-cell similarity
   rownames(cellEdges) = colnames(cellEdges) = colnames(ATAC_Mat)
   cellEdges = as.matrix(cellEdges)
+  
+  if(logarithm){
+    cellEdges = log(cellEdges + 0.01)
+  }
+  if(normalized){      
+    cellEdges = (cellEdges - mean(cellEdges))/sd(cellEdges)
+  }
   cellEdges
 }
 

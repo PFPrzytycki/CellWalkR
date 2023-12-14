@@ -1,7 +1,14 @@
-CellWalker2 Vignette
-================
-Zhirui Hu
-2023-12-14
+---
+title: "CellWalker2"
+author: "Zhirui Hu"
+date: "2023-12-14"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{CellWalker2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
 
 
 ## Introduction
@@ -228,8 +235,8 @@ cellWalk2 = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights
                          parallel  = T,  sampleDepth =1000, numCores = 8)
 #> tunning labelEdgeWeights...
 #> cellHomogeneity at optimal edgeWeight:
-#>    Var1  Var2 cellHomogeneity
-#> 1 1e-04 1e-04        9.932882
+#>     Var1  Var2 cellHomogeneity
+#> 10 1e-04 0.001         8.68531
 #> run CellWalker:
 ```
 
@@ -408,8 +415,8 @@ cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtr
                                numCores = 8) # with tuning edgeWeights
 #> tunning labelEdgeWeights...
 #> labelHomogeneity at optimal edgeWeight:
-#>     Var1 Var2 cellHomogeneity
-#> 45 10000    1       0.1057033
+#>    Var1 Var2 cellHomogeneity
+#> 53 1000   10       0.1007592
 #> run CellWalker:
 ```
 
@@ -474,8 +481,8 @@ cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, groups1, grou
                                parallel = T, numCores = 8)
 #> tunning labelEdgeWeights...
 #> labelHomogeneity at optimal edgeWeight:
-#>     Var1 Var2 cellHomogeneity
-#> 45 10000    1      0.09701262
+#>     Var1  Var2 cellHomogeneity
+#> 18 10000 0.001      0.09224497
 #> run CellWalker:
 ```
 
