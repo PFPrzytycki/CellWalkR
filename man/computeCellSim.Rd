@@ -2,22 +2,28 @@
 % Please edit documentation in R/DataParsingFunctions.R
 \name{computeCellSim}
 \alias{computeCellSim}
-\title{Compute Cell Similarity}
+\title{Compute Cell Similarity by ATACSeq}
 \usage{
-computeCellSim(ATACMat, method = sparseJaccard)
+computeCellSim(
+  ATACMat,
+  method = c("sparseJaccard", "sparseCosine", "LSI"),
+  ...
+)
 }
 \arguments{
 \item{ATACMat}{either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table}
 
-\item{method}{function, the method used to compute cell similarity, should operate on rows of a matrix. The default
-is Jaccard similiarty, but a second built in option is PCAdist which computes the euclidean distance in PCA space}
+\item{method}{function name, the method used to compute cell similarity, should operate on rows of a matrix. The default
+is sparseJaccard, other options are sparseCosine and LSI which computes the euclidean distance in LSI space. LSI only works for input cell-by-peak matrix.}
+
+\item{...}{additional parameters used by method}
 }
 \value{
 matrix of cell-to-cell similarity
 }
 \description{
 \code{computeCellSim} computes a cell-to-cell similarity matrix using the given method.
-Currently only Jaccard similarity is implemented.
+Currently Jaccard, Cosine and LSI similarity is implemented.
 }
 \examples{
 data("SampleCellWalkRData")

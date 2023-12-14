@@ -1,18 +1,18 @@
 Package: CellWalkR
 Type: Package
-Date: 2022-11-1
+Date: 2023-12-1
 Title: An R Package for Integrating and Visualizing Single-Cell and Bulk Data to Resolve Regulatory Elements 
-Version: 0.99.1
+Version: 1.0.0
 Authors@R: person(given="Pawel F.", family="Przytycki", role=c("aut","cre"), email="pawel.przytycki@gladstone.ucsf.edu")
 Description: CellWalkR is an R package that integrates single-cell open chromatin (scATAC-seq) data with cell type labels and bulk epigenetic data to identify cell type-specific regulatory regions. A GPU implementation and downsampling strategies enable thousands of cells to be processed in seconds. CellWalkR’s user-friendly interface provides interactive analysis and visualization of cell labels and regulatory region mappings.
 License: GPL-2 + file LICENSE
 Encoding: UTF-8
 Depends:
   R (>= 4.0.0),
-  GenomicRanges (>= 1.40.0)
+  GenomicRanges (>= 1.40.0),
 Imports:
-	data.table,
-	Matrix,
+    Matrix,
+    data.table,
 Suggests:
     SnapATAC,
     ArchR,
@@ -32,7 +32,7 @@ Suggests:
     parallel,
     knitr,
     rmarkdown
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.3
 VignetteBuilder: knitr
 LazyData: true
-biocViews: SingleCell, ATACSeq, Software
+biocViews: SingleCell, RNASeq, ATACSeq, Software

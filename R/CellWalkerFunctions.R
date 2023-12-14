@@ -78,9 +78,17 @@ randomWalk = function(adj, r=0.5, tensorflow=FALSE, steps){
   len = dim(adj)[1]
 
   if(!tensorflow){
-      W = adj/Matrix::rowSums(adj)
-
-      if(missing(steps)){
+      rSum = Matrix::rowSums(adj)
+      # for isolated nodes set W to 0
+      idx = which(rSum ==0)
+      if(length(idx) > 0)
+      {
+        Matrix::diag(adj)[idx] = 1
+        rSum[idx] = 1
+      }      
+      W = adj/rSum
+      
+      if(missing(steps) | steps == Inf | is.null(steps)){
 
         infMat = r*solve(Matrix::Diagonal(len)-(1-r)*W)
 
@@ -162,16 +170,22 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
   }
 
   l = length(cellTypes)
-  log(median(unlist(sapply(cellTypes, function(cellType)
-    median(sapply(which(cellLabels==cellType), function(x) {
-      median(infMat[x+l,which(cellLabels==cellType)+l])/median(infMat[x+l,which(!cellLabels==cellType)+l])
-    }))
+  # log(median(unlist(sapply(cellTypes, function(cellType)
+  #   median(sapply(which(cellLabels==cellType), function(x) {
+  #     median(infMat[x+l,which(cellLabels==cellType)+l])/median(infMat[x+l,which(!cellLabels==cellType)+l])
+  #   }))
+  # ))))
+  log(median(unlist(sapply(cellTypes, function(cellType){
+    idx = which(cellLabels==cellType)
+    idx2 = which(cellLabels!=cellType)
+    if(length(idx) <= 1 | length(idx2) <= 1) return()
+    median(matrixStats::rowMedians(infMat[idx+l, idx+l])/matrixStats::rowMedians(infMat[idx+l, idx2+l]))}
   ))))
 }
 
 #' Compute Jaccard on sprase matrix
 #'
-#' \code{sparseJaccard()} computes the Jaccard similarity between the rows
+#' \code{sparseJaccard0()} computes the Jaccard similarity between the rows
 #' of a sparse matrix.
 #'
 #' @param m sparse matrix
@@ -179,9 +193,9 @@ computeCellHomogeneity = function(cellWalk, cellTypes){
 #' @export
 #' @examples
 #' data("SampleCellWalkRData")
-#' sparseJaccard(SampleCellWalkRData$ATACMat)
+#' sparseJaccard0(SampleCellWalkRData$ATACMat)
 #'
-sparseJaccard = function(m) {
+sparseJaccard0 = function(m) {
   A = Matrix::tcrossprod(m)
   im = Matrix::summary(A)
   b = Matrix::rowSums(m!=0)

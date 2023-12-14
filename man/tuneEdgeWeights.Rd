@@ -9,12 +9,13 @@ tuneEdgeWeights(
   labelEdgesList,
   labelEdgeOpts = 10^seq(-4, 4, 1),
   sampleDepth = 10000,
-  steps,
+  steps = Inf,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
   trackProgress = FALSE,
-  tensorflow = FALSE
+  tensorflow = FALSE,
+  method = "computeCellHomogeneity"
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ tuneEdgeWeights(
 \item{trackProgress}{boolean, print percent run completed}
 
 \item{tensorflow}{boolean to indicate whether to compute on GPU}
+
+\item{method}{criterion to choose the optimal parameters. If annotate cells or map cell types, use computeCellHomogeneity otherwise use  computeLabelHomogeneity}
 }
 \value{
 data frame of weights with corresponding cell homogeneity
