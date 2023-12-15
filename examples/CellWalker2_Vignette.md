@@ -1,14 +1,7 @@
----
-title: "CellWalker2"
-author: "Zhirui Hu"
-date: "2023-12-14"
-output: rmarkdown::html_vignette
-vignette: >
-  %\VignetteIndexEntry{CellWalker2}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
----
-
+CellWalker2 Vignette
+================
+Zhirui Hu
+2023-12-14
 
 
 ## Introduction

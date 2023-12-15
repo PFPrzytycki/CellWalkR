@@ -6,8 +6,9 @@
 CellWalkR is updated to Version 2! It combines CellWalker that integrates single-cell open chromatin
 (scATAC-seq) data with cell type labels and bulk epigenetic data to
 and CellWalker2 that integrate different modalities of single-cell data. 
+CellWalker2 takes count data as input, either gene by cell matrix for scRNASeq data or peak by cell matrix for scATACSeq data, which works well with many upstream single cell software. 
 CellWalkR can annotate cells and compare cell type labels by scATACSeq (CellWalker) and by scRNASeq (CellWalker2), 
-and assign bulk identify cell type-specific regulatory regions by scATACSeq (CellWalker) or multiomic data (CellWalker2).
+and identify cell type-specific regulatory regions by scATACSeq (CellWalker) or multiomic data (CellWalker2).
 In addition, CellWalker2 can assign cells or bulk genomic annotations (e.g. TF motif or regulatory regions) to cell type hierarchy and compare different cell type hierarchies from different datasets. 
 It also provides statistical signifiance of the association by permutation.  
 
@@ -23,10 +24,10 @@ $ R
 
 ## Usage
 
-For a guide to using CellWalkR, see the provided
+For a guide to using CellWalker, see the provided
 [readme](CellWalker.md) and [vignette](examples/CellWalkR_Vignette.md). 
 
-For a guide to using CellWalkR2, see the provided
+For a guide to using CellWalker2, see the provided
 [readme](CellWalker2.md) and [vignette](examples/CellWalker2_Vignette.md). 
 
 If you use CellWalkR please cite:
