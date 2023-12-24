@@ -27,31 +27,17 @@ For a guide to using CellWalker2, see the provided
 
 1.  [Getting Started with CellWalker2](examples/CellWalker2_Vignette.md#getting-started-with-cellwalker2)
 2.  [Use CellWalker2 for scRNA-Seq data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-scRNA-Seq-data)
-    1.  [Computing Cell-Cell
-        Edges](examples/CellWalker2_Vignette.md#computing-cell-cell-edges)
-    2.  [Computing Label-Cell
-        Edges](examples/CellWalker2_Vignette.md#computing-label-cell-edges)
-4.  [Tuning Label
-    Edges](examples/CellWalker2_Vignette.md#tuning-label-edges)
-5.  [Making a cellWalk
-    Object](examples/CellWalker2_Vignette.md#making-a-cellwalk-object)
-6.  [Adding Filters](examples/CellWalker2_Vignette.md#adding-filters)
-7.  [Downstream
-    Analysis](examples/CellWalker2_Vignette.md#downstream-analysis)
-    1.  [Cell Labels](examples/CellWalker2_Vignette.md#cell-labels)
-    2.  [Confusion
-        Matrix](examples/CellWalker2_Vignette.md#confusion-matrix)
-    3.  [Hierarchical Clustering of
-        Labels](examples/CellWalker2_Vignette.md#hierarchical-clustering-of-labels)
-    4.  [Plotting Cells](examples/CellWalker2_Vignette.md#plotting-cells)
-    5.  [Bulk Data
-        Mapping](examples/CellWalker2_Vignette.md#bulk-data-mapping)
-8.  [Interactive
-    Visualizaiton](examples/CellWalker2_Vignette.md#interactive-visualzation)
-9.  [Adding a Second Set of
-    Labels](examples/CellWalker2_Vignette.md#adding-a-second-set-of-labels)
-10. [Detecting
-    Doublets](examples/CellWalker2_Vignette.md#detecting-doublets)
+    1.  [Simulate scRNA-Seq data](examples/CellWalker2_Vignette.md#simulate-scRNA-Seq-data)
+    2.  [Cell type annotation](examples/CellWalker2_Vignette.md#cell-type-annotation)
+    3.  [Cell types (trees) mapping](examples/CellWalker2_Vignette.md#Cell-types-trees-mapping)
+3.  [Use CellWalker2 for multiomic data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-multiomic-data)
+    1.  [Load data](examples/CellWalker2_Vignette.md#load-data)
+    2.  [Process RNASeq data](examples/CellWalker2_Vignette.md#process-rnaseq-data)
+    3.  [Compute cell-to-cell type edges](examples/CellWalker2_Vignette.md#compute-cell-to-cell-type-edges)
+    4.  [Construct cell-to-cell graph](examples/CellWalker2_Vignette.md#construct-cell-to-cell-graph)
+    5.  [Map region-specific pREs to cell types](examples/CellWalker2_Vignette.md#map-region-specific-pREs-to-cell-types)
+    6.  [Identify cell type specific TFs](examples/CellWalker2_Vignette.md#identify-cell-type-specific-tfs)
+    
 
 If you use CellWalkR please cite:
 
@@ -65,9 +51,3 @@ If you use CellWalkR please cite:
     complex tissues.” *Genome Biology* (2021).
     <https://doi.org/10.1186/s13059-021-02279-1>
 
-## AWS + TensorFlow
-
-CellWalkR can also be run on AWS which vastly simplifies the process of
-running on GPUs using TensorFlow. Using GPUs allows the code to run more
-than 15 times faster. For a guide to running CellWalkR on AWS using GPUs
-see this [vignette](examples/CellWalkR_TensorFlow_Vignette.md).
