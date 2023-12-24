@@ -1,11 +1,11 @@
-<img src="examples/CellWalkR_Vignette_files/figure-markdown_github/cellwalker2_icon.png" id="id" class="class" width="50" height="50" /> CellWalkR
+<img src="examples/CellWalkR_Vignette_files/figure-markdown_github/cellwalker2_icon.png" id="id" class="class" width="100" height="50" /> CellWalkR
 ================
 
 ## About
 
-CellWalkR is updated to Version 2! It combines *CellWalker* that integrates single-cell open chromatin
+CellWalkR is updated to Version 2! It combines **CellWalker** that integrates single-cell open chromatin
 (scATAC-seq) data with cell type labels and bulk epigenetic data to
-and *CellWalker2* that integrate different modalities of single-cell data. 
+and **CellWalker2** that integrate different modalities of single-cell data. 
 CellWalkerR takes count data as input, either gene by cell matrix for scRNASeq data or peak by cell matrix for scATACSeq data, which works well with many upstream single cell software. 
 
 CellWalkR can annotate cells and compare cell type labels by scATACSeq (CellWalker) and by scRNASeq (CellWalker2), 
