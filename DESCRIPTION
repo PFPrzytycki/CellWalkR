@@ -11,8 +11,10 @@ Depends:
   R (>= 4.0.0),
   GenomicRanges (>= 1.40.0),
 Imports:
-    Matrix,
+    Matrix (>= 1.5.3),
     data.table,
+    ggtree,
+    doParallel
 Suggests:
     SnapATAC,
     ArchR,

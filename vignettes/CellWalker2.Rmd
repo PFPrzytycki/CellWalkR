@@ -97,7 +97,7 @@ counts2 = counts[, -ind]
 
 CellWalker2 use Seurat to preprocess scRNA-Seq data. User can provide marker genes for each cell type as a dataframe with columns *gene*, *cluster,* *avg_log2FC* (optional). If not provided, CellWalker2 can compute cell type marker genes from a reference scRNA-Seq dataset. Optionally, user can provide cell type tree as a phylo object. If not provided, CellWalker2 can also build a cell type tree from a reference scRNA-Seq dataset.
 
-We compute cell type markers and the hierarchical relationship between cell type labels using dataset 1. To do that, we use `Batch` column in `mate.data1` as cell label. We also compute cell-to-cell similary graph for dataset 2 as a part of the graph to run random walk.
+We compute cell type markers and the hierarchical relationship between cell type labels using dataset 1. To do that, we use `Batch` column in `meta.data1` as cell label. We also compute cell-to-cell similary graph for dataset 2 as a part of the graph to run random walk.
 
 ```{r processRNA1, eval=TRUE}
 dataset1 = processRNASeq(counts1, meta.data1, group.col = 'Batch', do.findMarkers = T, 
