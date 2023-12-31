@@ -251,7 +251,7 @@ We load subset of multiomic, scRNA-Seq and scATAC-Seq data from human developing
 ```{r loadData2, eval=TRUE}
 # load single cell data
 # 'data/SampleCellTypeTree.rda' should be loaded upon loading the package
-devtools::load_all() # load SampleCortexSingleCellData
+devtools::load_all(system.file(package = "CellWalkR")) # load SampleCortexSingleCellData
 
 ATAC_Mat = SampleCortexSingleCellData$ATAC_Mat
 peaks = SampleCortexSingleCellData$peaks
