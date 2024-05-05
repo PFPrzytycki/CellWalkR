@@ -196,7 +196,7 @@ ggplot(aa, aes(x= Ren, y=Yoshida, size=count, color=prob, group=Ren)) +
   scale_color_gradient(low = "mediumblue",  high = "red2", space = "Lab", limit = c(0, 1))+scale_size(range = c(0.5, 6)) 
 ```
 
-![](CellWalker2_Vignette_files/CellWalker2-1_files/figure-markdown_github/evalAnnot-1.png)
+![](CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png)
 
 #### Cell types (trees) mapping
 
