@@ -27,7 +27,7 @@ For a guide to using CellWalker2, see the provided
 
 1.  [Getting Started with CellWalker2](examples/CellWalker2_Vignette.md#getting-started-with-cellwalker2)
 2.  [Use CellWalker2 for scRNA-Seq data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-scRNA-Seq-data)
-    1.  [Simulate scRNA-Seq data](examples/CellWalker2_Vignette.md#simulate-scRNA-Seq-data)
+    1.  [load scRNA-Seq data](examples/CellWalker2_Vignette.md#load-scRNA-Seq-data)
     2.  [Cell type annotation](examples/CellWalker2_Vignette.md#cell-type-annotation)
     3.  [Cell types (trees) mapping](examples/CellWalker2_Vignette.md#Cell-types-trees-mapping)
 3.  [Use CellWalker2 for multiomic data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-multiomic-data)
