@@ -30,7 +30,7 @@ For a guide to using CellWalker2, see the provided
     1.  [load scRNA-Seq data](examples/CellWalker2_Vignette.md#load-scRNA-Seq-data)
     2.  [Cell type annotation](examples/CellWalker2_Vignette.md#cell-type-annotation)
     3.  [Cell types (trees) mapping](examples/CellWalker2_Vignette.md#Cell-types-trees-mapping)
-3.  [Use CellWalker2 for multiomic data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-multiomic-data)
+3.  [Use CellWalker2 for multiomic data](https://github.com/PFPrzytycki/CellWalkR/blob/dev/examples/CellWalker2_Vignette.md#use-cellwalker2-for-multiomic-data)
     1.  [Load data](examples/CellWalker2_Vignette.md#load-data)
     2.  [Process RNASeq data](examples/CellWalker2_Vignette.md#process-rnaseq-data)
     3.  [Compute cell-to-cell type edges](examples/CellWalker2_Vignette.md#compute-cell-to-cell-type-edges)
