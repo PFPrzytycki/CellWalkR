@@ -23,249 +23,338 @@ devtools::install_github("PFPrzytycki/CellWalk@dev")
 After CellWalkR is installed, load the package:
 
 
-```r
+``` r
 library(CellWalkR)
+library(data.table)
+library(ggplot2)
+library(Matrix)
 ```
-
-
 
 ## Use CellWalker2 for scRNA-Seq data
 
-In this section, we show how to use CellWalker2 to annotate cells by reference cell type labels (or tree) and map similar cell type labels (or trees) using simulated scRNA-Seq datasets. We will generate two datasets using Splatter. To illustrate cell type annotation, we treat dataset 1 as the reference dataset and dataset 2 as unlabeled. We use cell types and marker genes obtained from dataset 1 to annotate cells in dataset2. To illustrate cell type mapping, we use CellWalker2 to identify the correspondence between cell type labels (or trees) from these two datasets.
+In this section, we show how to use CellWalker2 to annotate cells by
+reference cell type labels (or tree) and map similar cell type labels
+(or trees) using human PBMC scRNA-Seq datasets. The full data is
+downloaded from
+[CellTypist](https://celltypist.cog.sanger.ac.uk/Resources/Organ_atlas/Blood/Blood.h5ad)
+and we subsampled 2% cells for demonstration. To illustrate cell type
+annotation, we treat [Ren et
+al.](https://pubmed.ncbi.nlm.nih.gov/33657410/) as the reference dataset
+and [Yoshida et al.](https://www.nature.com/articles/s41586-021-04345-x)
+as unlabeled. We use cell types and marker genes obtained from Ren et
+al. to annotate cells in Yoshida et al.. To illustrate cell type
+mapping, we use CellWalker2 to identify the correspondence between cell
+type labels (or trees) from these two datasets.
 
-#### Simulate scRNA-Seq data
+#### load scRNA-Seq data
 
-We use Splatter to simulate scRNASeq. You might need to install splatter and scater packages. We will simulate four cell types 1,2,3,4, in which (1,2) are in one subtree and (3,4) in another subtree. Then, we split the data into two datasets.
+``` r
+load('../data-raw/Ren_subsample.rdat')
+load('../data-raw/Yoshida_subsample.rdat')
 
+# remove cell types with too few cells (less than 5)
+cts = sort(xtabs(~meta.data1$Original_annotation))
+lowcts = names(cts)[cts < 5]
+ind_rm = which(meta.data1$Original_annotation %in% lowcts) 
+counts1 = counts1[, -ind_rm]
+meta.data1 = meta.data1[-ind_rm, ]
 
-```r
-library(scater)
-library(splatter)
-```
-
-
-```r
-params <- newSplatParams()
-ncell = 4000 # total number of cells
-# simulate 1400 genes without DE
-sim <- splatSimulate(params, nGenes = 1400, batchCells = ncell)
-
-# simulate 200 DE genes between (1,2) and (3,4), batch for different cell types and data sets
-sim.groups1 <- splatSimulate(nGenes = 200, batch.facLoc = 0.1, batch.facScale = 0.2,
-                             method = "single", verbose = FALSE, batchCells = rep(ncell/2,2)) 
-
-# simulate 150 DE genes between (1,2)
-sim.groups2 <- splatSimulate(batch.facLoc = c(0.1,0.1, 0, 0) , batch.facScale = c(0.15, 0.15, 0, 0),
-                             nGenes = 150,
-                             method = "single", verbose = FALSE, batchCells = rep(ncell/4,4)) 
-# simulate 150 DE genes between (3,4)
-sim.groups3 <- splatSimulate(batch.facLoc = c(0, 0, 0.1, 0.1) , batch.facScale = c(0, 0, 0.15, 0.15),
-                             nGenes = 150,
-                             method = "single", verbose = FALSE, batchCells = rep(ncell/4,4))
-
-# combine genes
-counts = rbind(sim@assays@data$TrueCounts, sim.groups1@assays@data$TrueCounts,
-               sim.groups2@assays@data$TrueCounts, sim.groups3@assays@data$TrueCounts)
-
-# get cell metadata
-sim_placeholder <- splatSimulate(params, nGenes = nrow(counts), batchCells = rep(ncell/4, 4))
-meta.data = as.data.frame(colData(sim_placeholder)[, 'Batch', drop=F])
-
-# split the cells into two groups
-ind = sample(ncell, ncell/2)
-meta.data1 = meta.data[ind, , drop=F]
-meta.data1$Experiment = 1
-meta.data2 = meta.data[-ind,, drop=F]
-meta.data2$Experiment = 2
-rownames(counts) = paste0('Gene', 1:nrow(counts))
-counts1 = counts[, ind]
-counts2 = counts[, -ind]
+cts = sort(xtabs(~meta.data2$Original_annotation))
+lowcts = names(cts)[cts < 5]
+ind_rm = which(meta.data2$Original_annotation %in% lowcts) 
+counts2 = counts2[, -ind_rm]
+meta.data2 = meta.data2[-ind_rm, ]
 ```
 
 #### Cell type annotation
 
-CellWalker2 use Seurat to preprocess scRNA-Seq data. User can provide marker genes for each cell type as a dataframe with columns *gene*, *cluster,* *avg_log2FC* (optional). If not provided, CellWalker2 can compute cell type marker genes from a reference scRNA-Seq dataset. Optionally, user can provide cell type tree as a phylo object. If not provided, CellWalker2 can also build a cell type tree from a reference scRNA-Seq dataset.
+CellWalker2 use Seurat to preprocess scRNA-Seq data. User can provide
+marker genes for each cell type as a dataframe with columns *gene*,
+*cluster,* *avg_log2FC* (optional). If not provided, CellWalker2 can
+compute cell type marker genes from a reference scRNA-Seq dataset.
+Optionally, user can provide cell type tree as a phylo object. If not
+provided, CellWalker2 can also build a cell type tree from a reference
+scRNA-Seq dataset.
 
-We compute cell type markers and the hierarchical relationship between cell type labels using dataset 1. To do that, we use `Batch` column in `mate.data1` as cell label. We also compute cell-to-cell similary graph for dataset 2 as a part of the graph to run random walk.
+We compute cell type markers and the hierarchical relationship between
+cell type labels using reference dataset (Ren et al.). To do that, we
+use `Original_annotation` column in `meta.data1` as cell label. We also
+compute cell-to-cell similarity graph for query dataset (Yoshida et
+als.) as a part of the graph to run random walk. Since we only use a
+small subset of cells, we input cell type markers and cell type tree
+computed using full reference dataset (by setting
+`do.findMarkers = T, buildTree = T`).
 
-
-```r
-dataset1 = processRNASeq(counts1, meta.data1, group.col = 'Batch', do.findMarkers = T, 
-                         computeKNN = F, buildTree = T)
+``` r
+dataset1= processRNASeq(counts1, meta.data1, group.col = 'Original_annotation', do.findMarkers = F, 
+                        computeKNN = F, buildTree = T)
+#> The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,
+#> which was just loaded, will retire in October 2023.
+#> Please refer to R-spatial evolution reports for details, especially
+#> https://r-spatial.org/r/2023/05/15/evolution4.html.
+#> It may be desirable to make the sf package available;
+#> package maintainers should consider adding sf to Suggests:.
+#> The sp package is now running under evolution status 2
+#>      (status 2 uses the sf package in place of rgdal)
 #> Centering and scaling data matrix
-#> Calculating cluster Batch1
-#> Calculating cluster Batch3
-#> Calculating cluster Batch2
-#> Calculating cluster Batch4
+
 dataset2 = processRNASeq(counts2, do.findMarkers = F, computeKNN = T)
+#> Warning: Feature names cannot have underscores ('_'), replacing with dashes
+#> ('-')
 #> Centering and scaling data matrix
 #> Computing nearest neighbor graph
 #> Computing SNN
 #> Modularity Optimizer version 1.3.0 by Ludo Waltman and Nees Jan van Eck
 #> 
-#> Number of nodes: 2000
-#> Number of edges: 64582
+#> Number of nodes: 923
+#> Number of edges: 35457
 #> 
 #> Running Louvain algorithm...
-#> Maximum modularity in 10 random starts: 0.8322
-#> Number of communities: 7
+#> Maximum modularity in 10 random starts: 0.8638
+#> Number of communities: 6
 #> Elapsed time: 0 seconds
-markers = dataset1$markers 
+#markers = dataset1$markers  # if do.findMarkers = T
+markers = read.csv('../data-raw/Ren_markers.csv')
+tree = readRDS('../data-raw/Ren_tree.rds')
+tree = ape::keep.tip(tree, unique(meta.data1$Original_annotation))# only keep the tips exist in current dataset
+dataset1$tr = tree
+dataset1$markers = markers
 ```
 
-Then, we compute the cell-to-label edges based on standardized gene expression level of marker genes.
+Then, we compute the cell-to-label edges based on standardized gene
+expression level of marker genes.
 
-
-```r
+``` r
 labelEdges = computeTypeEdges(dataset2$expr_norm, markers)
 ```
 
-Finally, we annotate cells from dataset2 by cell type labels either hierarchically organized or not. `weight1` is the edge weight ratio between cell-label edges and cell-cell edges, which controls the information that flows from labels to the cells. If it's NULL, CellWalker2 will tune this parameter by a subsample of the cells (specified by `sampleDepth`). This parameter is tuned such that similar cells will have larger influence score. The range of possible values is provided by `labelEdgeOpts`. As tuning will take longer time, we provide the option to run different value in parallel by setting `parallel = T`. If a cell type tree is provided, `wtree` specifies the edge weight between cell type labels.
+Finally, we annotate query cells by cell type labels either
+hierarchically organized or not. `weight1` is the edge weight ratio
+between cell-label edges and cell-cell edges, which controls the
+information that flows from labels to the cells. If it’s NULL,
+CellWalker2 will tune this parameter by a subsample of the cells
+(specified by `sampleDepth`). This parameter is tuned such that similar
+cells will have larger influence score. The range of possible values is
+provided by `labelEdgeOpts`. As tuning will take longer time, we provide
+the option to run different value in parallel by setting `parallel = T`.
+If a cell type tree is provided, `wtree` specifies the edge weight
+between cell type labels.
 
 with hierarchical structure:
 
-
-```r
+``` r
 results = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
                         labelEdgeOpts = 10^seq(-5,3,1),  tr1 = dataset1$tr,
-                        wtree = 1)
+                        wtree = 10)
+#> Warning in tuneEdgeWeights(cellGraph, labelEdgesList, sampleDepth =
+#> sampleDepth, : Sample depth is greater than number of cells, will use all cells
 #> cellHomogeneity at each edgeWeight:
 #>    Var1 cellHomogeneity
-#> 1 1e-05        7.344859
-#> 2 1e-04        7.637210
-#> 3 1e-03        7.609625
-#> 4 1e-02        6.796334
-#> 5 1e-01        5.265232
-#> 6 1e+00        4.444708
-#> 7 1e+01        4.066864
-#> 8 1e+02        4.210668
-#> 9 1e+03        4.284148
+#> 1 1e-05       0.3837290
+#> 2 1e-04       0.3736373
+#> 3 1e-03       0.2327312
+#> 4 1e-02       0.1833579
+#> 5 1e-01       0.2114337
+#> 6 1e+00       4.5254681
+#> 7 1e+01       2.8002018
+#> 8 1e+02       0.1175620
+#> 9 1e+03       0.1337027
 ```
 
-without hierarchical structure:
+without hierarchical structure (not run):
 
-
-```r
-results = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
+``` r
+results_notree = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
                         labelEdgeOpts = 10^seq(-5,3,1))
 ```
 
-with parallel computing in tuning weight1:
+with parallel computing in tuning weight1 (not run):
 
-
-```r
-results = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
+``` r
+results_parallel = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
                         labelEdgeOpts = 10^seq(-5,3,1), parallel  = T,  numCores = 8)
 ```
 
-We evaluate results by comparing CellWalker2's results with the true labels of dataset2.
+We compare the cell annotation result with the orignal annotation in the
+query dataset:
 
-
-```r
+``` r
 cellLabel = results[[1]]$cellLabels[rownames(meta.data2)] # cell type labels from CellWalker2
-true_cluster = meta.data2$Batch
-confusion = xtabs(~true_cluster +cellLabel)
-message("compare cell annotation with true label: ")
-#> compare cell annotation with true label:
-print(round(confusion/rowSums(confusion),2))
-#>             cellLabel
-#> true_cluster Batch1 Batch2 Batch3 Batch4
-#>       Batch1   0.95   0.05   0.00   0.00
-#>       Batch2   0.00   1.00   0.00   0.00
-#>       Batch3   0.00   0.00   1.00   0.00
-#>       Batch4   0.00   0.00   0.00   1.00
+aa = data.frame('Yoshida' = meta.data2$Original_annotation, 'Ren' = cellLabel) # combine with original annotation
+aa = data.table(aa)
+aa = aa[, list(count= .N), by = c('Yoshida', 'Ren')]
+aa[, prob:= count/sum(count), by =  'Yoshida']
+
+load('../data-raw/Ren_Yoshida_celltype_order.rdat') # load cell type orders for dotplot
+
+aa$Ren = factor(aa$Ren, levels = ll)
+aa$Yoshida = factor(aa$Yoshida, levels = ll2)
+
+ggplot(aa, aes(x= Ren, y=Yoshida, size=count, color=prob, group=Ren)) + 
+  geom_point(alpha = 0.8) + 
+  theme_bw() +theme(axis.text.x = element_text(angle = 45, hjust=1), text = element_text(size = 14)) + 
+  scale_color_gradient(low = "mediumblue",  high = "red2", space = "Lab", limit = c(0, 1))+scale_size(range = c(0.5, 6)) 
 ```
+
+![](CellWalker2_Vignette_files/CellWalker2-1_files/figure-markdown_github/evalAnnot-1.png)
 
 #### Cell types (trees) mapping
 
-To map cell types between dataset1 and dataset2, CellWalker2 needs marker genes for each cell type and (optionally) cell type tree. We've already obtained marker genes for dataset1 in the last section, so we only need to compute markers for dataset 2. This step can be skipped if marker genes (and tree) are provided from external data.
+To map cell types, CellWalker2 needs marker genes for each cell type and
+(optionally) cell type tree. We’ve already obtained marker genes for
+reference in the last section, so we only need to compute markers for
+query. This step can be skipped if marker genes (and tree) are provided
+from external data. Here, as we only input a sampled data, we input
+precomputed markers and cell type tree using the full data.
 
-
-```r
-dataset2 = processRNASeq(counts2, meta.data2, group.col = 'Batch', do.findMarkers = T, computeKNN = F, buildTree = T)
+``` r
+dataset2= processRNASeq(counts2, meta.data2, group.col = 'Original_annotation', do.findMarkers = F, 
+                        computeKNN = F, buildTree = F) # set do.findMarkers = T, buildTree = T if compute markers and cell type tree
+#> Warning: Feature names cannot have underscores ('_'), replacing with dashes
+#> ('-')
 #> Centering and scaling data matrix
-#> Calculating cluster Batch1
-#> Calculating cluster Batch2
-#> Calculating cluster Batch3
-#> Calculating cluster Batch4
+dataset2$markers = read.csv('../data-raw/Yoshida_markers.csv')
+
+tree = readRDS('../data-raw/Yoshida_tree.rds')
+tree = ape::keep.tip(tree, unique(meta.data2$Original_annotation))# only keep the tips exist in current dataset
+dataset2$tr = tree
 ```
 
-Although not the main purpose of CellWalker2, if the dataset is unlabeled, CellWalker2 can identify cell clusters first and map cell clusters among datasets.
+Although not the main purpose of CellWalker2, if the dataset is
+unlabeled, CellWalker2 can identify cell clusters first and map cell
+clusters among datasets.
 
-Then, we compute the cell-to-label edges based on gene expression level of marker genes, merge the data from both datasets to compute a cell-to-cell graph. If `integrate = F`, just combine the data together without removing batch effect; if `integrate = T`, will use CCA method in Seurat to integrate data.
+Then, we compute the cell-to-label edges based on gene expression level
+of marker genes, merge the data from both datasets to compute a
+cell-to-cell graph. If `integrate = F`, just combine the data together
+without removing batch effect; if `integrate = T`, will use CCA method
+in Seurat to integrate data.
 
-
-```r
+``` r
 labelEdges1 = computeTypeEdges(dataset1$expr_norm, dataset1$markers)
-labelEdges2 = computeTypeEdges(dataset2$expr_norm, dataset2$markers)
+labelEdges2 = computeTypeEdges(dataset2$expr_norm, dataset2$markers, log2FC.cutoff = 0.25) # adjust log2FC to be smaller to increase number of markers
 labelEdgesList = list(labelEdges1, labelEdges2) # make sure that cell names are different in each dataset
-mergeResult =  mergeRNASeq(list(counts1, counts2), integrate = F) # make sure that cell names are different in each dataset. if there are cell names are duplicated, will add '_x' to cell names
+mergeResult =  mergeRNASeq(list(counts1, counts2), nfeatures = 5000) # make sure that cell names are different in each dataset. if there are cell names are duplicated, will add '_x' to cell names
+#> Warning: Feature names cannot have underscores ('_'), replacing with dashes
+#> ('-')
+#> Scaling features for provided objects
+#> Finding all pairwise anchors
+#> Running CCA
+#> Merging objects
+#> Finding neighborhoods
+#> Finding anchors
+#>  Found 4065 anchors
+#> Filtering anchors
+#>  Retained 3161 anchors
+#> Merging dataset 2 into 1
+#> Extracting anchors for merged samples
+#> Finding integration vectors
+#> Finding integration vector weights
+#> Integrating data
 ```
 
-Finally, we run CellWalker2 to map the cell types from two datasets either with or without the hierarchical structure of cell type labels. We set `labelEdgeWeight = NULL`, so CellWalker2 will tune the weight ratio between cell-to-label edges and cell-to-cell edges for each set of label, which controls the information that flows from labels to the cells. These parameters are tuned such that similar cells will have larger influence. By setting `parallel = T` and specifying `numCores`, CellWalker2 will tune edgeWeights in parallel. `sampleDepth` specifies the number of cells subsampled to tune these parameters. Smaller sample size will accelerate tuning but might be less optimal.
+Finally, we run CellWalker2 to map the cell types from two datasets
+either with or without the hierarchical structure of cell type labels.
+We set `labelEdgeWeight = NULL`, so CellWalker2 will tune the weight
+ratio between cell-to-label edges and cell-to-cell edges for each set of
+label, which controls the information that flows from labels to the
+cells. These parameters are tuned such that similar cells will have
+larger influence. By setting `parallel = T` and specifying `numCores`,
+CellWalker2 will tune edgeWeights in parallel. `sampleDepth` specifies
+the number of cells subsampled to tune these parameters. Smaller sample
+size will accelerate tuning but might be less optimal.
 
-If `compute.Zscore = T`, CellWalker2 will compute Z-scores by comparing the observed influence score with its null distribution generated by permuting cell-to-label edges. Otherwise, CellWalker2 will output influence score matrix between labels only. `nround` is the number of randomization to compute Z-scores.
+If `compute.Zscore = T`, CellWalker2 will compute Z-scores by comparing
+the observed influence score with its null distribution generated by
+permuting cell-to-label edges. Otherwise, CellWalker2 will output
+influence score matrix between labels only. `nround` is the number of
+randomization to compute Z-scores.
 
-CellWalker2 will output influence scores or Z-scores from cell types in dataset1 to that in dataset2 and vice versa. For Z-scores, they could be different but similar.
+CellWalker2 will output influence scores or Z-scores from cell types in
+dataset1 to that in dataset2 and vice versa. For Z-scores, they could be
+different but similar.
 
-CellWalker2 uses `%dppar%` to run each randomization parellally. `foreach` and `doParallel` packages are required and you need to register the parallel backend before running `mapCellTypes`.
+CellWalker2 uses `%dppar%` to run each randomization parellally.
+`foreach` and `doParallel` packages are required and you need to
+register the parallel backend before running `mapCellTypes`.
 
-
-```r
+``` r
 library(foreach)
 library(doParallel)
-cl<-makeCluster(8)
+cl<-makeCluster(8)  # change to smaller if your machine doesn't have enough cores
 registerDoParallel(cl)  # for computing Z-score
 ```
 
-with hierarchical structure:
+without hierarchical structure (not run):
 
+``` r
+cellWalk2_notree = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
+                         compute.Zscore = TRUE,  nround = 55, parallel  = T,  
+                         sampleDepth =1000, numCores = 8)
+```
 
-```r
+with hierarchical structure (not run):
+
+``` r
 treeList = list(dataset1$tr, dataset2$tr)
 cellWalk2 = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
-                         treeList = treeList, compute.Zscore = TRUE,  nround = 31,
+                         treeList = treeList, compute.Zscore = TRUE,  nround = 55,
                          parallel  = T,  sampleDepth =1000, numCores = 8)
-#> tunning labelEdgeWeights...
-#> cellHomogeneity at optimal edgeWeight:
-#>     Var1  Var2 cellHomogeneity
-#> 10 1e-04 0.001         8.68531
-#> run CellWalker:
+
+# if encounter error in serialize(data, node$con), can try re-initiate by:
+# stopCluster(cl)
+# cl<-makeCluster(8)
+# registerDoParallel(cl)
 ```
 
-without hierarchical structure:
+By default, CellWalker2 will permute the edge weights between cells to
+each set of cell type labels independently. We can also choose which set
+of cell-to-label edges to permute and/or to restrict permutation within
+cell groups by setting `groupsList`, as sometimes we want to maintain
+the (phylogenetic) correlation of edge weights between cell type labels.
 
+Here we show how to only permute edges between cells to labels of query
+dataset as we want to map each cell type label in query to reference and
+keep the hierarchical structure of labels in reference dataset. For
+edges between cells to labels in reference dataset, we set all the cells
+to group 0 so the edge weights are not permuted. For edges between cells
+to labels in query dataset, we set all the cells to a single group so
+that edge weights are permuted between all the cells to labels.
 
-```r
-cellWalk2 = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
-                         compute.Zscore = TRUE,  nround = 31, parallel  = T,  
-                         sampleDepth =1000, numCores = 8)
+Moreover, we can adjust the edge weight going up and down the cell type
+tree to discourage information going across lineages. In this case, as
+we only consider the information flow from query to reference, for cell
+type tree in reference dataset, we set the edge weight going up the tree
+(from tips to root) to 1 and down to 0.1, and set them reversely for
+cell tree in the query dataset.
 
-```
+Though CellWalker2 will output scores in both directions, the influence
+scores or Z-scores from query to reference dataset should be used in
+this setting.
 
-By default, CellWalker2 will permute the edge weights between cells to each set of cell type labels independently. We can also choose which set of cell-to-label edges to permute and/or to restrict permutation within cell groups by setting `groupsList`, as sometimes we want to maintain the (phylogenetic) correlation of edge weights between cell type labels.
-
-Here we show how to only permute edges between cells to labels of dataset2 as we want to map each cell type label in dataset 2 to dataset 1 and keep the hierarchical structure of labels in dataset 1. For edges between cells to labels in dataset1, we set all the cells to group 0 so the edge weights are not permuted. For edges between cells to labels in dataset2, we set all the cells to a single group so that edge weights are permuted between all the cells to labels.
-
-Moreover, we can adjust the edge weight going up and down the cell type tree to discourage information going across lineages. In this case, as we only consider the information flow from dataset 2 to dataset 1, for cell type tree in dataset 1, we set the edge weight going up the tree (from tips to root) to 1 and down to 0.1, and set them reversely for cell tree in dataset 2.
-
-Though CellWalker2 will output scores in both directions, the influence scores or Z-scores from dataset 2 to dataset 1 should be used in this setting.
-
-
-```r
+``` r
+# it may take a while to run
+treeList = list(dataset1$tr, dataset2$tr)
 # different weights going up/down the tree
 groupsList = list(rep(0, nrow(labelEdges1)), rep(1, nrow(labelEdges2)))
 wtrees = matrix(c(1,0.1,0.1,1), ncol=2) # first row for dataset 1 and second for dataset 2
-cellWalk2 = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
+cellWalk2_map = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
                          treeList = treeList, wtrees = wtrees, groupsList = groupsList,
-                         compute.Zscore = TRUE, nround = 31, parallel  = T,  
+                         compute.Zscore = TRUE, nround = 55, parallel  = T,  
                          sampleDepth =1000, numCores = 8)
+#> tunning labelEdgeWeights...
+#> cellHomogeneity at optimal edgeWeight:
+#>    Var1 Var2 cellHomogeneity
+#> 67  0.1 1000        7.225065
+#> run CellWalker:
+#> some of variances are zero or negative when computing Z-score
 ```
 
-Alternatively, we can connect all the cells to both marker sets if the genes from both datasets are mostly shared.
+Alternatively, we can connect all the cells to both marker sets if the
+genes from both datasets are mostly shared.
 
-
-```{.r .fold-hide}
+``` r
+# not run
 labelEdges1 = rbind(computeTypeEdges(dataset1$expr_norm, dataset1$markers),
               computeTypeEdges(dataset2$expr_norm, dataset1$markers))
 labelEdges2 = rbind(computeTypeEdges(dataset1$expr_norm, dataset2$markers),
@@ -273,28 +362,102 @@ labelEdges2 = rbind(computeTypeEdges(dataset1$expr_norm, dataset2$markers),
 labelEdgesList = list(labelEdges1, labelEdges2) # make sure that cell names are different in each dataset
 ```
 
-We check Z-score matrix by CellWalker2 to see if the same cell types from these two datasets having larger Z-scores.
+We can check the cell type mapping and plot Z-score matrix:
 
-
-```r
-Zscore = cellWalk2$zscore[[2]]
+``` r
+Zscore = cellWalk2_map$zscore[[2]]
 res = RcppHungarian::HungarianSolver(-Zscore[1:(nrow(Zscore) -1),1:(ncol(Zscore) -1)])$pairs # no root, remove '-1' if running without tree
-res[,1] = sapply(rownames(Zscore)[res[,1]], function(x) strsplit(x, '_')[[1]][1])
-res[,2] = sapply(colnames(Zscore)[as.numeric(res[,2])], function(x) strsplit(x, '_')[[1]][1])
-colnames(res) = c('cell labels 1', 'cell labels 2')
+res[,1] = sapply(rownames(Zscore)[res[,1]], function(x) sub('_[0-9]$', '', x))
+res[,2] = sapply(colnames(Zscore)[as.numeric(res[,2])], function(x) sub('_[0-9]$', '', x))
+colnames(res) = c('Yoshida labels', 'Ren labels')
 message("matching cell labels with Zscore (with tree): ")
 #> matching cell labels with Zscore (with tree):
+options(width = 200)
 print(res) # mapping cell types using Zscore
-#>      cell labels 1     cell labels 2    
-#> [1,] "Batch1"          "Batch1"         
-#> [2,] "Batch2"          "Batch2"         
-#> [3,] "Batch3"          "Batch3"         
-#> [4,] "Batch4"          "Batch4"         
-#> [5,] "Batch3:Batch2:3" "Batch3:Batch2:3"
-#> [6,] "Batch4:Batch2:2" "Batch4:Batch2:2"
+#>       Yoshida labels                           Ren labels                                   
+#>  [1,] "T CD4 helper"                           "T_CD4_c01-LEF1:T_CD4_c03-ITGA4:2"           
+#>  [2,] "T CD8 EM"                               "T_CD8_c10-MKI67-GZMK:T_CD4_c09-GZMK-FOS_l:2"
+#>  [3,] "NK"                                     "NK_c01-FCGR3A"                              
+#>  [4,] "T CD8 CTL"                              "T_CD8_c04-COTL1:T_CD4_c11-GNLY:2"           
+#>  [5,] "T CD4 naive"                            "T_CD4_c01-LEF1:T_CD8_c01-LEF1:1"            
+#>  [6,] "T CD4 CTL"                              "T_CD4_c11-GNLY"                             
+#>  [7,] "Monocyte CD14"                          "Mono_c4-CD14-CD16"                          
+#>  [8,] "B sw mem"                               "B_c02-MS4A1-CD27"                           
+#>  [9,] "Monocyte CD16"                          "Mono_c5-CD16"                               
+#> [10,] "T CD8 naive"                            "T_CD4_c05-FOS"                              
+#> [11,] "MAIT"                                   "T_CD8_c09-SLC4A10:T_CD4_c08-GZMK-FOS_h:2"   
+#> [12,] "T CD8 EMRA"                             "T_CD8_c04-COTL1"                            
+#> [13,] "B n-sw mem"                             "B_c02-MS4A1-CD27:B_c03-CD27-AIM2:1"         
+#> [14,] "NK CD56"                                "T_CD8_c08-IL2RB"                            
+#> [15,] "B naive"                                "B_c01-TCL1A"                                
+#> [16,] "T g/d"                                  "T_CD8_c06-TNF:T_gdT_c14-TRDV2:1"            
+#> [17,] "T CD8 CM"                               "T_CD4_c09-GZMK-FOS_l"                       
+#> [18,] "cDC2"                                   "Mono_c3-CD14-VCAN"                          
+#> [19,] "T reg"                                  "T_CD8_c09-SLC4A10:T_CD4_c02-AQP3:3"         
+#> [20,] "Monocyte CD14 IFN stim"                 "Mono_c3-CD14-VCAN:Mono_c1-CD14-CCL3:1"      
+#> [21,] "Platelets"                              "Mega"                                       
+#> [22,] "B invar"                                "B_c04-SOX5-TNFRSF1B"                        
+#> [23,] "Platelets:B n-sw mem:8"                 "Mega:T_CD4_c02-AQP3:9"                      
+#> [24,] "Monocyte CD16:B n-sw mem:7"             "DC_c2-CD1C"                                 
+#> [25,] "Monocyte CD16:Monocyte CD14 IFN stim:2" "Mono_c5-CD16:Mono_c4-CD14-CD16:2"           
+#> [26,] "Monocyte CD14:Monocyte CD14 IFN stim:1" "Mono_c1-CD14-CCL3"                          
+#> [27,] "T CD4 helper:B n-sw mem:6"              "Mono_c2-CD14-HLA-DPB1"                      
+#> [28,] "T CD4 helper:NK CD56:5"                 "T_CD8_c07-TYROBP:T_gdT_c14-TRDV2:3"         
+#> [29,] "T CD4 helper:T CD8 CM:4"                "T_CD4_c07-AHNAK:T_CD4_c08-GZMK-FOS_h:1"     
+#> [30,] "T CD4 helper:T CD8 naive:2"             "T_CD4_c06-NR4A2:T_CD4_c05-FOS:1"            
+#> [31,] "T CD4 helper:T reg:1"                   "T_CD4_c12-FOXP3:T_CD4_c02-AQP3:2"           
+#> [32,] "T CD4 naive:T CD8 naive:1"              "T_CD4_c01-LEF1"                             
+#> [33,] "T CD8 EM:T CD8 CM:3"                    "T_CD8_c03-GZMK:T_CD4_c09-GZMK-FOS_l:1"      
+#> [34,] "MAIT:T CD8 CM:2"                        "T_CD8_c09-SLC4A10"                          
+#> [35,] "T g/d:T CD8 CM:1"                       "T_CD8_c03-GZMK"                             
+#> [36,] "T CD8 EMRA:NK CD56:3"                   "T_CD8_c07-TYROBP:NK_c01-FCGR3A:2"           
+#> [37,] "T CD8 EMRA:T CD4 CTL:2"                 "T_CD8_c05-ZNF683"                           
+#> [38,] "T CD8 CTL:T CD4 CTL:1"                  "T_CD8_c05-ZNF683:T_CD4_c11-GNLY:1"          
+#> [39,] "NK:NK CD56:1"                           "T_CD8_c08-IL2RB:NK_c01-FCGR3A:1"            
+#> [40,] "cDC2:B n-sw mem:4"                      "DC_c4-LILRA4"                               
+#> [41,] "B invar:B n-sw mem:3"                   "B_c03-CD27-AIM2"                            
+#> [42,] "B naive:B n-sw mem:2"                   "B_c01-TCL1A:B_c03-CD27-AIM2:2"
 ```
 
+``` r
+bb = reshape2::melt(Zscore[1:((nrow(Zscore) + 1)/2),1:((ncol(Zscore) + 1)/2)]) # only plot tips for illustration
+bb$Var1 = sub( '_[0-9]$', '',bb$Var1)
+bb$Var2 = sub( '_[0-9]$', '',bb$Var2)
+colnames(bb) = c('Yoshida','Ren', 'Zscores') 
+bb$Ren = factor(bb$Ren, levels = ll)
+bb$Yoshida = factor(bb$Yoshida, levels = ll2)
+
+ggplot(bb, aes(x= Ren, y=Yoshida, group=Ren)) + 
+  geom_tile(aes(fill=Zscores), alpha = 0.6) + theme_bw() + 
+  theme(axis.text.x = element_text(angle = 45, hjust=1), 
+        text = element_text(size = 14)) + 
+  scale_fill_gradient(low = "white",  high = "red2", space = "Lab")
+```
+
+![](CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png)
+
+We can also plot the Z-score on the cell type tree:
+
+``` r
+tr = treeList[[1]]
+tr$node.label = colnames(Zscore)[-1:-(tr$Nnode+1)]
+tr$node.label = sub('_[0-9]$', '',tr$node.label)
+dat = Zscore[c('NK_2', 'T CD8 EMRA_2'),, drop=F]
+colnames(dat) =  sub('_[0-9]$', '',colnames(dat))
+rownames(dat) =  sub('_[0-9]$', '',rownames(dat))
+cl1 = ape::extract.clade(tr, 'T_CD8_c07-TYROBP:T_gdT_c14-TRDV2:3')
+cl2 = ape::extract.clade(tr, 'T_CD8_c04-COTL1:T_CD4_c09-GZMK-FOS_l:3')
+subtr = ape::keep.tip(tr, c(cl1$tip.label, cl2$tip.label))
+subtr = ape::keep.tip(tr, c(cl1$tip.label, cl2$tip.label))
+pp = CellWalkR::plotZscoreTree(subtr, dat[,c(subtr$tip.label, subtr$node.label)], cutoff = 15)
+plot(pp)
+```
+
+![](CellWalker2_Vignette_files/figure-markdown_github/plotMapTree-1.png)
+
 CellWalker can also map more than two datasets (not shown here).
+
+
 
 ## Use CellWalker2 for multiomic data
 
@@ -429,7 +592,7 @@ p1 = plotZscoreTree(tr, cellWalk2$zscore, cutoff = 3)
 p1
 ```
 
-![plot of chunk plotTree](figure/plotTree-1.png)
+![plot of chunk plotTree](CellWalker2_Vignette_files/figure-markdown_github/plotTree-1.png)
 
 #### Identify cell type specific TFs
 
@@ -488,7 +651,7 @@ p1 = plotZscoreDotplot(Zscore, th = 5)
 p1
 ```
 
-![plot of chunk heatmap](figure/heatmap-1.png)
+![plot of chunk heatmap](CellWalker2_Vignette_files/figure-markdown_github/heatmap-1.png)
 
 ## Session Information
 

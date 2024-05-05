@@ -269,7 +269,7 @@ mapCellTypes <- function(cellGraph, labelEdgesList, labelEdgeWeights = NULL, wtr
       w = wtrees[i, ]
       tree2Mat(tr,w[1], w[2], i) # adding '_x' to tips to avoid duplicates
     })
-    allCellTypes = c(sapply(res, function(x) x[[2]]))
+    allCellTypes = unlist(sapply(res, function(x) x[[2]]))
     ncellTypes = sapply(res, function(x) length(x[[2]]))
     cellTypesM = Matrix::bdiag(sapply(res, function(x) x[1])) # becomes a sparse matrix
     ##cellTypesM = as.matrix(cellTypesM)

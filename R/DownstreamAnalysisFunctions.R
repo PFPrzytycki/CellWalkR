@@ -752,7 +752,7 @@ plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
 plotZscoreTree <- function(celltree, Zscore, cutoff = 10, xrange = 20)
 {
   Zscore[is.na(Zscore)] = 0
-  Zscore[Zscore < cutoff] = 0
+  Zscore[Zscore < cutoff] = cutoff
   n = length(celltree$tip.label)
   if(length(celltree$node.label)!=n-1 | !all(c(celltree$tip.label, celltree$node.label) %in% colnames(Zscore))){
     stop('tip and node labels of celltree must match with column names of Zscores')
@@ -762,9 +762,9 @@ plotZscoreTree <- function(celltree, Zscore, cutoff = 10, xrange = 20)
     stop('Zscore must have row names: regions/cell type to be mapped to')
   }
   td <- data.frame(node = 1:n,
-                   t(Zscore[, celltree$tip.label]), check.names = F)
+                   t(Zscore[, celltree$tip.label, drop=F]), check.names = F)
   nd <- data.frame(node = (n+1):(2*n-1),
-                   t(Zscore[, celltree$node.label]), check.names = F)
+                   t(Zscore[, celltree$node.label, drop=F]), check.names = F)
   d <- rbind(td, nd)
   tree <- full_join(celltree, d, by = 'node')
   ct = rownames(Zscore)
@@ -774,17 +774,20 @@ plotZscoreTree <- function(celltree, Zscore, cutoff = 10, xrange = 20)
 
   lm = max(d[,-1]) # plot each tree at the same scale
   p1 = "ggtree(trs, branch.length = 'none', ladderize = T, color='white') + facet_grid(~.id)"
-  for(i in 1:(length(ct)-1))
+  if(length(ct) > 1)
   {
-    p1 = paste(p1, "+ geom_tree(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 1.5) +
-         geom_point(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 3) +
-      scale_colour_viridis_c(direction=-1, option = 'C', limits = c(0,lm)) + guides(colour = 'none') +
-      ggnewscale::new_scale_colour()", sep = '')
+    for(i in 1:(length(ct)-1))
+    {
+      p1 = paste(p1, "+ geom_tree(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 1.5) +
+           geom_point(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 3) +
+        scale_colour_viridis_c(direction=-1, option = 'C', limits = c(cutoff,lm)) + guides(colour = 'none') +
+        ggnewscale::new_scale_colour()", sep = '')
+    }
   }
-  i = i + 1
+  i = length(ct)
   p1 = paste(p1, "+ geom_tree(data=td_filter(.id == ct[",i, "]), aes(colour= .data[[ct[",i, "]]]),size = 1.5) +
     geom_point(data=td_filter(.id == ct[",i,"]), aes(colour= .data[[ct[",i,"]]]),size = 3) +
-    scale_colour_viridis_c(name = 'Z-scores', direction=-1,option = 'C',limits = c(0,lm)) +
+    scale_colour_viridis_c(name = 'Z-scores', direction=-1,option = 'C',limits = c(cutoff,lm)) +
     theme(strip.background=element_blank(), text = element_text(size = 18), legend.position = 'bottom') +
     geom_tiplab(hjust = -.1) + xlim(0, ", xrange, ")", sep='')
 

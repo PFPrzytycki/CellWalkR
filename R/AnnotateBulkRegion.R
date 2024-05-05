@@ -95,7 +95,7 @@ computeBulkEdges = function(regions, peaks, ATAC_Mat, drop = T)
   seqlevelsStyle(regions) <- 'UCSC'
   peaks = as(peaks, 'GRanges')
   seqlevelsStyle(peaks) <- 'UCSC'
-  cellPeakCounts = colSums(ATAC_Mat)
+  cellPeakCounts = Matrix::colSums(ATAC_Mat)
 
   markerOverlaps = GenomicRanges::findOverlaps(peaks, regions)
   hits = unique(markerOverlaps@from)
