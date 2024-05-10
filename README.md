@@ -17,7 +17,6 @@ and assign cell type-specificity to annotations.
 The original **CellWalker** model integrates single-cell open chromatin (scATAC-seq) data with cell type labels and (optionally) 
 bulk epigenetic data to annotate cells, compare cell type labels, and probabilitically assign cell type labels to annotations. 
 **CellWalker2** extends this functionality with many new features, including:
-+ unordered list
 + integrates different modalities of single-cell data (scATAC-seq, scRNA-seq, multiomic), 
 + enables integrative modeling of cells measured in different experiments,
 + incorporates hierarchical relationships between cell type labels,
