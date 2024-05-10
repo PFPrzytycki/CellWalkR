@@ -5,11 +5,12 @@
 
 CellWalkR is updated to Version 2! This version combines the functionality of the **CellWalker** model with new features implemented in 
 **CellWalker2**. 
-As inputs, CellWalkerR takes cell type labels and count data: a gene by cell matrix from scRNASeq data and/or 
-a peak by cell matrix from scATACSeq data. 
+As inputs, CellWalkerR takes cell type labels (lineages, states, etc; defined by their marker genes) and count data: 
+a gene by cell matrix from scRNASeq data and/or a peak by cell matrix from scATACSeq data. 
 Count matrices can be computed using a variety of upstream single-cell quantification software tools. 
-CellWalkR builds a graph where the nodes are cells, cell types or states, and (optionally) genome
-annotations such as bulk-derived regulatory elements, sequence motifs, genetic variants, or gene sets.
+Optionally, users may provide genome coordinates for sets of annotations they wish to map to 
+cell types. Examples of annotations are bulk-derived regulatory elements, sequence motifs, genetic variants, 
+or gene sets. CellWalkR builds a graph where the nodes are cells, cell types, and (if provided) annotations.
 Then, CellWalkR uses a graph diffusion method to annotate cells, compare cell type labels, 
 and assign cell type-specificity to annotations. 
 
