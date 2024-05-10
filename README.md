@@ -3,15 +3,20 @@
 
 ## About
 
-CellWalkR is updated to Version 2! It combines **CellWalker** that integrates single-cell open chromatin
-(scATAC-seq) data with cell type labels and bulk epigenetic data to
-and **CellWalker2** that integrate different modalities of single-cell data. 
-CellWalkerR takes count data as input, either gene by cell matrix for scRNASeq data or peak by cell matrix for scATACSeq data, which works well with many upstream single cell software. 
+CellWalkR is updated to Version 2! This version combines the functionality of the **CellWalker** model with new features implemented in 
+**CellWalker2**. 
+As inputes, CellWalkerR takes cell type labels and count data, either gene by cell matrix for scRNASeq data or peak by cell matrix for scATACSeq data. 
+Count matrices can be computed using a variety of upstream single-cell quantification software tools. 
+CellWalkR can annotate cells, compare cell type labels, and assign cell type-specificity to genomic regions. 
 
-CellWalkR can annotate cells and compare cell type labels by scATACSeq (CellWalker) and by scRNASeq (CellWalker2), 
-and identify cell type-specific regulatory regions by scATACSeq (CellWalker) or multiomic data (CellWalker2).
-In addition, CellWalker2 can assign cells or bulk genomic annotations (e.g. TF motif or regulatory regions) to cell type hierarchy and compare different cell type hierarchies from different datasets. 
-It also provides statistical signifiance of the association by permutation.  
+The original **CellWalker** model integrates single-cell open chromatin (scATAC-seq) data with cell type labels and (optional) 
+bulk epigenetic data to annotate cells, compare cell type labels, and probabilitically assign cell type labels to genomic coordinates (e.g., 
+bulk-derived regulatory elements, sequence motifs, genetic variants). 
+
+**CellWalker2** integrates different modalities of single-cell data (scATAC-seq, scRNA-seq, multiomic), 
+including cells measured in different experiments. It also incorporates hierarchical relationships between cell type labels and enables comparisons of
+cell type ontologies across contexts (conditions, species, datasets). 
+Finally, **CellWalker2** adds permutation methods that provide statistical significance for cell-to-label, region-to-label, and label-to-label mappings. 
 
 ## Installation
 
