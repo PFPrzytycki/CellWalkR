@@ -35,10 +35,10 @@ $ R
 
 ## Usage
 
-For a guide to using CellWalker, see the provided
+For a guide to use CellWalker, see the provided
 [readme](CellWalker.md) and [vignette](examples/CellWalkR_Vignette.md). 
 
-For a guide to using CellWalker2, see the provided
+For a guide to use CellWalker2, see the provided
 [readme](CellWalker2.md) and [vignette](examples/CellWalker2_Vignette.md). 
 
 If you use CellWalkR please cite:
