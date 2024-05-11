@@ -82,12 +82,12 @@ use `Original_annotation` column in `meta.data1` as the cell labels. We also
 compute the cell-to-cell similarity graph for the query dataset (Yoshida et
 als.) as a part of the graph on which we will run the random walk. Since we only use a
 small subset of cells here, we chose to input the cell type markers and cell type tree
-computed using the full reference dataset (by setting
+computed using the full reference dataset (alternatively, the user can compute markers and tree from the input dataset by setting
 `do.findMarkers = T, buildTree = T`).
 
 ``` r
 dataset1= processRNASeq(counts1, meta.data1, group.col = 'Original_annotation', do.findMarkers = F, 
-                        computeKNN = F, buildTree = T)
+                        computeKNN = F, buildTree = F)
 #> The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,
 #> which was just loaded, will retire in October 2023.
 #> Please refer to R-spatial evolution reports for details, especially
@@ -315,16 +315,16 @@ the (phylogenetic) correlation of edge weights between cell type labels.
 Here we show how to only permute edges between cells to labels of query
 dataset as we want to map each cell type label in query to reference and
 keep the hierarchical structure of labels in reference dataset. For
-edges between cells to labels in reference dataset, we set all the cells
+edges between cells to labels in reference dataset, the user should set all the cells
 to group 0 so the edge weights are not permuted. For edges between cells
-to labels in query dataset, we set all the cells to a single group so
+to labels in query dataset, the user should set all the cells to a single group (e.g. 1) so
 that edge weights are permuted between all the cells to labels.
 
-Moreover, we can adjust the edge weight going up and down the cell type
+Moreover, the user can adjust the edge weight going up and down the cell type
 tree to discourage information going across lineages. In this case, as
 we only consider the information flow from query to reference, for cell
-type tree in reference dataset, we set the edge weight going up the tree
-(from tips to root) to 1 and down to 0.1, and set them reversely for
+type tree in reference dataset, the user should set the edge weight going up the tree
+(from tips to root) to 1 and down to 0.1, and set the opposite for
 cell tree in the query dataset.
 
 Though CellWalker2 will output scores in both directions, the influence
