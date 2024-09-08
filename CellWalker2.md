@@ -25,18 +25,18 @@ $ R
 For a guide to using CellWalker2, see the provided
 [vignette](examples/CellWalker2_Vignette.md), which covers the following:
 
-1.  [Getting Started with CellWalker2](examples/CellWalker2_Vignette.md#getting-started-with-cellwalker2)
-2.  [Use CellWalker2 for scRNA-Seq data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-scRNA-Seq-data)
-    1.  [load scRNA-Seq data](examples/CellWalker2_Vignette.md#load-scRNA-Seq-data)
-    2.  [Cell type annotation](examples/CellWalker2_Vignette.md#cell-type-annotation)
-    3.  [Cell types (trees) mapping](examples/CellWalker2_Vignette.md#Cell-types-trees-mapping)
-3.  [Use CellWalker2 for multiomic data](examples/CellWalker2_Vignette.md#use-cellwalker2-for-multiomic-data)
-    1.  [Load data](examples/CellWalker2_Vignette.md#load-data)
-    2.  [Process RNASeq data](examples/CellWalker2_Vignette.md#process-rnaseq-data)
-    3.  [Compute cell-to-cell type edges](examples/CellWalker2_Vignette.md#compute-cell-to-cell-type-edges)
-    4.  [Construct cell-to-cell graph](examples/CellWalker2_Vignette.md#construct-cell-to-cell-graph)
-    5.  [Map region-specific pREs to cell types](examples/CellWalker2_Vignette.md#map-region-specific-pREs-to-cell-types)
-    6.  [Identify cell type specific TFs](examples/CellWalker2_Vignette.md#identify-cell-type-specific-tfs)
+1.  [Getting Started with CellWalker2](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2)
+2.  [Use CellWalker2 for scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md)
+    1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
+    2.  [Cell type annotation](examples/CellWalker2_RNASeq_Vignette.md#cell-type-annotation)
+    3.  [Cell types (trees) mapping](examples/CellWalker2_RNASeq_Vignette.md#Cell-types-trees-mapping)
+3.  [Use CellWalker2 for multiomic data](examples/CellWalker2_Multiomic_Vignette.md)
+    1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
+    2.  [Process RNASeq data](examples/CellWalker2_Multiomic_Vignette.md#process-rnaseq-data)
+    3.  [Compute cell-to-cell type edges](examples/CellWalker2_Multiomic_Vignette.md#compute-cell-to-cell-type-edges)
+    4.  [Construct cell-to-cell graph](examples/CellWalker2_Multiomic_Vignette.md#construct-cell-to-cell-graph)
+    5.  [Map region-specific pREs to cell types](examples/CellWalker2_Multiomic_Vignette.md#map-region-specific-pREs-to-cell-types)
+    6.  [Identify cell type specific TFs](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-tfs)
     
 
 If you use CellWalkR please cite:
@@ -50,4 +50,8 @@ If you use CellWalkR please cite:
     and bulk data to resolve regulatory elements across cell types in
     complex tissues.” *Genome Biology* (2021).
     <https://doi.org/10.1186/s13059-021-02279-1>
+
+3.  Hu, Z., Przytycki, P.F., Pollard, K.S. "CellWalker2: multi-omic discovery 
+    of hierarchical cell type relationships and their associations with genomic annotations."
+    *bioRxiv* (2024).
 
