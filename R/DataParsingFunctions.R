@@ -1114,7 +1114,7 @@ processRNASeq = function(RNAMat, meta.data = NULL, group.col = NULL, do.findMark
   }
 
   if(buildTree){
-    RNASeurat =  Seurat::BuildClusterTree(RNASeurat)
+    RNASeurat =  Seurat::BuildClusterTree(RNASeurat, dims = dims)
     tr =  Seurat::Tool(object = RNASeurat, slot = 'Seurat::BuildClusterTree')
   }
 
