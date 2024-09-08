@@ -36,7 +36,7 @@ For a guide to using CellWalker2, see the provided
     3.  [Compute cell-to-cell type edges](examples/CellWalker2_Multiomic_Vignette.md#compute-cell-to-cell-type-edges)
     4.  [Construct cell-to-cell graph](examples/CellWalker2_Multiomic_Vignette.md#construct-cell-to-cell-graph)
     5.  [Map region-specific pREs to cell types](examples/CellWalker2_Multiomic_Vignette.md#map-region-specific-pREs-to-cell-types)
-    6.  [Identify cell type specific TFs](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-tfs)
+    6.  [Identify cell type-specific transcription factors](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-transcription-factors-tfs)
     
 
 If you use CellWalkR please cite:
@@ -54,4 +54,5 @@ If you use CellWalkR please cite:
 3.  Hu, Z., Przytycki, P.F., Pollard, K.S. "CellWalker2: multi-omic discovery 
     of hierarchical cell type relationships and their associations with genomic annotations."
     *bioRxiv* (2024).
+    <https://www.biorxiv.org/content/10.1101/2024.05.17.594770v1>
 
