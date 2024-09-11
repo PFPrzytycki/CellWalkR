@@ -61,8 +61,10 @@ computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.c
 
 
 #' Annotate cells by cell types
+#'
 #' \code{annotateCells} Random walk on the cells and cell type labels graph and compute influence scores from each cell to each cell type labels.
 #' Cell type labels can be organized in a hierarchical structure.
+#'
 #' @param cellGraph cell-cell graph, a cell-to-cell similarity matrix, row and colnames are cell barcodes
 #' @param labelEdges  a matrix or dataframe of edges from each cell type label to each cell. Each row is a cell,
 #' each column is a cell type label
@@ -116,10 +118,10 @@ annotateCells <- function(cellGraph, labelEdges, weight1 = NULL, sampleDepth =30
 
   labelEdges = labelEdges[rownames(cellGraph),]
   diag(cellGraph) = 0
+  labelEdgesList <- list(labelEdges)
 
   if(is.null(weight1))
   {
-    labelEdgesList <- list(labelEdges)
     edgeWeights <- tuneEdgeWeights(cellGraph,
                                    labelEdgesList,
                                    sampleDepth = sampleDepth,
@@ -170,8 +172,10 @@ annotateCells <- function(cellGraph, labelEdges, weight1 = NULL, sampleDepth =30
 }
 
 #' Mapping cell type labels
+#'
 #' \code{mapCellTypes} Random walk on the cells and cell type labels graph and permuted graphs, compute Z-scores for each pair of labels.
 #' Cell type labels can be organized in a hierarchical structure.
+#'
 #' @param cellGraph cell-cell graph, a cell-to-cell similarity matrix, row and colnames are cell barcodes
 #' @param labelEdgeList a list of cell-to-label edges. Each is a matrix or dataframe of edges from a cell to each cell type label. Each row is a cell,
 #' each column is a cell type label. The cell names of each matrix can be partially overlapped with the cells in \code{cellGraph}.
