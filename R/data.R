@@ -14,3 +14,9 @@
 #'
 #' @format List of 10 items
 "SampleCellWalkRData"
+
+
+#' Cell type tree to test CellWalker2
+#'
+#' @format a phylo object
+"SampleCellTypeTree"

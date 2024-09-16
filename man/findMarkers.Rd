@@ -8,23 +8,32 @@ findMarkers(
   RNAMat,
   genes,
   barcodes,
-  dims = 1:10,
+  dims = 1:20,
   resolution = 0.5,
-  only.pos = FALSE
+  only.pos = FALSE,
+  min.cells = 3,
+  scale.factor = 10000,
+  nfeatures = 3000
 )
 }
 \arguments{
-\item{RNAMat}{gene-by-barcode matrix of scRNA data}
+\item{RNAMat}{gene-by-barcode raw count matrix of scRNASeq data}
 
 \item{genes}{character vector of gene names}
 
-\item{barcodes}{character vector of barcodes}
+\item{barcodes}{character vector of cell barcodes}
 
 \item{dims}{integer vector of PCA dimensions to use}
 
 \item{resolution}{numeric resolution to use in Louvain clustering}
 
 \item{only.pos}{only return positive markers}
+
+\item{min.cells}{used by Seurat, include features detected in at least this many cells}
+
+\item{scale.factor}{used by Seurat, scale factor for cell-level normalization}
+
+\item{nfeatures}{used by Seurat, Number of features to select as top variable features}
 }
 \value{
 table of marker genes, labels, and logFC in expression

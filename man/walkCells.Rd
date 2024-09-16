@@ -9,7 +9,7 @@ walkCells(
   labelEdgesList,
   labelEdgeWeights,
   sampleDepth,
-  steps,
+  steps = Inf,
   tensorflow = FALSE
 )
 }

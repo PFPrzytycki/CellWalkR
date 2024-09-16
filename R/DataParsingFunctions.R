@@ -1,24 +1,25 @@
-#' Compute Cell Similarity
+#' Compute Cell Similarity by ATACSeq
 #'
 #' \code{computeCellSim} computes a cell-to-cell similarity matrix using the given method.
-#' Currently only Jaccard similarity is implemented.
+#' Currently Jaccard, Cosine and LSI similarity is implemented.
 #'
 #' @param ATACMat either a cell-by-peak matrix, a SnapATAC object, an ArchR project, or a Cicero count table
-#' @param method function, the method used to compute cell similarity, should operate on rows of a matrix. The default
-#' is Jaccard similiarty, but a second built in option is PCAdist which computes the euclidean distance in PCA space
+#' @param method function name, the method used to compute cell similarity, should operate on rows of a matrix. The default
+#' is sparseJaccard, other options are sparseCosine and LSI which computes the euclidean distance in LSI space. LSI only works for input cell-by-peak matrix.
+#' @param ... additional parameters used by method
 #' @return matrix of cell-to-cell similarity
 #' @export
 #' @examples
 #' data("SampleCellWalkRData")
 #' computeCellSim(SampleCellWalkRData$ATACMat)
 #'
-computeCellSim = function(ATACMat, method=sparseJaccard){
+computeCellSim = function(ATACMat, method=c("sparseJaccard", "sparseCosine", "LSI"), ...){
   if(missing(ATACMat)){
     stop("Must provide either a cell-by-peak matrix or a SnapATAC object")
   }
-  if(!is(method, "function")){
-    stop("Must provide a similarity function")
-  }
+  # if(!is(method, "function")){
+  #   stop("Must provide a similarity function")
+  # }
 
   if(is(ATACMat,"snap")){
     if(!requireNamespace("SnapATAC", quietly = TRUE)){
@@ -27,8 +28,9 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
     if(dim(ATACMat@bmat)[1]==0){
       stop("No bmat")
     }
+    stopifnot("Only sparseJaccard and sparseCosine is allowed:" = method %in% c('sparseJaccard', 'sparseCosine'))
     ATACMat = SnapATAC::makeBinary(ATACMat, mat="bmat")
-    method(ATACMat@bmat)
+    get(method)(ATACMat@bmat)
   }
   else if(is(ATACMat,"ArchRProject")){
     if(!requireNamespace("ArchR", quietly = TRUE)){
@@ -37,9 +39,10 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
     if(!"TileMatrix" %in% ArchR::getAvailableMatrices(ATACMat)){
       stop("TileMatrix missing from ArchR project")
     }
+    stopifnot("Only sparseJaccard and sparseCosine is allowed:" = method %in% c('sparseJaccard', 'sparseCosine'))
     ATACData = ArchR::getMatrixFromProject(ATACMat, "TileMatrix", verbose=FALSE, binarize = TRUE)
     ATACMat = Matrix::t(assay(ATACData))
-    method(ATACMat)
+    get(method)(ATACMat)
   }
   else if(is(ATACMat,"Matrix")|is(ATACMat,"matrix")){
     if(min(dim(ATACMat))==0){
@@ -48,19 +51,26 @@ computeCellSim = function(ATACMat, method=sparseJaccard){
     if(dim(ATACMat)[1]>dim(ATACMat)[2]){
       warning("ATACMat has more cells than peaks, does it need to be transposed?")
     }
-    method(ATACMat>0)
+    if(method %in% c('sparseJaccard', 'sparseCosine'))
+    {
+      get(method)(ATACMat>0)
+    }else if(method == 'LSI'){
+      get(method)(t(ATACMat))
+    }else{
+      stop('method not implemented yet')
+    }
   }
   else if(is(ATACMat, "data.frame")){
-    peaks = unique(ATACMat[,1])
-    cells = unique(ATACMat[,2])
-    rowIndex = match(ATACMat[,2], cells)
-    colIndex = match(ATACMat[,1], peaks)
-    ATACMat = Matrix::sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
-    simMat = method(ATACMat>0)
-    dimnames(simMat) = list(cells,cells)
-    simMat
-  }
-  else{
+      stopifnot("Only sparseJaccard and sparseCosine is allowed:" = method %in% c('sparseJaccard', 'sparseCosine'))
+      peaks = unique(ATACMat[,1])
+      cells = unique(ATACMat[,2])
+      rowIndex = match(ATACMat[,2], cells)
+      colIndex = match(ATACMat[,1], peaks)
+      ATACMat = Matrix::sparseMatrix(rowIndex, colIndex, x=ATACMat[,3])
+      simMat = method(ATACMat>0)
+      dimnames(simMat) = list(cells,cells)
+      simMat
+  }else{
     stop("Must provide either a cell-by-peak matrix, SnapATAC object, ArchR project, or Cicero count table")
   }
 }
@@ -557,7 +567,7 @@ computeLabelEdges = function(
 #' labelEdgesList <- list(SampleCellWalkRData$labelEdges)
 #' cellWalk <- walkCells(SampleCellWalkRData$cellEdges, labelEdgesList, 1)
 #'
-walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps, tensorflow=FALSE){
+walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, steps = Inf, tensorflow=FALSE){
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
   }
@@ -637,6 +647,7 @@ walkCells = function(cellEdges, labelEdgesList, labelEdgeWeights, sampleDepth, s
 #' @param numCores integer, number of cores to use for parallel execution
 #' @param trackProgress boolean, print percent run completed
 #' @param tensorflow boolean to indicate whether to compute on GPU
+#' @param method criterion to choose the optimal parameters. If annotate cells or map cell types, use computeCellHomogeneity otherwise use  computeLabelHomogeneity
 #' @return data frame of weights with corresponding cell homogeneity
 #' @export
 #' @examples
@@ -649,12 +660,13 @@ tuneEdgeWeights = function(
   labelEdgesList,
   labelEdgeOpts = 10^seq(-4,4,1),
   sampleDepth = 10000,
-  steps,
+  steps = Inf,
   cellTypes,
   parallel = FALSE,
   numCores = 1,
   trackProgress = FALSE,
-  tensorflow=FALSE){
+  tensorflow=FALSE,
+  method="computeCellHomogeneity"){
 
   if(missing(cellEdges)){
     stop("Must provide a matrix of cell-to-cell similarity")
@@ -705,14 +717,19 @@ tuneEdgeWeights = function(
 
     cellHomogeneity = parallel::mcmapply(function(param){
       theseWeights = as.numeric(parameterCombos[param,])
-
       cellWalk = walkCells(cellEdges, labelEdgesList, theseWeights, sampleDepth, steps)
 
       if(cellTypesMissing){
         cellTypes = unique(cellWalk[["cellLabels"]])
       }
-
-      computeCellHomogeneity(cellWalk, cellTypes)
+      if(method == 'computeCellHomogeneity')
+      {
+        get(method)(cellWalk, cellTypes)
+      }else if(method == 'computeLabelHomogeneity'){
+        get(method)(cellWalk, colnames(labelEdgesList[[1]]), colnames(labelEdgesList[[2]]))
+      }else{
+        stop(method, 'not implemented')
+      }
 
     }, param=1:dim(parameterCombos)[1], mc.cores = numCores)
   }
@@ -727,7 +744,16 @@ tuneEdgeWeights = function(
         cellTypes = unique(cellWalk[["cellLabels"]])
       }
 
-      cellHomogeneity = c(cellHomogeneity, computeCellHomogeneity(cellWalk, cellTypes))
+      if(method == 'computeCellHomogeneity')
+      {
+        score = get(method)(cellWalk, cellTypes)
+      }else if(method == 'computeLabelHomogeneity'){
+        score = get(method)(cellWalk, colnames(labelEdgesList[[1]]), colnames(labelEdgesList[[2]]))
+      }else{
+        stop(method, 'not implemented')
+      }
+
+      cellHomogeneity = c(cellHomogeneity, score)
 
       if(trackProgress & sum(sapply(seq(.1,.9,.1), function(x)
         (param)/dim(parameterCombos)[1] >= x &
@@ -962,16 +988,19 @@ tuneFilterWeights = function(
 #' uses default parameters and is designed for a simple first pass for creating
 #' labels.
 #'
-#' @param RNAMat gene-by-barcode matrix of scRNA data
+#' @param RNAMat gene-by-barcode raw count matrix of scRNASeq data
 #' @param genes character vector of gene names
-#' @param barcodes character vector of barcodes
+#' @param barcodes character vector of cell barcodes
 #' @param dims integer vector of PCA dimensions to use
 #' @param resolution numeric resolution to use in Louvain clustering
 #' @param only.pos only return positive markers
+#' @param min.cells used by Seurat, include features detected in at least this many cells
+#' @param scale.factor used by Seurat, scale factor for cell-level normalization
+#' @param nfeatures used by Seurat, Number of features to select as top variable features
 #' @return table of marker genes, labels, and logFC in expression
 #' @export
 #'
-findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.pos = FALSE){
+findMarkers = function(RNAMat, genes, barcodes, dims=1:20, resolution=0.5, only.pos = FALSE, min.cells = 3, scale.factor = 1e4, nfeatures = 3000){
   if(!requireNamespace("Seurat", quietly = TRUE)){
     stop("Must install Seurat")
   }
@@ -986,17 +1015,184 @@ findMarkers = function(RNAMat, genes, barcodes, dims=1:10, resolution=0.5, only.
   }
   rownames(RNAMat) = genes
   colnames(RNAMat) = barcodes
-  RNASeurat = Seurat::CreateSeuratObject(counts = RNAMat)
-  RNASeurat = Seurat::NormalizeData(RNASeurat)
-  RNASeurat = Seurat::FindVariableFeatures(RNASeurat)
-  RNASeurat = Seurat::ScaleData(RNASeurat)
+  RNASeurat = Seurat::CreateSeuratObject(counts = RNAMat, min.cells = min.cells)
+  RNASeurat = Seurat::NormalizeData(RNASeurat, scale.factor = scale.factor)
+  RNASeurat = Seurat::FindVariableFeatures(RNASeurat, nfeatures = nfeatures)
+  RNASeurat = Seurat::ScaleData(RNASeurat, verbose = F)
   RNASeurat = Seurat::RunPCA(RNASeurat)
   RNASeurat = Seurat::FindNeighbors(RNASeurat, dims = dims)
   RNASeurat = Seurat::FindClusters(RNASeurat, resolution = resolution)
   RNASeuratMarkers = Seurat::FindAllMarkers(RNASeurat, only.pos = only.pos)
   data.frame(gene=RNASeuratMarkers$gene,
              cluster=as.character(RNASeuratMarkers$cluster),
-             logFC=RNASeuratMarkers$avg_logFC)
+             avg_logFC=RNASeuratMarkers$avg_logFC)
+}
+
+#' preprocess scRNAseq data
+#'
+#' \code{processRNASeq} Uses Seurat to normalize raw count matrix, generate cell-to-cell similarity graph and find markers in scRNA-seq data and returns
+#' a table of markers and labels, cell-cell graph that can be used by CellWalker.
+#'
+#' @param RNAMat gene-by-barcode raw count matrix of scRNASeq data, either a matrix or a data.frame
+#' @param meta.data Additional cell-level metadata. Should be a data.frame where the rows are cell names matched with the column names of the counts matrix or \code{barcodes}
+#' and the columns are additional metadata fields.
+#' @param group.col the column name indicates the groups/cell clusters. If provided, will find markers for each group; otherwise, will use Seurat to identify clusters first.
+#' @param genes character vector of gene names. If NULL, use rownames of \code{RNAMat} as genes.
+#' @param barcodes character vector of cell barcodes
+#' @param do.findMarkers Whether to find cell type markers. Default: True.
+#' @param computeKNN Whether to compute cell-cell graph using KNN. Default: True.
+#' @param computeSimilarity Whether to compute cell-cell similarity matrix based on PCs. Default: False.
+#' @param knn Defines k for the k-nearest neighbor algorithm
+#' @param buildTree Whether to construct a cell type tree. Default: True
+#' @param dims integer vector of PCA dimensions to use
+#' @param resolution numeric resolution to use in Louvain clustering
+#' @param only.pos only return positive markers
+#' @param min.cells used by Seurat, include features detected in at least this many cells.
+#' @param scale.factor used by Seurat, scale factor for cell-level normalization
+#' @param nfeatures used by Seurat, Number of features to select as top variable features
+#' @param ... other parameters can be passed to \code{CreateSeuratObject}
+#' @return normalized gene expression matrix,  table of marker genes, labels, and logFC in expression,
+#' a matrix of cell-to-cell similarity matrix, a cell type tree and meta.data
+#' @export
+#'
+processRNASeq = function(RNAMat, meta.data = NULL, group.col = NULL, do.findMarkers = TRUE, computeKNN = TRUE, computeSimilarity = FALSE, knn = 20, buildTree = TRUE,
+                         genes=NULL, barcodes=NULL, dims=1:20, resolution=0.5, only.pos = FALSE, min.cells = 3, scale.factor = 1e4,
+                         nfeatures = 3000, ...){
+  if(!requireNamespace("Seurat", quietly = TRUE)){
+    stop("Must install Seurat")
+  }
+  if(missing(RNAMat) || (!is(RNAMat, "matrix") & !is(RNAMat, "Matrix") & !is(RNAMat, "data.frame"))){
+    stop("Must provide a matrix or a dataframe of RNA data")
+  }
+  if(is.null(genes) & is.null(rownames(RNAMat))){
+    stop('Must provide a vector of gene names')
+  }
+  if(is.null(barcodes) & is.null(colnames(RNAMat))){
+    stop('Must provide a vector of barcodes or cell names')
+  }
+  if(!is.null(genes) & length(genes)!=dim(RNAMat)[1]){
+    stop("Must provide a vector of gene names equal to the number of rows in the RNA matrix")
+  }
+  if(!is.null(barcodes) & length(barcodes)!=dim(RNAMat)[2]){
+    stop("Must provide a vector of barcodes equal to the number of columns in the RNA matrix")
+  }
+  if(!is.null(genes)) rownames(RNAMat) = genes
+  if(!is.null(barcodes)) colnames(RNAMat) = barcodes
+
+  RNASeuratMarkers  = cellgraph = tr = NULL
+
+  RNASeurat = Seurat::CreateSeuratObject(counts = RNAMat, meta.data = meta.data, min.cells = min.cells, ...)
+  RNASeurat = Seurat::NormalizeData(RNASeurat, scale.factor = scale.factor)
+  RNASeurat = Seurat::FindVariableFeatures(RNASeurat, nfeatures = nfeatures)
+  RNASeurat = Seurat::ScaleData(RNASeurat, features = rownames(RNAMat))
+  RNASeurat = Seurat::RunPCA(RNASeurat, verbose = F)
+
+  if(computeKNN) {
+    RNASeurat = Seurat::FindNeighbors(RNASeurat, dims = dims, k.param = knn)
+    cellgraph = RNASeurat@graphs$RNA_snn
+  }else if(computeSimilarity){
+    distance <- dist(RNASeurat@reductions$pca@cell.embeddings[,dims]) #include the weight of each PC
+    distance = distance/max(distance)
+    cellgraph = as.matrix(1 - distance) # similarity
+    diag(cellgraph) = 1
+  }
+
+  if(do.findMarkers | buildTree) # clustering if needed
+  {
+    if(is.null(group.col) | is.null(meta.data))
+    {
+      if(!computeKNN) RNASeurat = Seurat::FindNeighbors(RNASeurat, dims = dims, k.param = knn)
+      RNASeurat = Seurat::FindClusters(RNASeurat, resolution = resolution)
+    }else{
+      stopifnot("meta.data must contain group.col as column" = group.col %in% colnames(meta.data))
+      Seurat::Idents(RNASeurat) = group.col
+    }
+  }
+
+  if(do.findMarkers) {
+    RNASeuratMarkers = Seurat::FindAllMarkers(RNASeurat, only.pos = only.pos)
+  }
+
+  if(buildTree){
+    RNASeurat =  Seurat::BuildClusterTree(RNASeurat, dims = dims)
+    tr =  Seurat::Tool(object = RNASeurat, slot = 'Seurat::BuildClusterTree')
+  }
+
+  return(list("expr_norm" = RNASeurat@assays$RNA@scale.data, "markers" = RNASeuratMarkers, "cellGraph" = cellgraph, 'tr' = tr, 'meta' = RNASeurat@meta.data))
+}
+
+#' merge scRNAseq data
+#'
+#' \code{mergeRNASeq} Uses Seurat to normalize raw count matrix of each data set, integrate and
+#' generate cell-to-cell similarity graph that can be used by CellWalker.
+#'
+#' @param RNAMatList a list of gene-by-barcode raw count matrix of scRNASeq data, either a matrix or a data.frame.
+#' Each of them has cell barcodes as colnames and genes as rownames.
+#' @param integrate Whether to use Seurat to remove batch effects and integrate all datasets provided. Default: True
+#' @param min.cells used by Seurat, include features detected in at least this many cells.
+#' @param scale.factor used by Seurat, scale factor for cell-level normalization
+#' @param nfeatures used by Seurat, Number of features to select as top variable features and
+#' integration feautres (if \code{integrate} is TRUE)
+#' @param ndim integer vector of CCA dimensions to use for integration or PCA dimensions
+#' @param computeKNN Whether to compute cell-cell graph using KNN. Default: True. If false, compute cell-cell similarity matrix based on PCs.
+#' @param knn Defines k for the k-nearest neighbor algorithm
+#' @param ... other parameters can be passed to \code{CreateSeuratObject}
+#' @return normalized gene expression matrix and a matrix of cell-to-cell similarity matrix.
+#' @export
+#'
+mergeRNASeq = function(RNAMatList, integrate = TRUE, min.cells = 3, scale.factor = 1e4, nfeatures = 3000, ndim = 30, computeKNN = TRUE, knn = 20, ...)
+{
+  if(missing(RNAMatList) || !is(RNAMatList, "list")){
+    stop("Must provide a list of count matrices")
+  }
+  # normalize and identify variable features for each dataset independently
+  ifnb.list <- lapply(X = RNAMatList, FUN = function(x) {
+    if(!is(x, "matrix") & !is(x, "Matrix") & !is(x, "data.frame")){
+      stop("Must provide a matrix or a dataframe for each RNA data")
+    }
+    if(is.null(rownames(x)) | is.null(colnames(x))){
+      stop("Each RNA data must have gene names as rownames and cell names as colnames")
+    }
+    x= Seurat::CreateSeuratObject(counts = x, min.cells = min.cells, ...)
+    x = Seurat::NormalizeData(x, scale.factor = scale.factor)
+    x = Seurat::FindVariableFeatures(x, nfeatures = nfeatures)
+  })
+
+  if(integrate)
+  {
+    features <- Seurat::SelectIntegrationFeatures(object.list = ifnb.list,nfeatures = nfeatures)
+    ifnb.list <- lapply(X = ifnb.list, FUN = function(x) {
+      x <- Seurat::ScaleData(x, features = features, verbose = FALSE)
+      x <- Seurat::RunPCA(x, features = features, verbose = FALSE)
+    })
+    #
+    ## find anchors and integrate
+    anchors <- Seurat::FindIntegrationAnchors(object.list = ifnb.list, normalization.method = "LogNormalize",
+                                             anchor.features = features, dims = 1:ndim)
+    RNASeurat <- Seurat::IntegrateData(anchorset = anchors, normalization.method = "LogNormalize", dims = 1:ndim)
+    Seurat::DefaultAssay(RNASeurat) <- "integrated"
+  }else{
+    RNASeurat <- merge(ifnb.list[[1]], ifnb.list[[-1]]) #add.cell.ids = paste0("_", 1:length(ifnb.list))
+    RNASeurat <- Seurat::FindVariableFeatures(RNASeurat, selection.method = "vst", nfeatures = nfeatures)
+  }
+  RNASeurat <- Seurat::ScaleData(RNASeurat, verbose = FALSE)
+  RNASeurat <- Seurat::RunPCA(RNASeurat, verbose = F)
+  if(computeKNN)
+  {
+    RNASeurat <- Seurat::FindNeighbors(RNASeurat, dims = 1:ndim, verbose = F, k.param = knn)
+    if(integrate) cellgraph = RNASeurat@graphs$integrated_snn else cellgraph = RNASeurat@graphs$RNA_snn
+  }else{
+    distance <- dist(RNASeurat@reductions$pca@cell.embeddings[,1:ndim]) #include the weight of each PC
+    distance = distance/max(distance)
+    cellgraph = as.matrix(1 - distance) # similarity
+    diag(cellgraph) = 1
+  }
+  if(integrate)
+  {
+    return(list("expr_norm" = RNASeurat@assays$integrated@scale.data, "cellGraph" = cellgraph))
+  }else{
+    return(list("expr_norm" = RNASeurat@assays$RNA@scale.data, "cellGraph" = cellgraph))
+  }
 }
 
 #' Download Sample Data

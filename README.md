@@ -1,15 +1,27 @@
-<img src="examples/CellWalkR_Vignette_files/figure-markdown_github/cellwalker_icon.png" id="id" class="class" width="50" height="50" /> CellWalkR
+<img src="examples/CellWalkR_Vignette_files/figure-markdown_github/cellwalker2_icon.png" id="id" class="class" width="100" height="50" /> CellWalkR
 ================
 
 ## About
 
-CellWalkR is an R package that integrates single-cell open chromatin
-(scATAC-seq) data with cell type labels and bulk epigenetic data to
-identify cell type-specific regulatory regions. A GPU implementation and
-downsampling strategies enable thousands of cells to be processed in
-seconds. CellWalkR’s user-friendly interface provides interactive
-analysis and visualization of cell labels and regulatory region
-mappings.
+CellWalkR is updated to Version 2! This version combines the functionality of the **CellWalker** model with new features implemented in 
+**CellWalker2**. 
+As inputs, CellWalkerR takes cell type labels (lineages, states, etc; defined by their marker genes) and count data: 
+a gene by cell matrix from scRNASeq data and/or a peak by cell matrix from scATACSeq data. 
+Count matrices can be computed using a variety of upstream single-cell quantification software tools. 
+Optionally, users may provide genome coordinates for sets of annotations they wish to map to 
+cell types. Examples of annotations are bulk-derived regulatory elements, sequence motifs, genetic variants, 
+or gene sets. CellWalkR builds a graph where the nodes are cells, cell types, and (if provided) annotations.
+Then, CellWalkR uses a graph diffusion method to annotate cells, compare cell type labels, 
+and assign cell type-specificity to annotations. 
+
+The original **CellWalker** model integrates single-cell open chromatin (scATAC-seq) data with cell type labels and (optionally) 
+bulk epigenetic data to annotate cells, compare cell type labels, and probabilitically assign cell type labels to annotations. 
+**CellWalker2** extends this functionality with many new features, including:
++ integrates different modalities of single-cell data (scATAC-seq, scRNA-seq, multiomic), 
++ enables integrative modeling of cells measured in different experiments,
++ incorporates hierarchical relationships between cell type labels,
++ compares cell type ontologies across contexts (conditions, species, datasets),
++ provide permutation-based measures of statistical significance for cell-to-label, region-to-label, and label-to-label mappings. 
 
 ## Installation
 
@@ -18,49 +30,16 @@ Install CellWalkR for R using devtools as follows:
 ``` r
 $ R
 > install.packages("devtools")
-> devtools::install_github("PFPrzytycki/CellWalkR")
+> devtools::install_github("PFPrzytycki/CellWalkR@dev")
 ```
 
 ## Usage
 
-For a guide to using CellWalkR, see the provided
-[vignette](examples/CellWalkR_Vignette.md), which covers the following:
+For a guide to use CellWalker, see the provided
+[readme](CellWalker.md) and [vignette](examples/CellWalkR_Vignette.md). 
 
-1.  [Data
-    Pre-processing](examples/CellWalkR_Vignette.md#data-pre-processing)
-2.  [Getting Started with
-    CellWalkR](examples/CellWalkR_Vignette.md#getting-started-with-cellwalkr)
-    1.  [Loading scATAC-seq
-        Data](examples/CellWalkR_Vignette.md#loading-scatac-seq-data)
-    2.  [Defining Label
-        Nodes](examples/CellWalkR_Vignette.md#defining-label-nodes)
-3.  [Building a
-    Network](examples/CellWalkR_Vignette.md#building-a-network)
-    1.  [Computing Cell-Cell
-        Edges](examples/CellWalkR_Vignette.md#computing-cell-cell-edges)
-    2.  [Computing Label-Cell
-        Edges](examples/CellWalkR_Vignette.md#computing-label-cell-edges)
-4.  [Tuning Label
-    Edges](examples/CellWalkR_Vignette.md#tuning-label-edges)
-5.  [Making a cellWalk
-    Object](examples/CellWalkR_Vignette.md#making-a-cellwalk-object)
-6.  [Adding Filters](examples/CellWalkR_Vignette.md#adding-filters)
-7.  [Downstream
-    Analysis](examples/CellWalkR_Vignette.md#downstream-analysis)
-    1.  [Cell Labels](examples/CellWalkR_Vignette.md#cell-labels)
-    2.  [Confusion
-        Matrix](examples/CellWalkR_Vignette.md#confusion-matrix)
-    3.  [Hierarchical Clustering of
-        Labels](examples/CellWalkR_Vignette.md#hierarchical-clustering-of-labels)
-    4.  [Plotting Cells](examples/CellWalkR_Vignette.md#plotting-cells)
-    5.  [Bulk Data
-        Mapping](examples/CellWalkR_Vignette.md#bulk-data-mapping)
-8.  [Interactive
-    Visualizaiton](examples/CellWalkR_Vignette.md#interactive-visualzation)
-9.  [Adding a Second Set of
-    Labels](examples/CellWalkR_Vignette.md#adding-a-second-set-of-labels)
-10. [Detecting
-    Doublets](examples/CellWalkR_Vignette.md#detecting-doublets)
+For a guide to use CellWalker2, see the provided
+[readme](CellWalker2.md) and [vignette](examples/CellWalker2_Vignette.md). 
 
 If you use CellWalkR please cite:
 

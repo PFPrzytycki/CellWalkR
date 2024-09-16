@@ -734,3 +734,105 @@ plotMultiLevelLabels = function(cellWalk, labelScores, z=2, whichBulk){
 
   p
 }
+
+#' Plot Z-score on a phylogeny
+#'
+#' \code{plotZscoreTree} Plots Z-scores as the color of branches of a phylogeny
+#'
+#' @param celltree a phylo object, must have tip and node labels matched with column names of Zscores
+#' @param Zscore a matrix or dataframe, rows are annotations/cell type to be mapped to, and columns are cell types on the tree, including both tips and internal nodes.
+#' @param cutoff the minimum Zscore to show on the tree
+#' @param xrange specify xlim in ggplot, adjust if the tree is partially missing from the figure
+#' @return ggplot object
+#' @export
+#' @import ggtree
+#' @import tidytree
+#' @import ggplot2
+
+plotZscoreTree <- function(celltree, Zscore, cutoff = 10, xrange = 20)
+{
+  Zscore[is.na(Zscore)] = 0
+  Zscore[Zscore < cutoff] = cutoff
+  n = length(celltree$tip.label)
+  if(length(celltree$node.label)!=n-1 | !all(c(celltree$tip.label, celltree$node.label) %in% colnames(Zscore))){
+    stop('tip and node labels of celltree must match with column names of Zscores')
+  }
+  if(is.null(rownames(Zscore)))
+  {
+    stop('Zscore must have row names: regions/cell type to be mapped to')
+  }
+  td <- data.frame(node = 1:n,
+                   t(Zscore[, celltree$tip.label, drop=F]), check.names = F)
+  nd <- data.frame(node = (n+1):(2*n-1),
+                   t(Zscore[, celltree$node.label, drop=F]), check.names = F)
+  d <- rbind(td, nd)
+  tree <- full_join(celltree, d, by = 'node')
+  ct = rownames(Zscore)
+  trs <- rep(list(tree), length(ct))
+  names(trs) = ct
+  class(trs) <- 'treedataList'
+
+  lm = max(d[,-1]) # plot each tree at the same scale
+  p1 = "ggtree(trs, branch.length = 'none', ladderize = T, color='white') + facet_grid(~.id)"
+  if(length(ct) > 1)
+  {
+    for(i in 1:(length(ct)-1))
+    {
+      p1 = paste(p1, "+ geom_tree(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 1.5) +
+           geom_point(data=td_filter(.id == ct[", i, "]), aes(colour= .data[[ct[", i, "]]]),size = 3) +
+        scale_colour_viridis_c(direction=-1, option = 'C', limits = c(cutoff,lm)) + guides(colour = 'none') +
+        ggnewscale::new_scale_colour()", sep = '')
+    }
+  }
+  i = length(ct)
+  p1 = paste(p1, "+ geom_tree(data=td_filter(.id == ct[",i, "]), aes(colour= .data[[ct[",i, "]]]),size = 1.5) +
+    geom_point(data=td_filter(.id == ct[",i,"]), aes(colour= .data[[ct[",i,"]]]),size = 3) +
+    scale_colour_viridis_c(name = 'Z-scores', direction=-1,option = 'C',limits = c(cutoff,lm)) +
+    theme(strip.background=element_blank(), text = element_text(size = 18), legend.position = 'bottom') +
+    geom_tiplab(hjust = -.1) + xlim(0, ", xrange, ")", sep='')
+
+  p1 =eval(parse(text = p1))
+  return(p1)
+}
+
+#' Plot Z-score
+#'
+#' \code{plotZscoreDotplot} Plots Z-scores as dot plot
+#'
+#' @param Zscore a matrix or dataframe, rows are regions/cell type to be mapped to, and columns are cell types
+#' @param cutoff the minimum Zscore to show on the plot and do clustering
+#' @param orderRow whether to cluster bulk anntations based on Zscore profiles
+#' @return ggplot object
+#' @export
+#' @import ggplot2
+plotZscoreDotplot = function(Zscore, orderRow = T, orderCol = F,  th = 3)
+{
+    Zscore = Zscore[matrixStats::rowMaxs(as.matrix(Zscore)) > th, ]
+    aa2 = Zscore
+    aa2[aa2<th] = 0
+    if(orderRow)
+    {
+      ord = hclust(dist(aa2, method = 'manhattan'))
+      ord = ord$order
+    }else{
+      ord = 1:nrow(Zscore)
+    }
+    if(orderCol)
+    {
+      ord2 = hclust(dist(t(aa2), method = 'manhattan'))
+      ord2 = ord2$order
+    }else{
+      ord2 = 1:ncol(Zscore)
+    }
+
+    aa2 = Zscore[ord, ord2]
+    aa2[aa2 < th] = NA
+    aa2 = as.matrix(aa2)
+    aa2 = reshape2::melt(aa2)
+    colnames(aa2) = c('bulkLabel', 'celltype', 'zscore')
+    p1 = ggplot(aa2, aes(x=bulkLabel, y=celltype, group=bulkLabel, size = zscore, color = zscore)) +
+      geom_point(alpha = 0.8) + xlab('') +
+      theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust=1)) +
+      scale_color_gradient(low = "mediumblue",  high = "red2", space = "Lab")
+    return(p1)
+}
