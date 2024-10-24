@@ -50,7 +50,7 @@ counts2 = counts2[, -ind_rm]
 meta.data2 = meta.data2[-ind_rm, ]
 ```
 
-#### Cell type annotation
+#### Labeling cells
 
 CellWalker2 uses Seurat to preprocess scRNA-Seq data. Users can provide
 marker genes for each cell type as a dataframe with columns *gene*,
@@ -182,7 +182,7 @@ ggplot(aa, aes(x= Ren, y=Yoshida, size=count, color=prob, group=Ren)) +
 
 ![](CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png)
 
-#### Cell types (trees) mapping
+#### Comparing cell types or cell type trees
 
 To map cell types, CellWalker2 needs marker genes for each cell type and
 (optionally) cell type tree. We’ve already obtained marker genes for
