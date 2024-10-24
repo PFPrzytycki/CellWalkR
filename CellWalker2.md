@@ -25,8 +25,11 @@ $ R
 1.  [Getting Started with CellWalker2](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2)
 2.  [Use CellWalker2 for scRNA-Seq data (PBMC)](examples/CellWalker2_RNASeq_Vignette.md)
     1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
-    2.  [Cell type annotation](examples/CellWalker2_RNASeq_Vignette.md#cell-type-annotation)<img src="examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png" id="id" class="class" width="300" height="200" />
-    3.  [Cell types (trees) mapping](examples/CellWalker2_RNASeq_Vignette.md#Cell-types-trees-mapping)<img src="examples/CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png" id="id" class="class" width="400" height="200" />
+    2.  [Cell type annotation](examples/CellWalker2_RNASeq_Vignette.md#cell-type-annotation)
+    <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png" id="id" class="class" height="200" />
+    
+    3.  [Cell types (trees) mapping](examples/CellWalker2_RNASeq_Vignette.md#Cell-types-trees-mapping)
+    <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png" id="id" class="class" height="200" />
 
 3.  [Use CellWalker2 for multiomic data (human developing cortex)](examples/CellWalker2_Multiomic_Vignette.md)
     1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
@@ -37,6 +40,8 @@ $ R
     6.  [Identify cell type-specific transcription factors using motifs](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-transcription-factors-tfs)
     7.  [Identify cell type-specific transcription factors using ChIP-Seq peaks](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-transcription-factors-tfs)
     
+
+## Citation
 
 If you use CellWalkR please cite:
 
