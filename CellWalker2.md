@@ -51,7 +51,7 @@ $ R
 
 7.  [Mapping transcription factors to cell types using ChIP-Seq peaks](examples/CellWalker2_Multiomic_Vignette.md#mapping-transcription-factors-to-cell-types-using-chip-seq-peaks)
     <p align="left">
-        <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap_chip-1.png" id="id" class="class" height="200" />
+        <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap_chip-1.png" id="id" class="class" height="220" />
     </p>  
 
 ## Citations
