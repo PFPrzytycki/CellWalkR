@@ -26,11 +26,11 @@ $ R
 2.  [Use CellWalker2 for scRNA-Seq data (PBMC)](examples/CellWalker2_RNASeq_Vignette.md)
     1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
     2.  [Cell type annotation](examples/CellWalker2_RNASeq_Vignette.md#cell-type-annotation)
-    ![](CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png)
+    ![](examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png)
 
     3.  [Cell types (trees) mapping](examples/CellWalker2_RNASeq_Vignette.md#Cell-types-trees-mapping)
-    ![](CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png)
-    
+    ![](examples/CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png)
+
 3.  [Use CellWalker2 for multiomic data (human developing cortex)](examples/CellWalker2_Multiomic_Vignette.md)
     1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
     2.  [Process RNASeq data](examples/CellWalker2_Multiomic_Vignette.md#process-rnaseq-data)
