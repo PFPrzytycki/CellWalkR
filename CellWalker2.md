@@ -46,7 +46,7 @@ $ R
 
 6.  [Mapping transcription factors to cell types using motifs](examples/CellWalker2_Multiomic_Vignette.md#mapping-transcription-factors-to-cell-types-using-motifs)
     <p align="left">
-        <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap-1.png" id="id" class="class" height="200" /><img src="examples/CellWalker2_Multi_files/figure-markdown_github/tree_topTF-1.png" id="id" class="class" height="200" />
+        <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap_sel-1.png" id="id" class="class" height="200" /><img src="examples/CellWalker2_Multi_files/figure-markdown_github/tree_topTF-1.png" id="id" class="class" height="200" />
     </p>
 
 7.  [Mapping transcription factors to cell types using ChIP-Seq peaks](examples/CellWalker2_Multiomic_Vignette.md#mapping-transcription-factors-to-cell-types-using-chip-seq-peaks)
