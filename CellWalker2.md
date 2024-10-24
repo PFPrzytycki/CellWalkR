@@ -27,7 +27,7 @@ $ R
 1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
 2.  [Labeling cells](examples/CellWalker2_RNASeq_Vignette.md#labeling-cells)
     <p align="left">
-        <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png" id="id" class="class" height="200" />
+        <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png" id="id" class="class" height="250" />
     </p>
 3.  [Comparing cell types or cell type trees](examples/CellWalker2_RNASeq_Vignette.md#comparing-cell-types-or-cell-type-trees)
     <p align="left">
