@@ -21,7 +21,7 @@ convertToMatrix = function(bulkRegions)
     if(!all(c('seqnames', 'start', 'end') %in% colnames(bulkRegions))){
       stop('regions must have seqnames, start, end')
     }
-    bulkRegions[, sequence_name :=  paste0(seqname, ':', start ,'-', end)]
+    bulkRegions[, sequence_name :=  paste0(seqnames, ':', start ,'-', end)]
   }
   bulkRegions[, count := 1]
 

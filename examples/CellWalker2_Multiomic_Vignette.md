@@ -5,7 +5,7 @@ Zhirui Hu
 
 
 
-In this vignette, we will use CellWalker2 to 1) assign cell type labels to predicted regulatory regions (pREs) identified from basal ganglia vs cortex (see [paper](https://doi.org/10.1016/j.cell.2020.06.002)) in human developing brain samples and 2) identify enriched TF motifs within pREs that tend to be more open in specific cell types (candidate cell type specific pREs).
+In this vignette, we will use CellWalker2 to 1) assign cell type labels to predicted regulatory regions (pREs) identified from basal ganglia vs cortex (see [paper](https://doi.org/10.1016/j.cell.2020.06.002)) in human developing brain samples and 2) identify enriched TF motifs or ChIP-Seq peaks within pREs that tend to be more open in specific cell types (candidate cell type specific pREs).
 
 #### Load data
 

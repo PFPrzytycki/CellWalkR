@@ -1,0 +1,420 @@
+---
+title: "CellWalker2"
+author: "Zhirui Hu"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{CellWalker2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = FALSE,
+  comment = "#>"
+)
+```
+After CellWalkR is installed, load the package:
+
+```{r setup, message=FALSE, warning=FALSE}
+library(CellWalkR)
+library(data.table)
+library(ggplot2)
+library(Matrix)
+library(ape) # for computation on tree
+library(foreach) 
+library(doParallel)
+library(parallel)
+```
+
+```{r setseed, echo=FALSE}
+set.seed(1)
+```
+## Use CellWalker2 for ATAC-Seq and RNA-Seq data
+
+In this section, we will use CellWalker2 to 1) assign cell type labels to predicted regulatory regions (pREs) identified from basal ganglia vs cortex (see [paper](https://doi.org/10.1016/j.cell.2020.06.002)) in human developing cortex and 2) identify enriched TF motifs within pREs that tend to be more open in specific cell types (or cell type specific pREs?).
+
+#### Load data
+
+We load subset of multiomic, scRNA-Seq and scATAC-Seq data from human developing cortex ([GSE162170](https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=GSE162170)). For ATAC-Seq, we need to input a peak-by-cell count matrix accompanied with a peak coordinate matrix with the same rows. We can also load cell type tree as a phylo object and cell type markers. We rename some of the columns to make them readable by CellWalker2.
+
+```{r loadData2, eval=TRUE}
+# load single cell data
+# 'data/SampleCellTypeTree.rda' should be loaded upon loading the package
+devtools::load_all() # load SampleCortexSingleCellData (in R/sysdata.rda)
+
+ATAC_Mat = SampleCortexSingleCellData$ATAC_Mat
+peaks = SampleCortexSingleCellData$peaks
+ATAC_Mat0 = SampleCortexSingleCellData$ATAC_Mat0
+peaks0 = SampleCortexSingleCellData$peaks0
+counts = SampleCortexSingleCellData$counts
+counts2 = SampleCortexSingleCellData$counts2
+RNA_markers = SampleCortexSingleCellData$RNA_markers
+tr = SampleCellTypeTree
+
+colnames(RNA_markers)[5] = 'p_val_adj' # will be used for select markers
+colnames(peaks)[1:3] = c('seqnames', 'start', 'end')
+```
+
+#### Process RNASeq data
+
+We first normalize and standarize scRNA-Seq data for both RNASeq part of multiomic data and unpaired RNASeq data. We don't need to compute cell type markers and build cell tree as they are already provided. We also don't need to compute cell-to-cell similarities as it will be computed by integrating all sources of data in the following step.
+
+```{r processRNA, eval=TRUE, results=FALSE, message=FALSE}
+dataset1 = processRNASeq(counts, do.findMarkers = F, computeKNN = F, computeSimilarity = F, 
+                         buildTree = F) # RNASeq part of multiomic data, normalize data
+dataset2 = processRNASeq(counts2, do.findMarkers = F, computeKNN = F, computeSimilarity = F, 
+                         buildTree = F) # unpaired RNASeq, normalize data
+```
+
+#### Compute cell-to-cell type edges
+
+Then we can compute cell to cell type edges based on standarized marker gene expression. Users can adjust the p-values and log2 fold change cutoff to select markers for computing edge weights. Here we just use the default values.
+
+```{r labelEdge1, eval=TRUE}
+# option 1: connect all cells with RNA data to cell types
+labelEdges1 = computeTypeEdges(dataset1$expr_norm, RNA_markers)
+labelEdges2 = computeTypeEdges(dataset2$expr_norm, RNA_markers)
+labelEdges = rbind(labelEdges1, labelEdges2)
+
+```
+
+Users can also choose which cells to be connected to cell types.
+
+```{r labelEdge2, eval=FALSE}
+# option 2: connect only cells with unpaired RNA data to cell types
+labelEdges = computeTypeEdges(dataset2$expr_norm, RNA_markers)
+```
+
+#### Construct cell-to-cell graph
+
+Next, we construct cell-to-cell graph by integrating all the single cell data. For current version of CellWalker2, multiomic data is required and unpaired scRNA-Seq or scATAC-Seq data can be added to the graph. CellWalker2 will compute cell-to-cell similarity based on gene expression and chromatin accessibility, construct KNN graph and output shared K nearest neighbors between each pair of cells.
+
+For gene expression, user can adjust the dimensions of PCs to compute cell-to-cell distance (`ndim`). for chromatin accessibility, user can choose the similarity metric among Cosine, Jaccard, or LSI. Additionally, `ATAC_weight` specifies the weight of ATACSeq similarity for multiomic data (the weight for RNASeq is 1-`ATAC_weight`).
+
+```{r cellgraph1, eval=TRUE, warning=FALSE, results='hide', message=FALSE}
+cellgraph = constructCellGraph(counts, ATAC_Mat0, peaks0, counts2, ATAC_Mat, peaks) # with ATACSeq
+```
+
+We can also construct cell graph without unpaired scATAC-Seq:
+
+```{r cellgraph2, eval=FALSE}
+cellgraph = constructCellGraph(counts,ATAC_Mat0, peaks0, counts2) # without ATACSeq
+```
+
+#### Map region-specific pREs to cell types
+
+We further input basal ganglia or cortex specific pREs and compute cell-to-label edges. In this case, the labels are *basal ganglia* and *cortex*. The edge weight is based on the chromatin accessibility of basal ganglia or cortex pREs in the cell.
+
+```{r labelEdge3, eval=TRUE}
+pRE = read.csv(system.file("extdata", "pRE_region_bg_cortex.csv", package = "CellWalkR"))
+colnames(pRE)[c(1,11)] = c('seqnames', 'cluster') #rename some column names to be readable by CellWalker2
+
+labelEdges1 = computeBulkEdges(pRE, peaks0, ATAC_Mat0)
+labelEdges2 = computeBulkEdges(pRE, peaks, ATAC_Mat) 
+labelEdges2 = rbind(labelEdges1, labelEdges2) # connect all ATAC cells to bulk annotations
+```
+
+Alternatively, we can only connect unpaired ATAC cells to bulk annotations:
+
+```{r labelEdge4, eval=FALSE}
+labelEdges2 = computeBulkEdges(pRE, peaks, ATAC_Mat) 
+```
+
+Finally, we assign cell type labels to basal ganglia or cortex specific pREs. By default, `compute.Zscore = T`, CellWalker2 will compute Z-scores by comparing the observed influence score with its null distribution generated by permuting cell-to-cell type edges. Otherwise, CellWalker2 will output influence score matrix from bulk labels to cell types only. `nround` is the number of randomization to compute Z-scores.
+
+We set `labelEdgeWeight = NULL`, so CellWalker2 will tune the weight ratio between cell-to-label edges and cell-to-cell edges for both cell type labels and bulk annotations to minimize the entropy mapping each bulk annotation to cell types.
+
+
+```{r annotateBulk, eval=TRUE}
+cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtree = c(1, 0.1),
+                               labelEdgeWeights = NULL, sampleDepth = 2000,  parallel = T, 
+                               numCores = 8) # with tuning edgeWeights
+```
+
+If you don't want to tune `leblEdgeWeight`, you can use the following command using the default values or input other values.
+
+```{r annotateBulk2, eval=FALSE}
+cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtree = c(1, 0.1))
+```
+
+We plot Z-score on the cell type tree to compare the cell type specificity of different bulk annotations.
+
+```{r plotTree, eval=TRUE, fig.width=6, fig.height=6, fig.fullwidth=TRUE}
+tr$node.label = colnames(cellWalk2$zscore)[-1:-(tr$Nnode+1)]
+p1 = plotZscoreTree(tr, cellWalk2$zscore, cutoff = 3)
+p1
+```
+
+#### Identify cell type-specific TFs using motifs
+
+First, we input the genomic coordinates of pREs as a bed file and identify TF motifs from JASPAR2020 within each pRE using Signac. For faster computation in this demo, we also filter for TF motifs that occur more frequently. The result file contains the genomic coordinates of each pRE and the motifs within it. Currently only hg38 is supported in `findMotifs` but users can input custom motifs file.
+
+```{r findMotif, eval=TRUE}
+pRE = read.table(system.file("extdata", "pRE-hg38.bed", package = "CellWalkR"))
+colnames(pRE) = c('seqnames', 'start', 'end')
+motifs = findMotifs(pRE)
+
+motifs = data.table::as.data.table(motifs)
+motifs[, count:= .N, by = cluster] # select TFs appear in more pREs
+motifs = as.data.frame(motifs[count > 1000])
+```
+
+Then, we compute cell-to-label edges. We treat each TF as a bulk label and each TF connects to each cell through the chromatin accessibilty of pREs containing the TF motif. We connect both cells from multiomic and unpaired ATACSeq to TFs.
+
+```{r labelEdges5, eval=TRUE}
+labelEdges1 = computeBulkEdges(motifs, peaks0, ATAC_Mat0)
+labelEdges2 = computeBulkEdges(motifs, peaks, ATAC_Mat)
+labelEdges2 = rbind(labelEdges1, labelEdges2)
+```
+
+Finally, we identify TFs whose motifs are enriched in pREs that are active in specific cell types. We convert `motifs` to a binary matrix showing the present/absence of motif in each pRE that can be used by `annotateBulkRegion`.
+
+Different from previous section, we randomly assign pREs to motifs to generate the null distribution for computing Z-scores. We set `groups1` to all zero as no permutation between cell-to cell types edges and `group2` to all one as permutations occur between all motifs and regions. We need to input count matrix and peaks for ATACSeq data as we need to recompute `labelEdges` for each randomization.
+
+```{r mapTFs, eval=TRUE}
+regionMat = convertToMatrix(motifs) # a data.table with sequence name of pRE as the first column and clusters (TFs) as the following columns
+groups1 =  rep(0, nrow(labelEdges)) # no permutation between cell-to cell types edges
+groups2 = rep(1, nrow(regionMat)) # permutation between all motifs and regions
+cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, groups1, groups2,
+                               regionMat, list(ATAC_Mat0, ATAC_Mat), list(peaks0, peaks), 
+                               tr1 = tr, wtree = c(1, 0.1), labelEdgeWeights = NULL, sampleDepth = 2000,
+                               parallel = T, numCores = 8)
+
+```
+
+We can visualize Z-scores using dotplot. Each row is a cell type including internal nodes on the tree and each column is a TF. The internal node is names by two cell types among its descendents and the depth of the node.
+
+```{r heatmap, eval=TRUE, warning=FALSE, fig.width=7, fig.height=7, fig.fullwidth=TRUE}
+Zscore = cellWalk2$zscore[, tr$edge[,2]] # reorder cell types so that cell types closer in the tree will be closer on the heatmap
+p1 = plotZscoreDotplot(Zscore, th = 5)
+p1
+```
+
+We can further filter TFs by the average expression in each cell type, and the correlation between average expression and Z-scores.
+First, load log normalized scRNA-Seq data for TFs.
+```{r load_TFexp, eval=TRUE, warning=FALSE}
+tf_exp = SampleCortexSingleCellData$tf_exp # tf expression for each cell
+label = SampleCortexSingleCellData$label # cell labels
+# remove cell types less than 5 cells
+ct_num = xtabs(~label)
+clusters = names(ct_num)[which(ct_num > 4)]
+cell_ind = which(label %in% clusters)
+label = label[cell_ind]
+tf_exp = tf_exp[, cell_ind]
+```
+
+Then, we compute average expression in each cell type. 
+```{r compute_TFexp, eval=TRUE, warning=FALSE}
+#If tr is provided, also compute selected internal nodes of the cell type tree. If scale = T, get standardized expression for each gene
+computeTFexp <- function(tf_exp, Zscore, cellLabels, tr = NULL, levels = c(1:8,12), scale = T)
+{
+  # select expressed TF
+  ind = which(rowMeans(tf_exp > 0) > 0.01) # 
+  tf_exp = tf_exp[ind, ]
+  tf_exp = as.matrix(tf_exp)
+  # get tf expression per cell type
+  if(scale) tf_exp = t(scale(t(tf_exp)))
+  tf_exp = reshape2::melt(tf_exp)
+  
+  tf_exp = tf_exp[tf_exp$Var2 %in% names(cellLabels), ]
+  tf_exp$cluster = cellLabels[as.character(tf_exp$Var2)] 
+  
+  tf_exp = as.data.table(tf_exp)
+  tf_exp_mean = tf_exp[, mean(value),  by = c('Var1', 'cluster')]
+  ##tf_exp_mean$cluster = make.names(tf_exp_mean$cluster)
+  tf_exp_mean = reshape2::acast(tf_exp_mean, Var1 ~ cluster)
+  
+  # adding internal nodes
+  if(!is.null(tr))
+  {
+    #select levels of internal nodes to compute expression. In this example, only bottom 8 levels (for different groups of neurons)
+    # and level 12 (for non-neurons) will be computed
+    for(i in levels) 
+    {
+      nodes = grep(paste0('\\:', i, '$'), tr$node.label, value = T)
+      tf_exp$cluster2 = NA
+      for(x in nodes)
+      {
+        a = extract.clade(tr, x)
+        if(length(a$tip.label) > length(tr$tip.label)/2  + 1) a$tip.label = setdiff(tr$tip.label, a$tip.label)
+        if(i==12) x = "Peric.:Early RG:13"
+        tf_exp$cluster2[which(tf_exp$cluster %in% a$tip.label)] = x
+      }
+      temp = tf_exp[!is.na(cluster2), mean(value),  by = c('Var1', 'cluster2')]
+      tf_exp_mean = cbind(tf_exp_mean, reshape2::acast(temp, Var1 ~ cluster2))
+    }
+  }
+  inter_tf = intersect(rownames(tf_exp_mean), rownames(Zscore))
+  Zscore = Zscore[inter_tf, colnames(tf_exp_mean)]
+  tf_exp_mean = tf_exp_mean[inter_tf,]
+  return(list(Zscore,tf_exp_mean)) 
+}
+res = computeTFexp(tf_exp, Zscore, label)
+```
+
+We can filter TFs by Z-score, expression and correlation:
+```{r filter_TFexp, eval=TRUE, warning=FALSE}
+# compute correlation
+corr = sapply(1:nrow(res[[1]]), function(x) cor(unlist(res[[1]][x,]), unlist(res[[2]][x,]), method= 'spearman'))
+names(corr) = rownames(res[[1]])
+posTF = corr[corr > 0.2] # less strict cutoff as demo
+nn = sapply(1:ncol(res[[1]]), function(i) { # iterate over all the cell types
+  y = sum(res[[1]][,i] >3) # select TFs with Z-score > 3
+  x = order(-res[[1]][,i])[1:min(50,y)] # further top 50 TFs if too many to plot
+  x = rownames(res[[1]])[x]
+  intersect(intersect(x, rownames(res[[2]])[res[[2]][,i] > 0.5]), names(posTF)) # select TF with standarized expression (>0.5) and correlation
+  })
+names(nn) = colnames(res[[1]])
+tfs = unique(unlist(nn))
+```
+
+Then we plot Z-score and expression in the same heatmap. 
+```{r heatmap_sel, eval=TRUE, warning=FALSE, fig.width=7, fig.height=7, fig.fullwidth=TRUE}
+# ord: order of TFs in the heatmap. If not provided, will order TF by clustering Z-scores
+# ord2: order of cell types in the heatmap. If not provided, will order cell types by clustering Z-scores
+# th: only plot Z-score if it is above th. 
+convert2plot <- function(Zscore, tf_exp_mean, label = 'zscore', th = 3, ord2 = NULL, ord = NULL)
+{
+  Zscore2 = Zscore
+  Zscore2[Zscore2<th] = 0
+  if(is.null(ord))
+  {
+    ord = hclust(dist(Zscore2, method = 'manhattan')) # clustering similar TF motifs, zscore1
+    ord = ord$order
+  }
+  if(is.null(ord2))
+  {
+    ord2 = hclust(dist(t(Zscore2), method = 'manhattan')) # clustering similar TF motifs, zscore1
+    ord2 = ord2$order
+  }
+  Zscore = Zscore[ord, ord2]
+  
+  Zscore2 = Zscore
+  Zscore2[Zscore2 < th] = NA
+  Zscore2 = as.matrix(Zscore2)
+  Zscore2 = reshape2::melt(Zscore2)
+  colnames(Zscore2) = c('enhancer', 'celltype', label) 
+  
+  tf_exp_mean = tf_exp_mean[ord,ord2]
+  all(rownames(Zscore) == rownames(tf_exp_mean))
+  all(colnames(Zscore) == colnames(tf_exp_mean))
+  
+  tf_exp_mean2 = reshape2::melt(as.matrix(tf_exp_mean))
+  colnames(tf_exp_mean2) = c('enhancer', 'celltype', 'expression') 
+  tf_exp_mean2[tf_exp_mean2$expression > 5, 'expression'] = 5 
+  return(list(Zscore2, tf_exp_mean2))
+}
+ord2 = na.omit(tr$tip.label[tr$edge[,2]])
+res2 = convert2plot(res[[1]][tfs,], res[[2]][tfs,], ord2 = ord2)
+ggplot(res2[[1]], aes(x=enhancer , y=celltype, group=enhancer)) +
+  geom_tile(data = res2[[2]], mapping =  aes(fill= expression)) + geom_point(aes(size = zscore),  alpha = 0.8) + xlab('') +
+  theme_bw() +theme(axis.text.x = element_text(angle = 90, hjust=1)) + 
+  scale_fill_gradient2(low = "mediumblue",  high = "red2", space = "Lab") + scale_size(range = c(0.5, 6))
+```
+
+
+Lastly, we can plot top TFs on the cell type tree.
+```{r tree_topTF, eval=TRUE, warning=FALSE, fig.width=7, fig.height=7, fig.fullwidth=TRUE}
+
+# get top TFs for each cell type including internal nodes
+res = computeTFexp(tf_exp, Zscore, label, tr = tr)
+nn = sapply(1:ncol(res[[1]]), function(i) { # iterate over all the cell types
+  y = sum(res[[1]][,i] >3) # select TFs with Z-score > 3
+  x = order(-res[[1]][,i])[1:min(50,y)] # further top 50 TFs if too many to plot
+  x = rownames(res[[1]])[x]
+  intersect(intersect(x, rownames(res[[2]])[res[[2]][,i] > 0.5]), names(posTF)) # select TF with standarized expression (>0.5) and correlation
+  })
+names(nn) = colnames(res[[1]])
+trr <- root(tr, outgroup = c('Peric.','EC'), resolve.root = TRUE)
+tr1 = trr
+tr1$node.label = sapply(nn[trr$node.label], function(x) paste(x, collapse = ','))
+tr1$tip.label = sapply(nn[trr$tip.label], function(x) paste(x, collapse = ','))
+
+# reduce TFs on the cell type tree: each TF will only appear in the most upstream node in which the TF is selected
+nodes = which(!is.na(names(tr1$node.label)))
+for(e in nodes)
+{
+  st = subtrees(tr1)
+  a = tr1$node.label[e]
+  a = strsplit(a, ',')[[1]]
+  for(i in 1:length(st[[e]]$tip.label))
+  {
+    b = st[[e]]$tip.label[i]
+    if(b == '') next
+    tr1$tip.label[names(b)]  = paste(setdiff(strsplit(b, ',')[[1]], a), collapse = ',')
+  }
+  if(length(st[[e]]$node.label) < 2) next
+  for(i in 2:length(st[[e]]$node.label))
+  {
+    b = st[[e]]$node.label[i]
+    if(b == '') next
+    tr1$node.label[names(b)]  = paste(setdiff(strsplit(b, ',')[[1]], a), collapse = ',')
+  }
+}
+
+td <- data.frame(node = 1:length(trr$tip.label),
+                'TFs' = tr1$tip.label, check.names = F)
+nd <- data.frame(node = (1:length(trr$node.label)) + length(trr$tip.label),
+                 'TFs' = tr1$node.label, check.names = F)
+d <- rbind(td, nd)
+d[d$TFs=='', 'TFs'] = NA
+tree <- full_join(trr, d, by = 'node')
+
+ggtree(tree, branch.length = 'none') + geom_tiplab(hjust = -0.5) + xlim(0, 15) + geom_label(aes(x = branch, label=TFs)) 
+```
+
+#### Identify cell type-specific TFs using ChIPSeq data
+Instead motifs, we can input TF ChIP-Seq peaks in brain and use CellWalker2 to identify cell type-specific TFs. We collected ChIP=Seq data from [ReMap2022](https://remap.univ-amu.fr/storage/remap2022/hg38/MACS2/remap2022_nr_macs2_hg38_v1_0.bed.gz). Subset of peaks in brain are included 
+
+```{r prepare_ChIPSeq, eval=TRUE}
+# input chipseq
+chipseq = readRDS(system.file("extdata", 'remap2022_nr_macs2_hg38_brain_tfs.rds', package = "CellWalkR"))
+# overlap ChIPSeq peaks with pRE
+chip_peaks = GRanges(chipseq[,1:3])
+pRE = GRanges(pRE)
+overlaps = findOverlaps(chip_peaks, pRE)
+chipseq2 = cbind(chipseq[queryHits(overlaps), ], as.data.frame(pRE[subjectHits(overlaps),]))
+chipseq2 = unique(chipseq2[, c(5:7,4)])
+```
+Then, we compute cell-to-label edges. We treat each TF as a bulk label and each TF connects to each cell through the chromatin accessibilty of pREs with TF ChIP-Seq peaks. We connect both cells from multiomic and unpaired ATACSeq to TFs.
+
+```{r labelEdges6, eval=TRUE}
+labelEdges1 = computeBulkEdges(chipseq2, peaks0, ATAC_Mat0)
+labelEdges2 = computeBulkEdges(chipseq2, peaks, ATAC_Mat)
+labelEdges2 = rbind(labelEdges1, labelEdges2)
+```
+
+Finally, we identify TFs whose peaks are enriched in pREs that are active in specific cell types. We convert `chipseq2` to a binary matrix showing the present/absence of peak in each pRE that can be used by `annotateBulkRegion`.
+
+
+```{r mapTFs_ChIPSeq, eval=TRUE}
+regionMat = convertToMatrix(chipseq2) # a data.table with sequence name of pRE as the first column and clusters (TFs) as the following columns
+groups1 =  rep(0, nrow(labelEdges)) # no permutation between cell-to cell types edges
+groups2 = rep(1, nrow(regionMat)) # permutation between all motifs and regions
+cellWalk2_chip = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, groups1, groups2,
+                               regionMat, list(ATAC_Mat0, ATAC_Mat), list(peaks0, peaks), 
+                               tr1 = tr, wtree = c(1, 0.1), labelEdgeWeights = NULL, sampleDepth = 2000,
+                               parallel = T, numCores = 8)
+
+```
+
+We can visualize Z-scores using ChIP-Seq peaks using dotplot. Each row is a cell type including internal nodes on the tree and each column is a TF. The internal node is names by two cell types among its descendents and the depth of the node.
+
+```{r heatmap_chip, eval=TRUE, warning=FALSE, fig.width=7, fig.height=7, fig.fullwidth=TRUE}
+Zscore_chip = cellWalk2_chip$zscore[, tr$edge[,2]] # reorder cell types so that cell types closer in the tree will be closer on the heatmap
+p1 = plotZscoreDotplot(Zscore_chip, th = 2)
+p1
+```
+
+
+
+## Session Information
+
+```{r session-info}
+sessionInfo()
+```
