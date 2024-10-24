@@ -106,7 +106,7 @@ We can also construct cell graph without unpaired scATAC-Seq:
 cellgraph = constructCellGraph(counts,ATAC_Mat0, peaks0, counts2) # without ATACSeq
 ```
 
-#### Map region-specific pREs to cell types
+#### Labeling region-specific pREs to cell types
 
 We further input basal ganglia or cortex specific pREs and compute
 cell-to-label edges. In this case, the labels are *basal ganglia* and
@@ -222,7 +222,7 @@ p1
 
 ![](CellWalker2_Multi_files/figure-markdown_github/plotTree-1.png)
 
-#### Identify cell type-specific TFs using motifs
+#### Mapping transcription factors to cell types using motifs
 
 First, we input the genomic coordinates of pREs as a bed file and
 identify TF motifs from JASPAR2020 within each pRE using Signac. For
@@ -592,7 +592,7 @@ ggtree(tree, branch.length = 'none') + geom_tiplab(hjust = -0.5) + xlim(0, 15) +
 
 ![](CellWalker2_Multi_files/figure-markdown_github/tree_topTF-1.png)
 
-#### Identify cell type-specific TFs using ChIP-Seq data
+#### Mapping transcription factors to cell types using ChIP-Seq peaks
 
 Instead motifs, we can input TF ChIP-Seq peaks in the brain and use
 CellWalker2 to identify cell type-specific TFs. We collected ChIP-Seq

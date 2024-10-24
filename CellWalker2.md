@@ -22,23 +22,30 @@ $ R
 
 ## Usage
 
-1.  [Getting Started with CellWalker2](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2)
-2.  [Use CellWalker2 for scRNA-Seq data (PBMC)](examples/CellWalker2_RNASeq_Vignette.md)
-    1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
-    2.  [Cell type annotation](examples/CellWalker2_RNASeq_Vignette.md#cell-type-annotation)
+####  [Getting Started with CellWalker2](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2)
+#### [Use CellWalker2 for scRNA-Seq data (PBMC)](examples/CellWalker2_RNASeq_Vignette.md)
+1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
+2.  [Labeling cells](examples/CellWalker2_RNASeq_Vignette.md#labeling-cells)
+    A sneakpeek of the result: 
     <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/evalAnnot-1.png" id="id" class="class" height="200" />
     
-    3.  [Cell types (trees) mapping](examples/CellWalker2_RNASeq_Vignette.md#Cell-types-trees-mapping)
+3.  [Comparing cell types or cell type trees](examples/CellWalker2_RNASeq_Vignette.md#comparing-cell-types-or-cell-type-trees)
+    A sneakpeek of the result: 
     <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png" id="id" class="class" height="200" />
 
-3.  [Use CellWalker2 for multiomic data (human developing cortex)](examples/CellWalker2_Multiomic_Vignette.md)
-    1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
-    2.  [Process RNASeq data](examples/CellWalker2_Multiomic_Vignette.md#process-rnaseq-data)
-    3.  [Compute cell-to-cell type edges](examples/CellWalker2_Multiomic_Vignette.md#compute-cell-to-cell-type-edges)
-    4.  [Construct cell-to-cell graph](examples/CellWalker2_Multiomic_Vignette.md#construct-cell-to-cell-graph)
-    5.  [Map region-specific pREs to cell types](examples/CellWalker2_Multiomic_Vignette.md#map-region-specific-pREs-to-cell-types)
-    6.  [Identify cell type-specific transcription factors using motifs](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-transcription-factors-tfs)
-    7.  [Identify cell type-specific transcription factors using ChIP-Seq peaks](examples/CellWalker2_Multiomic_Vignette.md#identify-cell-type-specific-transcription-factors-tfs)
+####  [Use CellWalker2 for multiomic data (human developing cortex)](examples/CellWalker2_Multiomic_Vignette.md)
+1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
+2.  [Process RNASeq data](examples/CellWalker2_Multiomic_Vignette.md#process-rnaseq-data)
+3.  [Compute cell-to-cell type edges](examples/CellWalker2_Multiomic_Vignette.md#compute-cell-to-cell-type-edges)
+4.  [Construct cell-to-cell graph](examples/CellWalker2_Multiomic_Vignette.md#construct-cell-to-cell-graph)
+5.  [Labeling region-specific pREs by cell types](examples/CellWalker2_Multiomic_Vignette.md#labeling-region-specific-pREs-by-cell-types)
+    <img src="examples/CellWalker2_Multi_files/figure-markdown_github/plotTree-1.png" id="id" class="class" height="200" />
+
+6.  [Mapping transcription factors to cell types using motifs](examples/CellWalker2_Multiomic_Vignette.md#mapping-transcription-factors-to-cell-types-using-motifs)
+    <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap-1.png" id="id" class="class" height="200" /><img src="examples/CellWalker2_Multi_files/figure-markdown_github/tree_topTF-1.png" id="id" class="class" height="200" />
+
+7.  [Mapping transcription factors to cell types using ChIP-Seq peaks](examples/CellWalker2_Multiomic_Vignette.md#mapping-transcription-factors-to-cell-types-using-chip-seq-peaks)
+    <img src="examples/CellWalker2_Multi_files/figure-markdown_github/heatmap_chip-1.png" id="id" class="class" height="200" />
     
 
 ## Citation
