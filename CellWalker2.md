@@ -23,7 +23,7 @@ $ R
 ## Usage
 
 ####  Getting Started with CellWalker2 ([start](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2))
-#### Use CellWalker2 for scRNA-Seq data ([human PBMC)](examples/CellWalker2_RNASeq_Vignette.md))
+#### Use CellWalker2 for scRNA-Seq Data ([human PBMC](examples/CellWalker2_RNASeq_Vignette.md))
 1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
 2.  [Labeling cells](examples/CellWalker2_RNASeq_Vignette.md#labeling-cells)
     <p align="left">
@@ -34,7 +34,7 @@ $ R
         <img src="examples/CellWalker2_Vignette_files/figure-markdown_github/plotMap-1.png" id="id" class="class" height="200" />
     </p>
 
-#### Use CellWalker2 for multiomic data ([human developing cortex)](examples/CellWalker2_Multiomic_Vignette.md))
+#### Use CellWalker2 for Multiomic Data ([human developing cortex](examples/CellWalker2_Multiomic_Vignette.md))
 1.  [Load data](examples/CellWalker2_Multiomic_Vignette.md#load-data)
 2.  [Process RNASeq data](examples/CellWalker2_Multiomic_Vignette.md#process-rnaseq-data)
 3.  [Compute cell-to-cell type edges](examples/CellWalker2_Multiomic_Vignette.md#compute-cell-to-cell-type-edges)
