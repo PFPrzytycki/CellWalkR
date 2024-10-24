@@ -106,7 +106,7 @@ We can also construct cell graph without unpaired scATAC-Seq:
 cellgraph = constructCellGraph(counts,ATAC_Mat0, peaks0, counts2) # without ATACSeq
 ```
 
-#### Labeling region-specific pREs to cell types
+#### Labeling region-specific pREs by cell types
 
 We further input basal ganglia or cortex specific pREs and compute
 cell-to-label edges. In this case, the labels are *basal ganglia* and
