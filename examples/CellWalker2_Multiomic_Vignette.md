@@ -529,7 +529,7 @@ ggplot(res2[[1]], aes(x=enhancer , y=celltype, group=enhancer)) +
 
 ![](CellWalker2_Multi_files/figure-markdown_github/heatmap_sel-1.png)
 
-Lastly, we can plot top TFs on the cell type tree.
+Lastly, we can plot top TFs on the cell type tree. MEF2C regulates cortical excitatory synapses and is associated with many neuron developmental disorders. TBR1 regulates deep layers of neurons in developing neocortex. EMX2 promotes neuronogensis. ZIC5 is a zinc finger transcription factor which plays important roles in cell-fate specification and cell proliferation during neural crest development. TFAP2C has a general role in maintaining pluripotency. PLAGL1 is upregulated in pediatric central nervous system tumors that may arise from early to intermediate neural progenitor cells.
 
 ``` r
 
