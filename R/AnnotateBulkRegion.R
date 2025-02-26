@@ -69,13 +69,13 @@ computeBulkEdges = function(regions, peaks, ATAC_Mat, drop = T)
     }
   }
 
-  if(missing(peaks) | !is(peaks, 'data.frame'))
-  {
-    stop('Must input genomic coordinates of peaks for the ATACSeq data as a dataframe')
-  }
-  if(ncol(peaks) < 3 | is.null(colnames(peaks)) | any(colnames(peaks)[1:3]!=c('seqnames', 'start', 'end'))){
-    stop('peaks must have at least 3 columns with names seqnames, start and end')
-  }
+#  if(missing(peaks) | !is(peaks, 'data.frame'))
+#  {
+#    stop('Must input genomic coordinates of peaks for the ATACSeq data as a dataframe')
+#  }
+#  if(ncol(peaks) < 3 | is.null(colnames(peaks)) | any(colnames(peaks)[1:3]!=c('seqnames', 'start', 'end'))){
+#    stop('peaks must have at least 3 columns with names seqnames, start and end')
+#  }
   if(missing(ATAC_Mat) | !(is(ATAC_Mat, 'Matrix') | is(ATAC_Mat, 'matrix') | is(ATAC_Mat, 'data.frame')))
   {
     stop('Must input ATACSeq data as a matrix or dataframe')
@@ -324,8 +324,8 @@ annotateBulkRegion = function(cellGraph, labelEdges, labelEdges2, groups1 = 1, g
   }
 
   info1 = info1_rand[[1]]
-  if(compute.Zscore) zscore = compute_zscore(info1, info1_rand[2:(nround+1)], nround) else zscore = NULL
-  cellWalk = list(infMat=info1, zscore= zscore, labelEdgeWeights = labelEdgeWeights)
+  if(compute.Zscore) reslist = compute_zscore(info1, info1_rand[2:(nround+1)], nround) else zscore = NULL
+  cellWalk = list(infMat=info1, zscore= reslist$zscore, infomean = reslist$mean, infovar = reslist$var, labelEdgeWeights = labelEdgeWeights)
   class(cellWalk) = "cellWalk2"
   return(cellWalk)
 }

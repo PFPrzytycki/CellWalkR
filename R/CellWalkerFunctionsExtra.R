@@ -213,22 +213,23 @@ simulate_rand <- function(labelEdges2) #quantile
 compute_zscore <- function(info, info_rand, nround)
 {
   info_mean = matrix(0, nrow(info), ncol(info))
-  info_std = matrix(0, nrow(info), ncol(info))
+  info_var = matrix(0, nrow(info), ncol(info))
   for(i in 1:nround)
   {
     info_mean = info_mean + info_rand[[i]]
-    info_std = info_std + info_rand[[i]]^2
+    info_var = info_var + info_rand[[i]]^2
   }
 
   info_mean = info_mean/nround
-  info_std = info_std/nround - info_mean^2
+  info_var = info_var/nround
+  info_std = info_var - info_mean^2
   if(any(info_std < 0)) {
     message('some of variances are zero or negative when computing Z-score')
     info_std[info_std < 0] = 0
   }
   zscore = (info - info_mean)/sqrt(info_std)
   zscore[zscore <0] = 0
-  return(zscore)
+  return(list('zscore' = zscore, 'mean' = info_mean, 'var' = info_var))
 }
 
 # Compute Cosine distance on sparse matrix between the rows

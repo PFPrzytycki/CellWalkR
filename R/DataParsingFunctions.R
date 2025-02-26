@@ -1114,7 +1114,7 @@ processRNASeq = function(RNAMat, meta.data = NULL, group.col = NULL, do.findMark
   }
 
   if(buildTree){
-    RNASeurat =  Seurat::BuildClusterTree(RNASeurat, dims = dims)
+    RNASeurat =  Seurat::BuildClusterTree(RNASeurat)
     tr =  Seurat::Tool(object = RNASeurat, slot = 'Seurat::BuildClusterTree')
   }
 
@@ -1189,9 +1189,9 @@ mergeRNASeq = function(RNAMatList, integrate = TRUE, min.cells = 3, scale.factor
   }
   if(integrate)
   {
-    return(list("expr_norm" = RNASeurat@assays$integrated@scale.data, "cellGraph" = cellgraph))
+    return(list('counts' = RNASeurat@assays$RNA@counts, "expr_norm" = RNASeurat@assays$integrated@scale.data, "cellGraph" = cellgraph))
   }else{
-    return(list("expr_norm" = RNASeurat@assays$RNA@scale.data, "cellGraph" = cellgraph))
+    return(list('counts' = RNASeurat@assays$RNA@counts, "expr_norm" = RNASeurat@assays$RNA@scale.data, "cellGraph" = cellgraph))
   }
 }
 
