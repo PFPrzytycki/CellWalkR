@@ -324,7 +324,11 @@ annotateBulkRegion = function(cellGraph, labelEdges, labelEdges2, groups1 = 1, g
   }
 
   info1 = info1_rand[[1]]
-  if(compute.Zscore) reslist = compute_zscore(info1, info1_rand[2:(nround+1)], nround) else zscore = NULL
+  if(compute.Zscore){
+    reslist = compute_zscore(info1, info1_rand[2:(nround+1)], nround)
+  }else{
+    reslist = list()
+  }
   cellWalk = list(infMat=info1, zscore= reslist$zscore, infomean = reslist$mean, infovar = reslist$var, labelEdgeWeights = labelEdgeWeights)
   class(cellWalk) = "cellWalk2"
   return(cellWalk)
