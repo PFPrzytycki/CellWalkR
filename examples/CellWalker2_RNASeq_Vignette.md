@@ -33,8 +33,8 @@ type labels (or trees) from these two datasets.
 #### load scRNA-Seq data
 
 ``` r
-load('../data-raw/Ren_subsample.rdat')
-load('../data-raw/Yoshida_subsample.rdat')
+load('../data/Ren_subsample.rdat')
+load('../data/Yoshida_subsample.rdat')
 
 # remove cell types with too few cells (less than 5)
 cts = sort(xtabs(~meta.data1$Original_annotation))
@@ -98,8 +98,8 @@ dataset2 = processRNASeq(counts2, do.findMarkers = F, computeKNN = T)
 #> Number of communities: 6
 #> Elapsed time: 0 seconds
 #markers = dataset1$markers  # if do.findMarkers = T
-markers = read.csv('../data-raw/Ren_markers.csv')
-tree = readRDS('../data-raw/Ren_tree.rds')
+markers = read.csv('../data/Ren_markers.csv')
+tree = readRDS('../data/Ren_tree.rds')
 tree = ape::keep.tip(tree, unique(meta.data1$Original_annotation))# only keep the tips exist in current dataset
 dataset1$tr = tree
 dataset1$markers = markers
@@ -169,7 +169,7 @@ aa = data.table(aa)
 aa = aa[, list(count= .N), by = c('Yoshida', 'Ren')]
 aa[, prob:= count/sum(count), by =  'Yoshida']
 
-load('../data-raw/Ren_Yoshida_celltype_order.rdat') # load cell type orders for dotplot
+load('../data/Ren_Yoshida_celltype_order.rdat') # load cell type orders for dotplot
 
 aa$Ren = factor(aa$Ren, levels = ll)
 aa$Yoshida = factor(aa$Yoshida, levels = ll2)
@@ -197,9 +197,9 @@ dataset2= processRNASeq(counts2, meta.data2, group.col = 'Original_annotation', 
 #> Warning: Feature names cannot have underscores ('_'), replacing with dashes
 #> ('-')
 #> Centering and scaling data matrix
-dataset2$markers = read.csv('../data-raw/Yoshida_markers.csv')
+dataset2$markers = read.csv('../data/Yoshida_markers.csv')
 
-tree = readRDS('../data-raw/Yoshida_tree.rds')
+tree = readRDS('../data/Yoshida_tree.rds')
 tree = ape::keep.tip(tree, unique(meta.data2$Original_annotation))# only keep the tips exist in current dataset
 dataset2$tr = tree
 ```
