@@ -33,8 +33,11 @@ type labels (or trees) from these two datasets.
 #### load scRNA-Seq data
 
 ``` r
-load('../data/Ren_subsample.rdat')
-load('../data/Yoshida_subsample.rdat')
+# 'data/SampleSingleCellRNASeq.rda' should be loaded upon loading the package
+counts1 = SampleSingleCellRNASeq$counts1
+counts2 = SampleSingleCellRNASeq$counts2
+meta.data1 = SampleSingleCellRNASeq$meta.data1
+meta.data2 = SampleSingleCellRNASeq$meta.data2
 
 # remove cell types with too few cells (less than 5)
 cts = sort(xtabs(~meta.data1$Original_annotation))
@@ -98,8 +101,8 @@ dataset2 = processRNASeq(counts2, do.findMarkers = F, computeKNN = T)
 #> Number of communities: 6
 #> Elapsed time: 0 seconds
 #markers = dataset1$markers  # if do.findMarkers = T
-markers = read.csv('../data/Ren_markers.csv')
-tree = readRDS('../data/Ren_tree.rds')
+markers = SampleSingleCellRNASeq$RNA_markers1
+tree = SampleSingleCellRNASeq$tree1
 tree = ape::keep.tip(tree, unique(meta.data1$Original_annotation))# only keep the tips exist in current dataset
 dataset1$tr = tree
 dataset1$markers = markers
@@ -169,10 +172,9 @@ aa = data.table(aa)
 aa = aa[, list(count= .N), by = c('Yoshida', 'Ren')]
 aa[, prob:= count/sum(count), by =  'Yoshida']
 
-load('../data/Ren_Yoshida_celltype_order.rdat') # load cell type orders for dotplot
 
-aa$Ren = factor(aa$Ren, levels = ll)
-aa$Yoshida = factor(aa$Yoshida, levels = ll2)
+aa$Ren = factor(aa$Ren, levels = SampleSingleCellRNASeq$label_ord1)
+aa$Yoshida = factor(aa$Yoshida, levels = SampleSingleCellRNASeq$label_ord2)
 
 ggplot(aa, aes(x= Ren, y=Yoshida, size=count, color=prob, group=Ren)) + 
   geom_point(alpha = 0.8) + 
@@ -197,9 +199,9 @@ dataset2= processRNASeq(counts2, meta.data2, group.col = 'Original_annotation', 
 #> Warning: Feature names cannot have underscores ('_'), replacing with dashes
 #> ('-')
 #> Centering and scaling data matrix
-dataset2$markers = read.csv('../data/Yoshida_markers.csv')
+dataset2$markers = SampleSingleCellRNASeq$RNA_markers2
 
-tree = readRDS('../data/Yoshida_tree.rds')
+tree = SampleSingleCellRNASeq$tree2
 tree = ape::keep.tip(tree, unique(meta.data2$Original_annotation))# only keep the tips exist in current dataset
 dataset2$tr = tree
 ```
@@ -407,8 +409,8 @@ bb = reshape2::melt(Zscore[1:((nrow(Zscore) + 1)/2),1:((ncol(Zscore) + 1)/2)]) #
 bb$Var1 = sub( '_[0-9]$', '',bb$Var1)
 bb$Var2 = sub( '_[0-9]$', '',bb$Var2)
 colnames(bb) = c('Yoshida','Ren', 'Zscores') 
-bb$Ren = factor(bb$Ren, levels = ll)
-bb$Yoshida = factor(bb$Yoshida, levels = ll2)
+bb$Ren = factor(bb$Ren, levels = SampleSingleCellRNASeq$label_ord1)
+bb$Yoshida = factor(bb$Yoshida, levels = SampleSingleCellRNASeq$label_ord2)
 
 ggplot(bb, aes(x= Ren, y=Yoshida, group=Ren)) + 
   geom_tile(aes(fill=Zscores), alpha = 0.6) + theme_bw() + 
