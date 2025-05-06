@@ -338,14 +338,27 @@ mapCellTypes <- function(cellGraph, labelEdgesList, labelEdgeWeights = NULL, wtr
   }
 
   info1 = info1_rand[[1]]
-  if(compute.Zscore) zscore = compute_zscore(info1, info1_rand[2:(nround+1)], nround)
+  if(compute.Zscore){
+       reslist = compute_zscore(info1, info1_rand[2:(nround+1)], nround)
+       zscore = reslist$zscore
+       infomean = reslist$mean 
+       infovar = reslist$var
+  }else{
+       zscore = NULL
+       infomean = NULL
+       infovar = NULL
+  }
   idx = cumsum(ncellTypes)
   sts = c(1, idx[1:(length(idx)-1)]+1)
   params = expand.grid(1:length(idx), 1:length(idx))
   params = params[params[,1]!=params[,2,], ]
   info = Map(function(u,v) info1[sts[u]:idx[u],sts[v]:idx[v]], params[,2],  params[,1])
-  if(compute.Zscore) zscore = Map(function(u,v) zscore[sts[u]:idx[u],sts[v]:idx[v]], params[,2],  params[,1]) else zscore = NULL
-  cellWalk = list(infMat=info, zscore= zscore, labelEdgeWeights = labelEdgeWeights)
+  if(compute.Zscore){
+       zscore = Map(function(u,v) zscore[sts[u]:idx[u],sts[v]:idx[v]], params[,2],  params[,1])
+       infomean = Map(function(u,v) infomean[sts[u]:idx[u],sts[v]:idx[v]], params[,2],  params[,1])
+       infovar = Map(function(u,v) infovar[sts[u]:idx[u],sts[v]:idx[v]], params[,2],  params[,1])
+  }
+  cellWalk = list(infMat=info, zscore= zscore, infomean = infomean, infovar = infovar, labelEdgeWeights = labelEdgeWeights)
   class(cellWalk) = "cellWalk2"
   return(cellWalk)
 }
