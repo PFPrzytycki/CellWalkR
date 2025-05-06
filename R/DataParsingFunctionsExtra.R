@@ -1,3 +1,106 @@
+#' Construct cell-to-cell graph from two multiomic data
+#'
+#' \code{constructCellGraph} construct cell-to-cell graph integrating two multiomic data.
+#'
+#' @param RNA_MatList a list of gene-by-cell count matrix, RNASeq part of the multiomic data. Rownames are genes and colnames are cells
+#' @param ATAC_MatList a list of peak-by-cell count matrix, ATACSeq part of the multiomic data. Must have barcodes as colnames
+#' @param peaksList a list of dataframe of genomic coordinates of peaks of ATACSeq part of the multiomic data. Must contain at least three columns
+#'  with names 'seqnames', 'start' and 'end'.
+#' @param distan distance metrics for compute similarity of ATACSeq profile. Either sparseJaccard, sparseCosine or LSI.
+#' @param filterGene filter peaks close to gene body and promoters to compute cell-cell similarity
+#' @param ext_region expand gene region by \code{ext_region} bp for filtering peaks. Default: 1e4
+#' @param filterFreq filter peaks by proportion of cells having the peaks. a vector of low and high proportion cutoffs
+#' @param ndim the PC dimensions to compute cell-cell distance using RNASeq data
+#' @param logarithm Whether to take logarithm of the cell-cell distance using ATACSeq data
+#' @param ATAC_weight the weight of ATACSeq similarity for combining ATACSeq and RNASeq profile of multiomic data. \code{ATAC_weight} ATAC similarity +
+#' (1-\code{ATAC_weight}) RNA similarity. Must to between 0 and 1.
+#' @param normalized Whether to normalize the cell-cell distances between 0 and 1
+#' @param knn Defines k for the k-nearest neighbor algorithm
+#' @param ... additional parameters used by method
+#' @return matrix of cell-to-cell similarity
+#' @export
+constructMultiomicCellGraph = function(RNA_MatList, ATAC_MatList, peaksList, distan = 'sparseCosine', filterGene = T, ext_region = 1e4,
+                              ATAC_weight = 0.3, ndim = 1:30, filterFreq = c(0.002, 0.2),  logarithm = T,  normalized = T, knn = 30 )
+{
+  if((length(RNA_MatList) != length(ATAC_MatList)) | (length(peaksList) != length(ATAC_MatList)))
+  {
+    stop('RNA, ATAC and peaks lists must have the same length')
+  }
+  cellnames = NULL
+  for(i in 1:length(RNA_MatList))
+  {
+    RNA_Mat = RNA_MatList[[i]]
+    ATAC_Mat = ATAC_MatList[[i]]
+    if(!(is(RNA_Mat, 'Matrix') | is(RNA_Mat, 'matrix') | is(RNA_Mat, 'data.frame')))
+    {
+      stop('Must input RNASeq part of multiomic data as a matrix or dataframe')
+    }
+    if(is.null(colnames(RNA_Mat)) | is.null(rownames(RNA_Mat))){
+      stop('RNA_Mat must have geneIDs as rownames and cell barcodes  as colnames')
+    }
+    if(!(is(ATAC_Mat, 'Matrix') | is(ATAC_Mat, 'matrix') | is(ATAC_Mat, 'data.frame')))
+    {
+      stop('Must input ATACSeq part of multiomic data as a matrix or dataframe')
+    }
+    if(is.null(colnames(ATAC_Mat)) | any(colnames(ATAC_Mat) != colnames(RNA_Mat))){
+      stop('ATAC_Mat must have cell barcodes as colnames, same order as colnames of RNA_Mat')
+    }
+
+    if(!is.null(cellnames) & any(colnames(RNA_Mat) %in% cellnames)){
+      stop('RNA_Mat must have different cell barcodes')
+    }
+    cellnames = c(cellnames, colnames(RNA_Mat) )
+  }
+
+  for(peaks in peaksList)
+  {
+    if(!is(peaks, 'data.frame'))
+    {
+      stop('Must input genomic coordinates of peaks for the ATACSeq part of multiomic data as a dataframe')
+    }
+    if(ncol(peaks) < 3 | is.null(colnames(peaks)) | any(colnames(peaks)[1:3]!=c('seqnames', 'start', 'end'))){
+      stop('peaks must have at least 3 columns with names seqnames, start and end')
+    }
+  }
+
+  message('compute cell-cell similarity for RNASeq data')
+  mergeRNA = mergeRNASeq(RNA_MatList, integrate = T, computeKNN = F) # generate cell-cell graph combining RNASeq datasets
+  cellgraph_R = mergeRNA$cellGraph
+  if(logarithm){
+    cellgraph_R = -log(1-cellgraph_R + 0.01)
+    cellgraph_R = (cellgraph_R - mean(cellgraph_R))/sd(cellgraph_R)
+  }
+
+
+  message('compute cell-cell similarity for ATACSeq data')
+  mergeATAC = list('mat' = ATAC_MatList[[1]], 'peaks' = peaksList[[1]])
+  if(length(ATAC_MatList) > 1)
+  {
+    for(i in 2:length(ATAC_MatList))
+    {
+      mergeATAC = mergeATACSeq(mergeATAC$mat, mergeATAC$peaks, ATAC_MatList[[i]], peaksList[[i]])
+    }
+  }
+  cellgraph_A = constructCellGraphFromATAC(mergeATAC$mat, mergeATAC$peaks,  distan = distan, filterGene = filterGene, ext_region = ext_region,
+                                           filterFreq = filterFreq,  logarithm = logarithm,  normalized = normalized)
+
+  stopifnot(all(colnames(cellgraph_R) == colnames(cellgraph_A)))
+
+  cellgraph_comb = cellgraph_A * ATAC_weight + cellgraph_R * (1 - ATAC_weight)
+  cellgraph_comb = as.matrix(cellgraph_comb)
+
+  if(logarithm)
+  {
+    cellgraph_comb = max(cellgraph_comb) - cellgraph_comb # distance
+    diag(cellgraph_comb) = 0
+    knn_graph = Seurat::FindNeighbors(cellgraph_comb, distance.matrix = T, k.param = knn)
+  }else{
+    knn_graph = Seurat::FindNeighbors(1-cellgraph_comb, distance.matrix = T, k.param = knn)
+  }
+  knn_graph$snn
+
+}
+
 #' Construct cell-to-cell graph from multiple sources
 #'
 #' \code{constructCellGraph} construct cell-to-cell graph integrating RNASeq, ATACSeq and multiomic data.
@@ -196,11 +299,11 @@ constructCellGraphFromATAC = function(ATAC_Mat, peaks, distan = 'sparseCosine', 
   cellEdges = computeCellSim(Matrix::t(ATAC_Mat),distan) # celll-to-cell similarity
   rownames(cellEdges) = colnames(cellEdges) = colnames(ATAC_Mat)
   cellEdges = as.matrix(cellEdges)
-  
+
   if(logarithm){
     cellEdges = log(cellEdges + 0.01)
   }
-  if(normalized){      
+  if(normalized){
     cellEdges = (cellEdges - mean(cellEdges))/sd(cellEdges)
   }
   cellEdges
