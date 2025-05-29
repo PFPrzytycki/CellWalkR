@@ -307,7 +307,11 @@ annotateBulkRegion = function(cellGraph, labelEdges, labelEdges2, groups1 = 1, g
 
     if(!is.null(tr1))
     {
-      expandLabelEdges = labelEdgeWeights[1] * cbind(labelEdges_rand, matrix(0,dim(labelEdges_rand)[1], tr1$Nnode)) #add 0s to labelEdges to allow room for internal nodes
+      expandLabelEdges = matrix(0, dim(labelEdges_rand)[1], length(allCellTyes))
+      colnames(expandLabelEdges) = allCellTypes
+      labels_col = intersect(allCellTypes, colnames(labelEdges_rand))
+      expandLabelEdges[, labels_col] = labelEdges_rand[, labels_col]
+      expandLabelEdges = labelEdgeWeights[1] * expandLabelEdges #add 0s to labelEdges to allow room for internal nodes
     }else{
       expandLabelEdges = labelEdges_rand * labelEdgeWeights[1]
     }
