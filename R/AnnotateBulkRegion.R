@@ -184,13 +184,13 @@ annotateBulkRegion = function(cellGraph, labelEdges, labelEdges2, groups1 = 1, g
     groups1 = rep(groups1, nrow(labelEdges))
   }
 
-  if(!is.null(tr1))
-  {
-    stopifnot('tree must have tip labels' = !is.null(tr1$tip.label))
-    res = checkLabelEdges(labelEdges, groups1, cellGraph, tips = tr1$tip.label)
-  }else{
+  # if(!is.null(tr1))
+  # {
+  #   stopifnot('tree must have tip labels' = !is.null(tr1$tip.label))
+  #   res = checkLabelEdges(labelEdges, groups1, cellGraph, tips = tr1$tip.label)
+  # }else{
     res = checkLabelEdges(labelEdges, groups1, cellGraph)
-  }
+  #}
   labelEdges = res[[1]]
   groups1 = res[[2]]
 
