@@ -1,0 +1,42 @@
+---
+title: "CellWalker2"
+author: "Zhirui Hu"
+date: "`r Sys.Date()`"
+output: 
+  rmarkdown::md_document:
+    variant: markdown_github
+vignette: >
+  %\VignetteIndexEntry{CellWalker2}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  cache = FALSE,
+  comment = "#>"
+)
+```
+
+## Introduction
+
+CellWalker2 extends the CellWalker method for combining scRNA-seq data with cell type ontologies to annotate cells and compare (hierarchically related) cell type labels, and combinding multiomic, scATAC-seq and scRNA-seq data with cell type labels and other bulk epigenetic data to interpret bulk level annotations at single cell level (see [paper](https://doi.org/10.1186/s13059-021-02279-1) for algorithmic details). This vignette shows an example of running CellWalker2 on 1) simulated scRNA-seq datasets and 2) a small subset of multiomic, scATAC-seq and scRNA-seq data from human developing cortex (see [paper](https://doi.org/10.1016/j.cell.2021.07.039) ) to generate a cellWalk2 object which can then be used to assign cell type labels to cells, map cell type trees as well as assign cell-type specific labels to bulk level annotations.
+
+CellWalker2 use Gene-by-Cell count matrix as input for scRNA-seq data and Cell-by-Peak matrix as input for scATAC-seq data. scATAC-Seq data can be pre-processed by many pipelines including CellRanger, ArchR, SnapATAC, and Cicero, which outputs Cell-by-Peak matrix. Additionally, marker genes, cell type tree and bulk level annotations can be provided to CellWalker2.
+
+## Getting Started with CellWalker2
+
+Currently, CellWalker2 must be installed useing devtools:
+
+```{r installation, eval=FALSE}
+install.packages("devtools")
+devtools::install_github("PFPrzytycki/CellWalk@dev")
+```
+
+
+## Session Information
+
+```{r session-info}
+sessionInfo()
+```
