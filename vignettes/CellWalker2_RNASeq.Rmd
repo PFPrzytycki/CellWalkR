@@ -45,20 +45,6 @@ counts1 = SampleSingleCellRNASeq$counts1
 counts2 = SampleSingleCellRNASeq$counts2
 meta.data1 = SampleSingleCellRNASeq$meta.data1
 meta.data2 = SampleSingleCellRNASeq$meta.data2
-
-
-# remove cell types with too few cells (less than 5)
-cts = sort(xtabs(~meta.data1$Original_annotation))
-lowcts = names(cts)[cts < 5]
-ind_rm = which(meta.data1$Original_annotation %in% lowcts) 
-counts1 = counts1[, -ind_rm]
-meta.data1 = meta.data1[-ind_rm, ]
-
-cts = sort(xtabs(~meta.data2$Original_annotation))
-lowcts = names(cts)[cts < 5]
-ind_rm = which(meta.data2$Original_annotation %in% lowcts) 
-counts2 = counts2[, -ind_rm]
-meta.data2 = meta.data2[-ind_rm, ]
 ```
 
 #### Cell type annotation
@@ -94,6 +80,7 @@ with hierarchical structure:
 results = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL, sampleDepth =1000,
                         labelEdgeOpts = 10^seq(-5,3,1),  tr1 = dataset1$tr,
                         wtree = 10)
+
 ```
 
 without hierarchical structure (not run):
@@ -114,8 +101,7 @@ We compare the cell annotation result with the orignal annotation in the query d
 
 ```{r evalAnnot, eval=TRUE, fig.width=12, fig.height=9, fig.fullwidth=TRUE}
 cellLabel = results[[1]]$cellLabels[rownames(meta.data2)] # cell type labels from CellWalker2
-aa = data.frame('Yoshida' = meta.data2$Original_annotation, 'Ren' = cellLabel) # combine with original annotation
-aa = data.table(aa)
+aa = data.table('Yoshida' = meta.data2$Original_annotation, 'Ren' = cellLabel) # combine with original annotation
 aa = aa[, list(count= .N), by = c('Yoshida', 'Ren')]
 aa[, prob:= count/sum(count), by =  'Yoshida']
 
@@ -207,10 +193,12 @@ treeList = list(dataset1$tr, dataset2$tr)
 # different weights going up/down the tree
 groupsList = list(rep(0, nrow(labelEdges1)), rep(1, nrow(labelEdges2)))
 wtrees = matrix(c(1,0.1,0.1,1), ncol=2) # first row for dataset 1 and second for dataset 2
+start_time <- proc.time()
 cellWalk2_map = mapCellTypes(mergeResult$cellGraph, labelEdgesList, labelEdgeWeights = NULL,
                          treeList = treeList, wtrees = wtrees, groupsList = groupsList,
                          compute.Zscore = TRUE, nround = 55, parallel  = T,  
                          sampleDepth =1000, numCores = 8)
+print(proc.time() - start_time)
 ```
 
 Alternatively, we can connect all the cells to both marker sets if the genes from both datasets are mostly shared.

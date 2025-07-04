@@ -204,7 +204,7 @@ cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtr
 #> permutation round 50
 ```
 
-If you don’t want to tune `leblEdgeWeight`, you can use the following
+If you don’t want to tune `labelEdgeWeight`, you can use the following
 command using the default values or input other values.
 
 ``` r

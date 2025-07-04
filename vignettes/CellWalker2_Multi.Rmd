@@ -29,6 +29,8 @@ library(ape) # for computation on tree
 library(foreach) 
 library(doParallel)
 library(parallel)
+cl<-makeCluster(8)  # change to smaller if your machine doesn't have enough cores
+registerDoParallel(cl)  # for computing Z-score
 ```
 
 ```{r setseed, echo=FALSE}
@@ -131,12 +133,14 @@ We set `labelEdgeWeight = NULL`, so CellWalker2 will tune the weight ratio betwe
 
 
 ```{r annotateBulk, eval=TRUE}
+start.time <- proc.time()
 cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtree = c(1, 0.1),
                                labelEdgeWeights = NULL, sampleDepth = 2000,  parallel = T, 
                                numCores = 8) # with tuning edgeWeights
+print(proc.time() - start.time)
 ```
 
-If you don't want to tune `leblEdgeWeight`, you can use the following command using the default values or input other values.
+If you don't want to tune `labelEdgeWeight`, you can use the following command using the default values or input other values.
 
 ```{r annotateBulk2, eval=FALSE}
 cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, tr1 = tr, wtree = c(1, 0.1))
@@ -180,11 +184,12 @@ Different from previous section, we randomly assign pREs to motifs to generate t
 regionMat = convertToMatrix(motifs) # a data.table with sequence name of pRE as the first column and clusters (TFs) as the following columns
 groups1 =  rep(0, nrow(labelEdges)) # no permutation between cell-to cell types edges
 groups2 = rep(1, nrow(regionMat)) # permutation between all motifs and regions
+start.time <- proc.time()
 cellWalk2 = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, groups1, groups2,
                                regionMat, list(ATAC_Mat0, ATAC_Mat), list(peaks0, peaks), 
                                tr1 = tr, wtree = c(1, 0.1), labelEdgeWeights = NULL, sampleDepth = 2000,
                                parallel = T, numCores = 8)
-
+proc.time() - start.time
 ```
 
 We can visualize Z-scores using dotplot. Each row is a cell type including internal nodes on the tree and each column is a TF. The internal node is names by two cell types among its descendents and the depth of the node.
@@ -396,11 +401,12 @@ Finally, we identify TFs whose peaks are enriched in pREs that are active in spe
 regionMat = convertToMatrix(chipseq2) # a data.table with sequence name of pRE as the first column and clusters (TFs) as the following columns
 groups1 =  rep(0, nrow(labelEdges)) # no permutation between cell-to cell types edges
 groups2 = rep(1, nrow(regionMat)) # permutation between all motifs and regions
+start_time <- proc.time()
 cellWalk2_chip = annotateBulkRegion(cellgraph, labelEdges, labelEdges2, groups1, groups2,
                                regionMat, list(ATAC_Mat0, ATAC_Mat), list(peaks0, peaks), 
                                tr1 = tr, wtree = c(1, 0.1), labelEdgeWeights = NULL, sampleDepth = 2000,
                                parallel = T, numCores = 8)
-
+proc.time() - start_time
 ```
 
 We can visualize Z-scores using ChIP-Seq peaks using dotplot. Each row is a cell type including internal nodes on the tree and each column is a TF. The internal node is names by two cell types among its descendents and the depth of the node.

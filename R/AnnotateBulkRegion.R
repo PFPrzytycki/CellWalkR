@@ -307,7 +307,7 @@ annotateBulkRegion = function(cellGraph, labelEdges, labelEdges2, groups1 = 1, g
 
     if(!is.null(tr1))
     {
-      expandLabelEdges = matrix(0, dim(labelEdges_rand)[1], length(allCellTyes))
+      expandLabelEdges = matrix(0, dim(labelEdges_rand)[1], length(allCellTypes))
       colnames(expandLabelEdges) = allCellTypes
       labels_col = intersect(allCellTypes, colnames(labelEdges_rand))
       expandLabelEdges[, labels_col] = labelEdges_rand[, labels_col]
