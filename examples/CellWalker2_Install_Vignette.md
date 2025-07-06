@@ -31,6 +31,6 @@ Currently, CellWalker2 must be installed using devtools:
 
 ```r
 install.packages("devtools")
-devtools::install_github("PFPrzytycki/CellWalk@dev")
+devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2")
 ```
 
