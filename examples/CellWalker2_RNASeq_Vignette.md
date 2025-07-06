@@ -38,19 +38,6 @@ counts1 = SampleSingleCellRNASeq$counts1
 counts2 = SampleSingleCellRNASeq$counts2
 meta.data1 = SampleSingleCellRNASeq$meta.data1
 meta.data2 = SampleSingleCellRNASeq$meta.data2
-
-# remove cell types with too few cells (less than 5)
-cts = sort(xtabs(~meta.data1$Original_annotation))
-lowcts = names(cts)[cts < 5]
-ind_rm = which(meta.data1$Original_annotation %in% lowcts) 
-counts1 = counts1[, -ind_rm]
-meta.data1 = meta.data1[-ind_rm, ]
-
-cts = sort(xtabs(~meta.data2$Original_annotation))
-lowcts = names(cts)[cts < 5]
-ind_rm = which(meta.data2$Original_annotation %in% lowcts) 
-counts2 = counts2[, -ind_rm]
-meta.data2 = meta.data2[-ind_rm, ]
 ```
 
 #### Labeling cells
@@ -162,7 +149,7 @@ results_parallel = annotateCells(dataset2$cellGraph, labelEdges, weight1 = NULL,
                         labelEdgeOpts = 10^seq(-5,3,1), parallel  = T,  numCores = 8)
 ```
 
-We compare the cell annotation result with the orignal annotation in the
+We compare the cell annotation result with the original annotation in the
 query dataset:
 
 ``` r

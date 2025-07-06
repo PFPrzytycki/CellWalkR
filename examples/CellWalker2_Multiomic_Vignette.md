@@ -29,7 +29,7 @@ columns to make them readable by CellWalker2.
 ``` r
 # load single cell data
 # 'data/SampleCellTypeTree.rda' should be loaded upon loading the package
-devtools::load_all() # load SampleCortexSingleCellData (in R/sysdata.rda)
+# 'data/SampleCortexSingleCellData.rda' should be loaded upon loading the package
 #> ℹ Loading CellWalkR
 
 ATAC_Mat = SampleCortexSingleCellData$ATAC_Mat
