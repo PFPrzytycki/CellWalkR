@@ -34,7 +34,7 @@ conda activate cellWalker2
 conda install -c conda-forge zlib openssl curl libxml2 bzip2 xz pcre2 gsl gmp glp
 
 ```
-Currently, CellWalker2 must be installed using devtools. Also CellWalker2 is only compatible with Seurat v4 if you might need to install it using remotes.
+Currently, CellWalker2 must be installed using devtools. Also CellWalker2 is only compatible with Seurat v4 and you might need to install it using remotes.
 
 
 ```r

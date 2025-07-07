@@ -25,7 +25,7 @@ bulk epigenetic data to annotate cells, compare cell type labels, and probabilit
 
 ## Installation
 
-Install CellWalkR for R using devtools as follows:
+Install CellWalkR for R using devtools as follows (please check CellWalker2 [readme](CellWalker2.md) for detailed instruction):
 
 ``` r
 $ R
