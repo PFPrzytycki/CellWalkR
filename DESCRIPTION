@@ -1,10 +1,13 @@
 Package: CellWalkR
 Type: Package
 Date: 2023-12-1
-Title: An R Package for Integrating and Visualizing Single-Cell and Bulk Data to Resolve Regulatory Elements 
-Version: 1.0.0
-Authors@R: person(given="Pawel F.", family="Przytycki", role=c("aut","cre"), email="pawel.przytycki@gladstone.ucsf.edu")
-Description: CellWalkR is an R package that integrates single-cell open chromatin (scATAC-seq) data with cell type labels and bulk epigenetic data to identify cell type-specific regulatory regions. A GPU implementation and downsampling strategies enable thousands of cells to be processed in seconds. CellWalkR’s user-friendly interface provides interactive analysis and visualization of cell labels and regulatory region mappings.
+Title: An R Package for Integrating and Visualizing Single-Cell and Bulk Data to Resolve Regulatory Elements and Cell Type Hierarchy 
+Version: 2.0.0
+Authors@R: c(
+    person(given="Pawel F.", family="Przytycki", role=c("aut","cre"), email="pawel.przytycki@gladstone.ucsf.edu"),
+    person(given="Zhirui", family="Hu", role=c("aut","cre"), email="zhirui.hu@gladstone.ucsf.edu")
+)
+Description: CellWalkR is an R package that integrates single-cell multiomics data with cell type labels and bulk epigenetic data to identify cell type-specific regulatory regions and map cell type hierarchies. A GPU implementation and downsampling strategies enable thousands of cells to be processed in seconds. CellWalkR’s user-friendly interface provides interactive analysis and visualization of cell labels and regulatory region mappings.
 License: GPL-2 + file LICENSE
 Encoding: UTF-8
 Depends:

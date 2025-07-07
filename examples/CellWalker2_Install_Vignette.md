@@ -31,7 +31,7 @@ Before installing CellWalker2, you might need to install some system libraries. 
 conda create -n cellWalker2 -c conda-forge r-base r-devtools
 conda activate cellWalker2
 # install system libraries
-conda install -c conda-forge zlib openssl curl libxml2 bzip2 xz pcre2 gsl gmp glp
+conda install -c conda-forge zlib openssl curl libxml2 bzip2 xz pcre2 gsl gmp glpk
 
 ```
 Currently, CellWalker2 must be installed using devtools. Also CellWalker2 is only compatible with Seurat v4 and you might need to install it using remotes.
@@ -54,6 +54,6 @@ if(!require(remotes)){
 }
 remotes::install_version("Seurat", version = "4.3.0.1")
 
-devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2")
+devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2") # # do not select updating Seurat package
 ```
 
