@@ -10,19 +10,10 @@ and identifities cell type-specific regulatory regions or other bulk-derived ann
 CellWalker2 can assign cells or bulk genomic annotations (e.g. TF motif or regulatory regions) to cell type hierarchy and compare different cell type hierarchies from different datasets. 
 It also provides statistical signifiance of the association by permutation and visualization of cell labels and regulatory region mappings on a cell type hierarchy. 
 
-## Installation
+##  Getting Started with CellWalker2 ([start](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2))
 
-Install CellWalkR for R using devtools as follows:
-
-``` r
-$ R
-> install.packages("devtools")
-> devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2")
-```
 
 ## Usage
-
-####  Getting Started with CellWalker2 ([start](examples/CellWalker2_Install_Vignette.md#getting-started-with-cellwalker2))
 #### Use CellWalker2 for scRNA-Seq Data ([human PBMC](examples/CellWalker2_RNASeq_Vignette.md))
 1.  [load scRNA-Seq data](examples/CellWalker2_RNASeq_Vignette.md#load-scRNA-Seq-data)
 2.  [Labeling cells](examples/CellWalker2_RNASeq_Vignette.md#labeling-cells)

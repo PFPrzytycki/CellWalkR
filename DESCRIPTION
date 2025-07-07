@@ -18,7 +18,7 @@ Imports:
     foreach,
     doParallel,
     Seurat (< 5.0),
-    Seurat (>= 3.0),
+    Seurat (>= 4.3),
     ggplot2,
     reshape2,
     ape,

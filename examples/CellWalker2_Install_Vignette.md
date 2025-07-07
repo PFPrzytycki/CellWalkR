@@ -24,13 +24,36 @@ Users can provide  marker genes for each cell type, and can also provide a hiera
 ### Bulk derived-annotations
 Additionally, groups of genome coordinates can be provided to CellWalker2. Genome coordinates can be a group of regulatory regions (e.g. regulatory regions in a brain region), or regions with motifs or ChIPSeq peaks of a TF (for identifying cell type-specific TFs).
 
-## Getting Started with CellWalker2
+## Installation
 
-Currently, CellWalker2 must be installed using devtools:
+Before installing CellWalker2, you might need to install some system libraries. If you use conda, you may create a new conda environment and install R, devtools and other system libraries. 
+```bash
+conda create -n cellWalker2 -c conda-forge r-base r-devtools
+conda activate cellWalker2
+# install system libraries
+conda install -c conda-forge zlib openssl curl libxml2 bzip2 xz pcre2 gsl gmp glp
+
+```
+Currently, CellWalker2 must be installed using devtools. Also CellWalker2 is only compatible with Seurat v4 if you might need to install it using remotes.
 
 
 ```r
-install.packages("devtools")
+$ R
+if(!require(devtools))
+{
+  install.packages("devtools")
+}
+if (!require("BiocManager", quietly = TRUE))
+{
+  install.packages("BiocManager") # some dependencies are from Bioconductor
+}
+
+# install Seurat version 4 if you don’t have it
+if(!require(remotes)){
+  install.packages("remotes") # If not already installed
+}
+remotes::install_version("Seurat", version = "4.3.0.1")
+
 devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2")
 ```
 
