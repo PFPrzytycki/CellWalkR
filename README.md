@@ -30,7 +30,7 @@ Install CellWalkR for R using devtools as follows (please check CellWalker2 [rea
 ``` r
 $ R
 > install.packages("devtools")
-> devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2")
+> devtools::install_github("PFPrzytycki/CellWalkR")
 ```
 
 ## Usage

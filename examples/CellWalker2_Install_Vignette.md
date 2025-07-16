@@ -54,6 +54,6 @@ if(!require(remotes)){
 }
 remotes::install_version("Seurat", version = "4.3.0.1")
 
-devtools::install_github("PFPrzytycki/CellWalkR@cellwalker2") # # do not select updating Seurat package
+devtools::install_github("PFPrzytycki/CellWalkR") # # do not select updating Seurat package
 ```
 

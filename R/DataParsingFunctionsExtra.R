@@ -366,9 +366,9 @@ mergeATACSeq <-function(ATAC_Mat, peaks, ATAC_Mat2, peaks2)
 
 }
 
-#' Identify motifs in given genomic regoins
+#' Identify motifs in given genomic regions
 #'
-#' \code{findMotifs} merge peaks from two ATACSeq data and combine cells to generate a single peak-by-cell matrix
+#' \code{findMotifs} Identify motifs in given genomic regions
 #'
 #' @param pRE a dataframe of genomic coordinates. Must contain at least three columns
 #'  with names 'seqnames', 'start' and 'end'.
