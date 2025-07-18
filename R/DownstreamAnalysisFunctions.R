@@ -836,3 +836,104 @@ plotZscoreDotplot = function(Zscore, orderRow = T, orderCol = F,  th = 3)
       scale_color_gradient(low = "mediumblue",  high = "red2", space = "Lab")
     return(p1)
 }
+
+
+#' Plot Z-score heatmap with gene expression
+#'
+#' \code{convert2plot} Plot Z-score heatmap with gene expression
+#'
+#' @param Zscore a matrix or dataframe, rows are TFs to be mapped to, and columns are cell types
+#' @param tf_exp_mean gene expression of TFs
+#' @param label figure legend, default: zscore
+#' @param th threshold of Zscore to plot
+#' @param ord2 order of cell types, if NULL, clustering cell types by Z-score
+#' @param ord order of TFs, if NULL, clustering TFs by Z-score
+#' @return a list with reordered Z-score and expression to plot
+#' @export
+convert2plot <- function(Zscore, tf_exp_mean, label = 'zscore', th = 3, ord2 = NULL, ord = NULL)
+{
+  Zscore2 = Zscore
+  Zscore2[Zscore2<th] = 0
+  if(is.null(ord))
+  {
+    ord = hclust(dist(Zscore2, method = 'manhattan')) # clustering similar TF motifs by zscore
+    ord = ord$order
+  }
+  if(is.null(ord2))
+  {
+    ord2 = hclust(dist(t(Zscore2), method = 'manhattan')) # clustering similar cell types by zscore
+    ord2 = ord2$order
+  }
+  Zscore = Zscore[ord, ord2]
+
+  Zscore2 = Zscore
+  Zscore2[Zscore2 < th] = NA
+  Zscore2 = as.matrix(Zscore2)
+  Zscore2 = reshape2::melt(Zscore2)
+  colnames(Zscore2) = c('enhancer', 'celltype', label)
+
+  tf_exp_mean = tf_exp_mean[ord,ord2]
+  all(rownames(Zscore) == rownames(tf_exp_mean))
+  all(colnames(Zscore) == colnames(tf_exp_mean))
+
+  tf_exp_mean2 = reshape2::melt(as.matrix(tf_exp_mean))
+  colnames(tf_exp_mean2) = c('enhancer', 'celltype', 'expression')
+  tf_exp_mean2[tf_exp_mean2$expression > 5, 'expression'] = 5
+  return(list(Zscore2, tf_exp_mean2))
+}
+
+#' Compute mean gene expression of TF in each cell type
+#'
+#' \code{computeTFexp} Compute mean gene expression of TF in each cell type
+#'
+#' @param tf_exp single cell level gene expression of TFs
+#' @param Zscore a matrix or dataframe, rows are TFs to be mapped to, and columns are cell types
+#' @param cellLabels cell labels
+#' @param tr If tr is provided, also compute selected internal nodes of the cell type tree.
+#' @param levels select levels of internal nodes to compute expression
+#' @param scale If scale = T, get standardized expression for each gene
+#' @return a list with Z-score and mean expression
+#' @export
+computeTFexp <- function(tf_exp, Zscore, cellLabels, tr = NULL, levels = c(1:8,12), scale = T)
+{
+  # select expressed TF
+  ind = which(Matrix::rowMeans(tf_exp > 0) > 0.01) #
+  tf_exp = tf_exp[ind, ]
+  tf_exp = as.matrix(tf_exp)
+  # get tf expression per cell type
+  if(scale) tf_exp = t(scale(t(tf_exp)))
+  tf_exp = reshape2::melt(tf_exp)
+
+  tf_exp = tf_exp[tf_exp$Var2 %in% names(cellLabels), ]
+  tf_exp$cluster = cellLabels[as.character(tf_exp$Var2)]
+
+  tf_exp = as.data.table(tf_exp)
+  tf_exp_mean = tf_exp[, mean(value),  by = c('Var1', 'cluster')]
+  ##tf_exp_mean$cluster = make.names(tf_exp_mean$cluster)
+  tf_exp_mean = reshape2::acast(tf_exp_mean, Var1 ~ cluster)
+
+  # adding internal nodes
+  if(!is.null(tr))
+  {
+    #select levels of internal nodes to compute expression. In this example, only bottom 8 levels (for different groups of neurons)
+    # and level 12 (for non-neurons) will be computed
+    for(i in levels)
+    {
+      nodes = grep(paste0('\\:', i, '$'), tr$node.label, value = T)
+      tf_exp$cluster2 = NA
+      for(x in nodes)
+      {
+        a = extract.clade(tr, x)
+        if(length(a$tip.label) > length(tr$tip.label)/2  + 1) a$tip.label = setdiff(tr$tip.label, a$tip.label)
+        if(i==12) x = "Peric.:Early RG:13"
+        tf_exp$cluster2[which(tf_exp$cluster %in% a$tip.label)] = x
+      }
+      temp = tf_exp[!is.na(cluster2), mean(value),  by = c('Var1', 'cluster2')]
+      tf_exp_mean = cbind(tf_exp_mean, reshape2::acast(temp, Var1 ~ cluster2))
+    }
+  }
+  inter_tf = intersect(rownames(tf_exp_mean), rownames(Zscore))
+  Zscore = Zscore[inter_tf, colnames(tf_exp_mean)]
+  tf_exp_mean = tf_exp_mean[inter_tf,]
+  return(list(Zscore,tf_exp_mean))
+}

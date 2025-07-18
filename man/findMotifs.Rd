@@ -2,7 +2,7 @@
 % Please edit documentation in R/DataParsingFunctionsExtra.R
 \name{findMotifs}
 \alias{findMotifs}
-\title{Identify motifs in given genomic regoins}
+\title{Identify motifs in given genomic regions}
 \usage{
 findMotifs(pRE)
 }
@@ -14,5 +14,5 @@ with names 'seqnames', 'start' and 'end'.}
 a dataframe with the first column pREs and second column motifs
 }
 \description{
-\code{findMotifs} merge peaks from two ATACSeq data and combine cells to generate a single peak-by-cell matrix
+\code{findMotifs} Identify motifs in given genomic regions
 }
