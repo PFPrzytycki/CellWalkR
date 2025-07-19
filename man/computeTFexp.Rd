@@ -9,7 +9,8 @@ computeTFexp(
   Zscore,
   cellLabels,
   tr = NULL,
-  levels = c(1:8, 12),
+  levels = NULL,
+  nodes = NULL,
   scale = T
 )
 }
@@ -20,9 +21,12 @@ computeTFexp(
 
 \item{cellLabels}{cell labels}
 
-\item{tr}{If tr is provided, also compute selected internal nodes of the cell type tree.}
+\item{tr}{If tr is provided, also compute selected internal nodes of the cell type tree.
+Please provide \code{levels} and/or \code{node_labels}. All internal nodes by either option will be combined.}
 
 \item{levels}{select levels of internal nodes to compute expression}
+
+\item{nodes}{select internal nodes to compute expression.}
 
 \item{scale}{If scale = T, get standardized expression for each gene}
 }
