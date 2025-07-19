@@ -890,11 +890,13 @@ convert2plot <- function(Zscore, tf_exp_mean, label = 'zscore', th = 3, ord2 = N
 #' @param Zscore a matrix or dataframe, rows are TFs to be mapped to, and columns are cell types
 #' @param cellLabels cell labels
 #' @param tr If tr is provided, also compute selected internal nodes of the cell type tree.
+#'           Please provide \code{levels} and/or \code{node_labels}. All internal nodes by either option will be combined.
 #' @param levels select levels of internal nodes to compute expression
+#' @param nodes select internal nodes to compute expression.
 #' @param scale If scale = T, get standardized expression for each gene
 #' @return a list with Z-score and mean expression
 #' @export
-computeTFexp <- function(tf_exp, Zscore, cellLabels, tr = NULL, levels = c(1:8,12), scale = T)
+computeTFexp <- function(tf_exp, Zscore, cellLabels, tr = NULL, levels = NULL, nodes = NULL, scale = T)
 {
   # select expressed TF
   ind = which(Matrix::rowMeans(tf_exp > 0) > 0.01) #
@@ -919,19 +921,20 @@ computeTFexp <- function(tf_exp, Zscore, cellLabels, tr = NULL, levels = c(1:8,1
     # and level 12 (for non-neurons) will be computed
     for(i in levels)
     {
-      nodes = grep(paste0('\\:', i, '$'), tr$node.label, value = T)
+      nodes = c(nodes,grep(paste0('\\:', i, '$'), tr$node.label, value = T))
+    }
+    nodes = unique(nodes)
+    for(x in nodes)
+    {
       tf_exp$cluster2 = NA
-      for(x in nodes)
-      {
-        a = extract.clade(tr, x)
-        if(length(a$tip.label) > length(tr$tip.label)/2  + 1) a$tip.label = setdiff(tr$tip.label, a$tip.label)
-        if(i==12) x = "Peric.:Early RG:13"
-        tf_exp$cluster2[which(tf_exp$cluster %in% a$tip.label)] = x
-      }
+      a = extract.clade(tr, x)
+      if(length(a$tip.label) > length(tr$tip.label)/2  + 1) a$tip.label = setdiff(tr$tip.label, a$tip.label)
+      tf_exp$cluster2[which(tf_exp$cluster %in% a$tip.label)] = x
       temp = tf_exp[!is.na(cluster2), mean(value),  by = c('Var1', 'cluster2')]
       tf_exp_mean = cbind(tf_exp_mean, reshape2::acast(temp, Var1 ~ cluster2))
     }
   }
+
   inter_tf = intersect(rownames(tf_exp_mean), rownames(Zscore))
   Zscore = Zscore[inter_tf, colnames(tf_exp_mean)]
   tf_exp_mean = tf_exp_mean[inter_tf,]
