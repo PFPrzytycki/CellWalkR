@@ -9,7 +9,8 @@ computeTypeEdges(
   markers,
   pval.cutoff = 0.05,
   log2FC.cutoff = 0.5,
-  only.pos = F
+  only.pos = F,
+  force = T
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ computeTypeEdges(
 \item{log2FC.cutoff}{select markers with abs(log2FC.cutoff)> 0.5 if only.pos = F or log2FC.cutoff>0.5 if only.pos = T. Default: 0.5}
 
 \item{only.pos}{only include positive markers}
+
+\item{force}{if true (default), this function will use marker genes that matched the name in exprMat_norm to compute edge weight;
+if false, this function will raise an error if some marker genes are not in exprMat_norm.}
 }
 \value{
 a matrix of edges from each cell type label to each cell

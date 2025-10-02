@@ -8,11 +8,13 @@
 #' @param pval.cutoff select markers with adjust pvalue (\code{p_val_adj}) < pval.cutoff. Default: 0.05
 #' @param log2FC.cutoff select markers with abs(log2FC.cutoff)> 0.5 if only.pos = F or log2FC.cutoff>0.5 if only.pos = T. Default: 0.5
 #' @param only.pos only include positive markers
+#' @param force if true (default), this function will use marker genes that matched the name in exprMat_norm to compute edge weight;
+#'              if false, this function will raise an error if some marker genes are not in exprMat_norm.
 #' @return a matrix of edges from each cell type label to each cell
 #' @export
 #' @import data.table
 
-computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.cutoff = 0.5, only.pos = F)
+computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.cutoff = 0.5, only.pos = F, force = T)
 {
   if(!requireNamespace("data.table", quietly = TRUE)){
     stop("Must install data.table")
@@ -43,6 +45,10 @@ computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.c
     markers = markers[abs(avg_log2FC) >= log2FC.cutoff & p_val_adj <= pval.cutoff]
   }
 
+  if(force == F)
+  {
+    stopifnot(all(markers$gene %in% rownames(exprMat_norm)))
+  }
   markers_inter = markers[markers$gene %in% rownames(exprMat_norm)]
 
   if(length(unique(markers_inter$cluster)) < length(unique(markers$cluster)))
@@ -341,7 +347,7 @@ mapCellTypes <- function(cellGraph, labelEdgesList, labelEdgeWeights = NULL, wtr
   if(compute.Zscore){
        reslist = compute_zscore(info1, info1_rand[2:(nround+1)], nround)
        zscore = reslist$zscore
-       infomean = reslist$mean 
+       infomean = reslist$mean
        infovar = reslist$var
   }else{
        zscore = NULL
