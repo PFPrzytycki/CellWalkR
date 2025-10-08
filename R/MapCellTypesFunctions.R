@@ -34,8 +34,14 @@ computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.c
   }
 
 
-  if(is.null(markers$avg_log2FC)) markers$avg_log2FC = log2FC.cutoff
-  if(is.null(markers$p_val_adj)) markers$p_val_adj =  pval.cutoff
+  if(is.null(markers$avg_log2FC)) {
+    warning('avg_log2FC is not present in the columns of markers, so markers will not be filtered by avg_log2FC')
+    markers$avg_log2FC = log2FC.cutoff
+  }
+  if(is.null(markers$p_val_adj)) {
+    warning('p_val_adj is not present in the columns of markers, so markers will not be filtered by p_val_adj')
+    markers$p_val_adj =  pval.cutoff
+  }
 
   markers = data.table(markers)
   if(only.pos)

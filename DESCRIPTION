@@ -16,6 +16,7 @@ Imports:
     Matrix (>= 1.5.3),
     data.table,
     ggtree,
+    ggnewscale,
     tidytree,
     foreach,
     doParallel,
@@ -24,7 +25,9 @@ Imports:
     ggplot2,
     reshape2,
     ape,
+    motifmatchr,
 Suggests:
+    BSgenome.Hsapiens.UCSC.hg38,
     SnapATAC,
     ArchR,
     cicero,
