@@ -53,6 +53,10 @@ If you use CellWalkR please cite:
     complex tissues.” *Genome Biology* (2021).
     <https://doi.org/10.1186/s13059-021-02279-1>
 
+3.  Hu, Z., Przytycki, P.F., Pollard, K.S. "CellWalker2: Multi-omic discovery using hierarchical cell type relationships."
+    *Cell Genomics* (2025).
+    <https://www.cell.com/cell-genomics/fulltext/S2666-979X(25)00142-9>
+
 ## AWS + TensorFlow
 
 CellWalkR can also be run on AWS which vastly simplifies the process of
