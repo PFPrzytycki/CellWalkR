@@ -59,8 +59,7 @@ If you use CellWalkR please cite:
     complex tissues.” *Genome Biology* (2021).
     <https://doi.org/10.1186/s13059-021-02279-1>
 
-3.  Hu, Z., Przytycki, P.F., Pollard, K.S. "CellWalker2: multi-omic discovery 
-    of hierarchical cell type relationships and their associations with genomic annotations."
-    *bioRxiv* (2024).
-    <https://www.biorxiv.org/content/10.1101/2024.05.17.594770v1>
+3.  Hu, Z., Przytycki, P.F., Pollard, K.S. "CellWalker2: Multi-omic discovery using hierarchical cell type relationships."
+    *Cell Genomics* (2025).
+    <https://www.cell.com/cell-genomics/fulltext/S2666-979X(25)00142-9>
 
