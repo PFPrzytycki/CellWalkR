@@ -1,0 +1,444 @@
+#' Compute Label Edges
+#'
+#' \code{computeTypeEdges} generates a matrix of edges from each cell type label to each cell from gene expression.
+#' The edge weight is normalized gene expression of markers weighted by the log2FC.
+#'
+#' @param exprMat_norm a gene by cell data.frame or matrix, rownames are genes, colnames are cell barcodes
+#' @param markers marker genes for each cell type, columns are gene, cluster, p_val_adj (optional) and avg_log2FC (optional).
+#' @param pval.cutoff select markers with adjust pvalue (\code{p_val_adj}) < pval.cutoff. Default: 0.05
+#' @param log2FC.cutoff select markers with abs(log2FC.cutoff)> 0.5 if only.pos = F or log2FC.cutoff>0.5 if only.pos = T. Default: 0.5
+#' @param only.pos only include positive markers
+#' @param force if true (default), this function will use marker genes that matched the name in exprMat_norm to compute edge weight;
+#'              if false, this function will raise an error if some marker genes are not in exprMat_norm.
+#' @return a matrix of edges from each cell type label to each cell
+#' @export
+#' @import data.table
+
+computeTypeEdges <- function(exprMat_norm, markers, pval.cutoff = 0.05, log2FC.cutoff = 0.5, only.pos = F, force = T)
+{
+  if(!requireNamespace("data.table", quietly = TRUE)){
+    stop("Must install data.table")
+  }
+  if(missing(exprMat_norm) || (!is(exprMat_norm, "data.frame") & !is(exprMat_norm, "matrix")  & !is(exprMat_norm, "Matrix"))){
+    stop("Must provide a dataframe or matrix of RNA data")
+  }
+  if(is.null(colnames(exprMat_norm)) | is.null(rownames(exprMat_norm)))
+  {
+    stop('exprMat_norm must have column and row names')
+  }
+  if(missing(markers) || !is(markers, "data.frame")){
+    stop("Must provide a dataframe of markers")
+  }
+  if(is.null(markers$gene) || is.null(markers$cluster)){
+    stop("markers must have 'gene' and 'cluster' columns")
+  }
+
+
+  if(is.null(markers$avg_log2FC)) {
+    warning('avg_log2FC is not present in the columns of markers, so markers will not be filtered by avg_log2FC')
+    markers$avg_log2FC = log2FC.cutoff
+  }
+  if(is.null(markers$p_val_adj)) {
+    warning('p_val_adj is not present in the columns of markers, so markers will not be filtered by p_val_adj')
+    markers$p_val_adj =  pval.cutoff
+  }
+
+  markers = data.table(markers)
+  if(only.pos)
+  {
+    markers = markers[avg_log2FC >= log2FC.cutoff & p_val_adj <= pval.cutoff]
+  }else{
+    markers = markers[abs(avg_log2FC) >= log2FC.cutoff & p_val_adj <= pval.cutoff]
+  }
+
+  if(force == F)
+  {
+    stopifnot(all(markers$gene %in% rownames(exprMat_norm)))
+  }
+  markers_inter = markers[markers$gene %in% rownames(exprMat_norm)]
+
+  if(length(unique(markers_inter$cluster)) < length(unique(markers$cluster)))
+  {
+    stop("Some clusters don't have markers. Need to lower the pval/logFC thresholds or check if expression matrix contains the markers")
+  }
+
+  labelEdges = markers_inter[, list("score" = colSums(exprMat_norm[.SD[['gene']],]* .SD[['avg_log2FC']]) / sum(abs(.SD[['avg_log2FC']])), "cell" = colnames(exprMat_norm)),
+                             by = cluster]
+  labelEdges = reshape2::acast(labelEdges, cell~cluster, value.var = 'score')
+  labelEdges[labelEdges <0] = 0
+
+  labelEdges
+}
+
+
+
+#' Annotate cells by cell types
+#' \code{annotateCells} Random walk on the cells and cell type labels graph and compute influence scores from each cell to each cell type labels.
+#' Cell type labels can be organized in a hierarchical structure.
+#' @param cellGraph cell-cell graph, a cell-to-cell similarity matrix, row and colnames are cell barcodes
+#' @param labelEdges  a matrix or dataframe of edges from each cell type label to each cell. Each row is a cell,
+#' each column is a cell type label
+#' @param weight1 the edge weight ratio between cell-label edges and cell-cell edges.
+#' If it's NULL, will tune edge weights and get the optimal value of it; otherwise will use the input weight
+#' @param tr1 if not null, incorporating the cell type hierarchy into the graph. input the cell type tree as a phylo object
+#' @param wtree the edge weight between cell type labels, default: 1
+#' @param sampleDepth subsample cells to for faster calculation to tune edge weight ratio, default: 3000
+#' @param ... other arguments pass to \code{tuneEdgeWeights} and \code{walkCells}
+#' @return a list including a CellWalker object and weight1
+#' @export
+
+annotateCells <- function(cellGraph, labelEdges, weight1 = NULL, sampleDepth =3000, ... , tr1 = NULL, wtree = 1)
+{
+
+  args = list(...)
+  if('steps' %in% names(args)){
+    steps = args[['steps']]
+  }else{
+    steps = Inf
+  }
+  if('tensorflow' %in% names(args)){
+    tensorflow = args[['tensorflow']]
+  }else{
+    tensorflow = F
+  }
+  if(missing(labelEdges) || (!is(labelEdges, "data.frame") & (!is(labelEdges, "matrix") & (!is(labelEdges, "Matrix"))))){
+    stop("Must provide a dataframe or matrix of cell-to-label edges")
+  }
+  if(is.null(colnames(labelEdges)) || is.null(rownames(labelEdges))){
+    stop("labelEdges must have cell barcodes as rownames and cell type labels as colnames")
+  }
+  if(missing(cellGraph) || (!is(cellGraph, "data.frame") & (!is(cellGraph, "matrix") & (!is(cellGraph, "Matrix"))))){
+    stop("Must provide a dataframe or matrix of cell-to-cell similarity graph")
+  }
+  if(is.null(colnames(cellGraph)) || is.null(rownames(cellGraph))){
+    stop("cellGraph must have same rownames and colnames as cell barcodes")
+  }
+  if(any(colnames(cellGraph) != rownames(cellGraph)))
+  {
+    stop('colname and rowname of cellGraph must be the same')
+  }
+  if(!setequal(colnames(cellGraph), rownames(labelEdges)))
+  {
+    stop('labelEdges and cellGraph needs to have the same set of cell barcodes')
+  }
+  if(!is.null(tr1) & !is(tr1, 'phylo'))
+  {
+    stop('tree must be a phylo object or NULL')
+  }
+
+  labelEdges = labelEdges[rownames(cellGraph),]
+  diag(cellGraph) = 0
+
+  if(is.null(weight1))
+  {
+    labelEdgesList <- list(labelEdges)
+    edgeWeights <- tuneEdgeWeights(cellGraph,
+                                   labelEdgesList,
+                                   sampleDepth = sampleDepth,
+                                   ...)
+    opt_idx = which.max(edgeWeights$cellHomogeneity)
+    message('cellHomogeneity at each edgeWeight:')
+    print(edgeWeights)
+    weight1 = edgeWeights[opt_idx, 1]
+  }
+
+  if(is.null(tr1))
+  {
+    cellWalk <- walkCells(cellGraph,
+                          labelEdgesList,
+                          labelEdgeWeights = weight1,
+                          steps=steps, tensorflow = tensorflow)
+
+    return(list(cellWalk, weight1))
+  }
+
+
+  res1 = tree2Mat(tr1)
+  allCellTypes = res1[[2]]
+  cellTypesM = res1[[1]]
+  colnames(cellTypesM) = rownames(cellTypesM) = allCellTypes
+
+  l = (length(allCellTypes) + 1)/2 #vector of cell type names
+  l_all = length(allCellTypes) #vector with cell type names and internal node names
+  labelEdges = labelEdges[, allCellTypes[1:l]]
+  expandLabelEdges = cbind(labelEdges, matrix(0,dim(labelEdges)[1],l_all-l)) #add 0s to labelEdges to allow room for internal nodes
+  labelMatrix = cellTypesM
+  cell2label = weight1*expandLabelEdges
+  combinedGraph = rbind(cbind(wtree*labelMatrix,t(cell2label)), #combined graph w/ internal nodes
+                        cbind(cell2label,cellGraph))
+
+  infMat <- randomWalk(combinedGraph, tensorflow = tensorflow, steps = steps) #5 steps is usually enough
+  normMat <- normalizeInfluence(infMat[-(1:l_all),1:l])
+  colnames(normMat) <- allCellTypes[1:l]
+  rownames(normMat) <- rownames(cellGraph)
+  cellLabels <- apply(normMat, 1, function(x) {
+    if(max(x) < 0) return(NA)
+    colnames(normMat)[order(x, decreasing = TRUE)][1]
+  }) #top scoring label
+  cellWalkH <- list(infMat=infMat, normMat=normMat, cellLabels=cellLabels) #make cellWalk object
+  class(cellWalkH) <- "cellWalk"
+
+  return(list(cellWalkH, weight1))
+}
+
+#' Mapping cell type labels
+#' \code{mapCellTypes} Random walk on the cells and cell type labels graph and permuted graphs, compute Z-scores for each pair of labels.
+#' Cell type labels can be organized in a hierarchical structure.
+#' @param cellGraph cell-cell graph, a cell-to-cell similarity matrix, row and colnames are cell barcodes
+#' @param labelEdgeList a list of cell-to-label edges. Each is a matrix or dataframe of edges from a cell to each cell type label. Each row is a cell,
+#' each column is a cell type label. The cell names of each matrix can be partially overlapped with the cells in \code{cellGraph}.
+#' @param labelEdgeWeights a vector of the edge weight ratios between cell-label edges and cell-cell edges. One for each label set.
+#' If it is NULL, will tune edge weights and get the optimal value for each  label set;
+#' otherwise must have the same length as  \code{labelEdgeList}.
+#' @param wtrees a dataframe/matrix the edge weight between nodes on the tree for each set of cell type labels. Each row is a label set. It must have two columns,
+#' the first and second column is the edge weights traversing up/down the tree. If NULL, will set all edge weights to 1;
+#' otherwise must have the same row as  \code{labelEdgeList}.
+#' @param treeList a list of cell type trees, each is a phylo object of the hierarchical structure of a set of cell type labels. Cell type labels in labelEdgeList much contain all the tips on the tree.
+#' If NULL, will not include hierarchical relationship between labels in the graph; otherwise must have the same length as \code{labelEdgeList}.
+#' @param compute.Zscore whether to do permutation and compute Z-score, If not, will return influence score between labels.
+#' @param nround rounds of permutations to compute null distribution. default: 50
+#' @param groupsList a list of vectors showing groups of cells for each label set. Only permute edges between cells and labels within the same group of the cells. default: NULL, permute among all cells with all labels.
+#' If not NULL, must have the same length as \code{labelEdgeList}. Each vector must have the same length as the rows of each labelEdge matrix. No permutation if group == 0.
+#' @param sampleDepth subsample cells to for faster calculation to tune edge weight ratios (\code{labelEdgeWeights}), default: 2000
+#' @param enable_convergence Enable early stopping (default: TRUE)
+#' @param conv_threshold Convergence threshold (default: 0.01)
+#' @param conv_window Window size for convergence check (default: 20)
+#' @param ... other arguments pass to \code{tuneEdgeWeights} and \code{walkCells}
+#' @return A cellWalk2 object. if \code{compute.Zscore} is False a list including influence score between each set of cell types and labelEdgeWeights.
+#' otherwise  a list including influence and Zscore between each set of cell types, as well as labelEdgeWeights.
+#' @export
+
+mapCellTypes <- function(cellGraph, labelEdgesList, labelEdgeWeights = NULL,
+                         wtrees = NULL, treeList = NULL, compute.Zscore = TRUE,
+                         nround = 50, groupsList = NULL, sampleDepth = 2000,
+                         enable_convergence = TRUE, conv_threshold = 0.01,
+                         conv_window = 20, ...) {
+
+  # Parse additional arguments
+  args <- list(...)
+  steps <- if ('steps' %in% names(args)) args[['steps']] else Inf
+  tensorflow <- if ('tensorflow' %in% names(args)) args[['tensorflow']] else FALSE
+
+  # Validate cellGraph
+  if (missing(cellGraph) ||
+      !inherits(cellGraph, c("data.frame", "matrix", "Matrix"))) {
+    stop("Must provide a dataframe or matrix of cell-to-cell similarity graph")
+  }
+  if (is.null(colnames(cellGraph)) || is.null(rownames(cellGraph))) {
+    stop("cellGraph must have cell barcodes as row/colnames")
+  }
+  if (any(colnames(cellGraph) != rownames(cellGraph))) {
+    stop("cellGraph row and column names must match")
+  }
+  diag(cellGraph) <- 0
+
+  # Validate labelEdgesList
+  if (missing(labelEdgesList) || !is.list(labelEdgesList)) {
+    stop("Must provide a list of cell-to-label edge matrices")
+  }
+
+  # Handle groupsList
+  if (!is.null(groupsList)) {
+    if (!is.list(groupsList) || length(groupsList) != length(labelEdgesList)) {
+      stop('groupsList must be a list with same length as labelEdgesList')
+    }
+  } else {
+    groupsList <- lapply(labelEdgesList, function(le) rep(1, nrow(le)))
+  }
+
+  # Validate treeList
+  if (!is.null(treeList) && length(treeList) != length(labelEdgesList)) {
+    stop('treeList must have same length as labelEdgesList')
+  }
+
+  # Process label edges and groups
+  for (i in seq_along(labelEdgesList)) {
+    labelEdges <- labelEdgesList[[i]]
+    groups <- groupsList[[i]]
+
+    if (!is.null(treeList)) {
+      if (!inherits(treeList[[i]], 'phylo')) {
+        stop('Each tree must be a phylo object')
+      }
+      if (is.null(treeList[[i]]$tip.label)) {
+        stop('Each tree must have tip labels')
+      }
+      res <- checkLabelEdges(labelEdges, groups, cellGraph,
+                             tips = treeList[[i]]$tip.label, suffix = i)
+    } else {
+      res <- checkLabelEdges(labelEdges, groups, cellGraph, suffix = i)
+    }
+
+    labelEdgesList[[i]] <- res[[1]]
+    groupsList[[i]] <- res[[2]]
+  }
+
+  # Build cell type matrix
+  if (!is.null(treeList)) {
+    if (!is.null(wtrees)) {
+      if (!(inherits(wtrees, c("data.frame", "matrix"))) ||
+          nrow(wtrees) != length(labelEdgesList) ||
+          ncol(wtrees) != 2) {
+        stop('wtrees must be a matrix with 2 columns and nrow = length(labelEdgesList)')
+      }
+    } else {
+      wtrees <- matrix(1, length(labelEdgesList), 2)
+    }
+
+    tree_mats <- lapply(seq_along(treeList), function(i) {
+      tree2Mat(treeList[[i]], wtrees[i, 1], wtrees[i, 2], i)
+    })
+    allCellTypes <- unlist(lapply(tree_mats, `[[`, 2))
+    ncellTypes <- sapply(tree_mats, function(x) length(x[[2]]))
+    cellTypesM <- Matrix::bdiag(lapply(tree_mats, `[[`, 1))
+    dimnames(cellTypesM) <- list(allCellTypes, allCellTypes)
+  } else {
+    allCellTypes <- unlist(lapply(labelEdgesList, colnames))
+    ncellTypes <- sapply(labelEdgesList, ncol)
+    cellTypesM <- matrix(0, length(allCellTypes), length(allCellTypes))
+    dimnames(cellTypesM) <- list(allCellTypes, allCellTypes)
+  }
+  l_all <- length(allCellTypes)
+
+  # Tune edge weights if not provided
+  if (is.null(labelEdgeWeights)) {
+    message('Tuning labelEdgeWeights...')
+    edgeWeights <- tuneEdgeWeights(cellGraph, labelEdgesList,
+                                   sampleDepth = sampleDepth, ...)
+    opt_idx <- which.max(edgeWeights$cellHomogeneity)
+    message('Cell homogeneity at optimal edge weight:')
+    print(edgeWeights[opt_idx, ])
+    labelEdgeWeights <- unlist(edgeWeights[opt_idx, ])
+  } else if (!is.numeric(labelEdgeWeights) ||
+             length(labelEdgeWeights) != length(labelEdgesList)) {
+    stop("labelEdgeWeights must be numeric with length = length(labelEdgesList)")
+  }
+
+  # Set up permutation rounds
+  if (!compute.Zscore) nround <- 0
+
+  message('Running CellWalker...')
+
+  # Helper to build combined graph
+  build_combined_graph <- function(labelEdges_list, permute = FALSE) {
+    expandLabelEdges <- lapply(seq_along(labelEdges_list), function(i) {
+      labelEdges <- labelEdges_list[[i]]
+
+      if (permute) {
+        groups <- groupsList[[i]]
+        if (any(groups != 0)) {
+          labelEdges_rand <- labelEdges
+          for (g in unique(groups[groups != 0])) {
+            cells <- which(groups == g)
+            labelEdges_rand[cells, ] <- simulate_rand0(labelEdges[cells, , drop = FALSE])
+          }
+          labelEdges <- labelEdges_rand
+        }
+      }
+
+      if (!is.null(treeList)) {
+        cbind(labelEdges * labelEdgeWeights[i],
+              matrix(0, nrow(labelEdges), treeList[[i]]$Nnode))
+      } else {
+        labelEdges * labelEdgeWeights[i]
+      }
+    })
+
+    cell2label <- do.call('cbind', expandLabelEdges)
+    rbind(cbind(cellTypesM, t(cell2label)),
+          cbind(cell2label, cellGraph))
+  }
+
+  # Run observed data (round 0)
+  message('Computing observed influence (round 0)...')
+  combinedGraph <- build_combined_graph(labelEdgesList, permute = FALSE)
+  infMat <- randomWalk(combinedGraph, tensorflow = tensorflow, steps = steps)
+  info1_rand <- list(infMat[1:l_all, 1:l_all])
+  dimnames(info1_rand[[1]]) <- list(allCellTypes, allCellTypes)
+
+  # Run permutations with optional convergence checking
+  if (nround > 0) {
+    converged <- FALSE
+    rounds_completed <- 0
+    batch_size <- 20
+
+    while (rounds_completed < nround && !converged) {
+      batch_end <- min(rounds_completed + batch_size, nround)
+      batch_start <- rounds_completed + 1
+
+      message(sprintf('Running permutation rounds %d-%d...',
+                      batch_start, batch_end))
+
+      batch_results <- foreach(
+        r = batch_start:batch_end,
+        .packages = 'Matrix'
+      ) %dopar% {
+        combinedGraph <- build_combined_graph(labelEdgesList, permute = TRUE)
+        infMat <- randomWalk(combinedGraph, tensorflow = tensorflow, steps = steps)
+        infMat[1:l_all, 1:l_all]
+      }
+
+      info1_rand <- c(info1_rand, batch_results)
+      rounds_completed <- batch_end
+
+      # Check convergence
+      if (enable_convergence && rounds_completed >= 2 * conv_window) {
+        converged <- check_convergence(
+          info1_rand[-1],  # Exclude observed
+          window = conv_window,
+          threshold = conv_threshold
+        )
+        if (converged) {
+          message(sprintf('*** Converged after %d rounds ***', rounds_completed))
+        }
+      }
+    }
+  }
+
+  # Compute Z-scores
+  info1 <- info1_rand[[1]]
+  actual_nround <- length(info1_rand) - 1
+
+  if (compute.Zscore && actual_nround > 0) {
+    reslist <- compute_zscore(info1, info1_rand[-1], actual_nround)
+    zscore <- reslist$zscore
+    infomean <- reslist$mean
+    infovar <- reslist$var
+  } else {
+    zscore <- infomean <- infovar <- NULL
+  }
+
+  # Split results by label sets
+  idx <- cumsum(ncellTypes)
+  sts <- c(1, idx[-length(idx)] + 1)
+  params <- expand.grid(1:length(idx), 1:length(idx))
+  params <- params[params[, 1] != params[, 2], ]
+
+  info <- Map(function(u, v) {
+    info1[sts[u]:idx[u], sts[v]:idx[v]]
+  }, params[, 2], params[, 1])
+
+  if (compute.Zscore && !is.null(zscore)) {
+    zscore <- Map(function(u, v) {
+      zscore[sts[u]:idx[u], sts[v]:idx[v]]
+    }, params[, 2], params[, 1])
+    infomean <- Map(function(u, v) {
+      infomean[sts[u]:idx[u], sts[v]:idx[v]]
+    }, params[, 2], params[, 1])
+    infovar <- Map(function(u, v) {
+      infovar[sts[u]:idx[u], sts[v]:idx[v]]
+    }, params[, 2], params[, 1])
+  }
+
+  cellWalk <- list(
+    infMat = info,
+    zscore = zscore,
+    infomean = infomean,
+    infovar = infovar,
+    labelEdgeWeights = labelEdgeWeights
+  )
+  class(cellWalk) <- "cellWalk2"
+  return(cellWalk)
+}
+
+
